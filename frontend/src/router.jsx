@@ -74,9 +74,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/farmer/dashboard/index", element: <FarmerIndex /> }, //FARMER's INDEX PAGE
           { path: "/farmer/dashboard/analytics", element: <FarmerAnalytics/>},
-          { path: "/farmer/dashboard/products", element: (
-          <FarmerProduce />
-            )},
+          { path: "/farmer/dashboard/products", element: <FarmerProduce />},
           { path: "/farmer/dashboard/orders", element:<FarmerOrders/>},
           { path: "/farmer/dashboard/inventory", element:<FarmerInventory/>},
           { path: "/farmer/dashboard/profile", element:<FarmerProfile/>},

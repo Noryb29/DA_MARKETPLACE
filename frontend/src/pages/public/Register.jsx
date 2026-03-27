@@ -329,13 +329,13 @@ const Register = () => {
               {loading ? 'Creating Account...' : 'Register'}
             </button>
 
-            <button
+            {/* <button
               type="button"
               onClick={handleBackToRoleSelection}
               className="w-full bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
             >
               Back to Role Selection
-            </button>
+            </button> */}
           </form>
 
           <div className="mt-3 text-center">
