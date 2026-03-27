@@ -20,7 +20,7 @@ export const getCrops = async (req, res) => {
 export const addCrop = async (req, res) => {
     const user_id = req.user.user_id;
     const {
-        crop_name, variety, volume,
+        crop_name, variety, volume, stock,
         specification_1, specification_2, specification_3,
         specification_4, specification_5,
         planting_date, expected_harvest
@@ -36,13 +36,13 @@ export const addCrop = async (req, res) => {
         const farm_id = farms[0].farm_id;
         const query = `
             INSERT INTO crop_in_farm (
-                farm_id, crop_name, variety, volume,
+                farm_id, crop_name, variety, volume, stock,
                 specification_1, specification_2, specification_3, specification_4, specification_5,
                 planting_date, expected_harvest
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         const [result] = await db.execute(query, [
-            farm_id, crop_name, variety || null, volume || null,
+            farm_id, crop_name, variety || null, volume || null, stock || null,
             specification_1 || null, specification_2 || null, specification_3 || null,
             specification_4 || null, specification_5 || null,
             planting_date || null, expected_harvest || null
@@ -59,7 +59,7 @@ export const updateCrop = async (req, res) => {
     const user_id = req.user.user_id;
     const { crop_id } = req.params;
     const {
-        crop_name, variety, volume,
+        crop_name, variety, volume, stock,
         specification_1, specification_2, specification_3,
         specification_4, specification_5,
         planting_date, expected_harvest
@@ -76,14 +76,14 @@ export const updateCrop = async (req, res) => {
 
         const query = `
             UPDATE crop_in_farm SET
-                crop_name=?, variety=?, volume=?,
+                crop_name=?, variety=?, volume=?, stock=?,
                 specification_1=?, specification_2=?, specification_3=?,
                 specification_4=?, specification_5=?,
                 planting_date=?, expected_harvest=?
             WHERE crop_id=?
         `;
         await db.execute(query, [
-            crop_name, variety || null, volume || null,
+            crop_name, variety || null, volume || null, stock || null,
             specification_1 || null, specification_2 || null, specification_3 || null,
             specification_4 || null, specification_5 || null,
             planting_date || null, expected_harvest || null,

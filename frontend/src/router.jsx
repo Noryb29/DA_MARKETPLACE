@@ -26,6 +26,7 @@ import UserAnalytics from "./pages/users/UserAnalytics.jsx";
 import UserOrders from "./pages/users/UserOrders.jsx";
 import UserCart  from "./pages/users/UserCart.jsx";
 import FarmerFarm from "./pages/farmer/FarmerFarm.jsx";
+import ShoppingPage from "./pages/public/ShoppingPage.jsx";
 
 export const router = createBrowserRouter([
 
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/login", element: <Login /> },
           { path: "/register",element:<Register/>},
+          { path: "/shop/dashboard",element:<ShoppingPage/>}
         ],
       },
     ],
