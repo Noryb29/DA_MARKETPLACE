@@ -6,6 +6,7 @@ import { produceRoutes } from './routes/produceRoutes.js'
 import { orderRoutes } from './routes/orderRoutes.js'
 import { marketRoutes } from './routes/marketRoutes.js'
 import authRouter from './routes/authRoutes.js'
+import { createDB } from './db.js'
 
 dotenv.config()
 const app = express()
@@ -20,6 +21,18 @@ app.use('/api/produce', produceRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/auth', authRouter)
 
-app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`)
-})
+const run = async() =>{
+
+  try{
+    createDB()
+    app.listen(PORT, () => {
+      console.log(`Server is running at http://localhost:${PORT}`)
+    })
+  }catch(error){
+    console.error("Something Went Wrong: ",error)
+    console.log("Please Check Code")
+  }
+}
+
+run()
+
