@@ -5,63 +5,69 @@ import UserLayout from "./layouts/UserLayout.jsx";
 import FarmerLayout from "./layouts/FarmerLayout.jsx"
 
 import Dashboard from "./pages/admin/Dashboard";
-import Login from "./pages/public/Login.jsx";
-import FarmerIndex from "./pages/farmer/FarmerIndex.jsx";
+import Login from "./pages/public/Login.jsx"
+import Register from "./pages/public/Register.jsx";
 import App from "./App.jsx"
 
 import { RequireRole } from "./auth/RequireRole.jsx";
 import { RequireGuest } from "./auth/RequireGuest.jsx";
-import Register from "./pages/public/Register.jsx";
+
 import Index from "./pages/users/UserIndex.jsx";
 import ErrorElement from "./ErrorElement.jsx";
 import FarmerAnalytics from "./pages/farmer/FarmerAnalytics.jsx";
-
 import FarmerProduce from "./pages/farmer/FarmerProduce.jsx";
-
+import FarmerIndex from "./pages/farmer/FarmerIndex.jsx";
 import FarmerOrders from "./pages/farmer/FarmerOrders.jsx";
 import FarmerInventory from "./pages/farmer/FarmerInventory.jsx";
 import FarmerProfile from "./pages/farmer/FarmerProfile.jsx";
+import FarmerFarm from "./pages/farmer/FarmerFarm.jsx";
 import UserProfile from "./pages/users/UserProfile.jsx";
 import UserAnalytics from "./pages/users/UserAnalytics.jsx";
-import UserOrders from "./pages/users/UserOrders.jsx";
-import UserCart  from "./pages/users/UserCart.jsx";
-import FarmerFarm from "./pages/farmer/FarmerFarm.jsx";
+import UserCart from "./pages/users/UserCart.jsx";
+import UserOrdersPage from "./pages/users/UserOrdersPage.jsx"
 import ShoppingPage from "./pages/public/ShoppingPage.jsx";
+import FarmList from "./pages/public/FarmList.jsx";
+import UserShoppingPage from "./pages/users/UserShoppingPage.jsx";
+import ShopDashboard from "./pages/public/ShopDashboard.jsx";
 
 export const router = createBrowserRouter([
 
   {
-    element:<App/>,
-    path:"/",
-    errorElement:<ErrorElement/>
+    path: "/",
+    element: <App />,
+    errorElement: <ErrorElement />
   },
-  // 🌐 Public Routes (Login/Register only for guests)
+
+  // 🌐 Public Routes — guests only (redirect if already logged in)
   {
     element: <RequireGuest />,
     children: [
       {
         element: <UserLayout />,
         children: [
-          { path: "/login", element: <Login /> },
-          { path: "/register",element:<Register/>},
-          { path: "/shop/dashboard",element:<ShoppingPage/>}
+          { path: "/login",           element: <Login /> },
+          { path: "/register",        element: <Register /> },
+          { path: "/shop/dashboard",  element: <ShopDashboard /> },
+          { path: "/shop/products",   element: <ShoppingPage /> },
+          { path: "/shop/farms",      element: <FarmList /> },
         ],
       },
     ],
   },
 
-  // 👤 Buyer Routes (role: user)
+  // 👤 User Routes
   {
     element: <RequireRole role="user" />,
     children: [
       {
         element: <UserLayout />,
         children: [
-          { path: "/user/index", element: <Index /> },
-          { path:"user/dashboard/profile", element:<UserProfile/>},
-          { path: "user/dashboard/orders",element:<UserOrders/>},
-          { path:"user/dashboard/analytics",element:<UserAnalytics/>},
-          { path:"user/dashboard/cart",element:<UserCart/>}
+          { path: "/user/index",              element: <Index /> },
+          { path: "/user/dashboard/profile",  element: <UserProfile /> },
+          { path: "/user/dashboard/orders",   element: <UserOrdersPage /> },
+          { path: "/user/dashboard/analytics",element: <UserAnalytics /> },
+          { path: "/user/dashboard/cart",     element: <UserCart /> },
+          { path: "/user/shop",               element: <UserShoppingPage /> },
         ],
       },
     ],
@@ -74,13 +80,13 @@ export const router = createBrowserRouter([
       {
         element: <FarmerLayout />,
         children: [
-          { path: "/farmer/dashboard/index", element: <FarmerIndex /> }, //FARMER's INDEX PAGE
-          { path: "/farmer/dashboard/analytics", element: <FarmerAnalytics/>},
-          { path: "/farmer/dashboard/products", element: <FarmerProduce />},
-          { path: "/farmer/dashboard/orders", element:<FarmerOrders/>},
-          { path: "/farmer/dashboard/inventory", element:<FarmerInventory/>},
-          { path: "/farmer/dashboard/profile", element:<FarmerProfile/>},
-          { path: "/farmer/dashboard/farm", element:<FarmerFarm/>}
+          { path: "/farmer/dashboard/index",     element: <FarmerIndex /> },
+          { path: "/farmer/dashboard/analytics", element: <FarmerAnalytics /> },
+          { path: "/farmer/dashboard/products",  element: <FarmerProduce /> },
+          { path: "/farmer/dashboard/orders",    element: <FarmerOrders /> },
+          { path: "/farmer/dashboard/inventory", element: <FarmerInventory /> },
+          { path: "/farmer/dashboard/profile",   element: <FarmerProfile /> },
+          { path: "/farmer/dashboard/farm",      element: <FarmerFarm /> },
         ],
       },
     ],
@@ -99,5 +105,4 @@ export const router = createBrowserRouter([
     ],
   },
 
-
-]);
+])

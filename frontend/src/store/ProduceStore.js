@@ -11,7 +11,7 @@ const useProduceStore = create((set, get) => ({
 
   getCrops: async () => {
     set({ cropsLoading: true })
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('farmer_token')
     try {
       const response = await axios.get(
         `http://localhost:${PORT}/api/produce/getCrops`,
@@ -26,7 +26,7 @@ const useProduceStore = create((set, get) => ({
 
   addCrop: async (cropData) => {
     set({ cropsLoading: true })
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('farmer_token')
     try {
       await axios.post(
         `http://localhost:${PORT}/api/produce/addCrop`,
@@ -45,7 +45,7 @@ const useProduceStore = create((set, get) => ({
 
   updateCrop: async (crop_id, cropData) => {
     set({ cropsLoading: true })
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('farmer_token')
     try {
       await axios.put(
         `http://localhost:${PORT}/api/produce/updateCrop/${crop_id}`,
@@ -63,7 +63,7 @@ const useProduceStore = create((set, get) => ({
   },
 
   deleteCrop: async (crop_id) => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('farmer_token')
     const confirm = await Swal.fire({
       title: 'Delete Crop?',
       text: 'This action cannot be undone.',

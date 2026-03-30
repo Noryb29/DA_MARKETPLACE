@@ -1,8 +1,8 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import FarmerSidebar from './components/FarmerSidebar'
-import useUserStore from '../../store/UserStore'
-
+import useFarmerAuthStore from '../../store/FarmerAuthStore'
 
 const stats = [
   { label: 'Total Sales',     value: '₱24,850', change: '+12%', up: true },
@@ -24,39 +24,41 @@ const statusStyles = {
   Pending:    'bg-gray-100 text-gray-600',
 }
 
-
 export default function FarmerIndex() {
-  const logout = useUserStore((state) => state.logout)
+  const { farmer, logout } = useFarmerAuthStore()
+  const navigate = useNavigate()
 
   const handleLogout = () => {
     logout()
-  console.log('Logging out...')
-}
+    navigate('/login', { replace: true })
+  }
+
+  const firstName = farmer?.firstname || 'Farmer'
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
         <FarmerSidebar onLogout={handleLogout} />
 
         <main className="flex-1 overflow-auto p-8">
 
-        <div className='flex justify-between'>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-green-900">Good morning, Farmer! 🌤️</h2>
-            <p className="text-gray-500 text-sm mt-1">Here's an overview of your farm today.</p>
+          {/* Header row */}
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-green-900">
+                Good morning, {firstName}! 🌤️
+              </h2>
+              <p className="text-gray-500 text-sm mt-1">Here's an overview of your farm today.</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-sm font-medium text-red-500 hover:bg-red-50 border border-red-200 rounded px-4 py-2 transition-colors"
+            >
+              Logout
+            </button>
           </div>
 
-          <div>
-          <button
-                  onClick={logout}
-                  className="ml-2  w-full text-sm font-medium text-red-500 hover:bg-red-50 border border-red-200 rounded px-4 py-2 transition-colors"
-                >
-                 Logout
-            </button>
-            </div>
-            </div>
-
+          {/* Stats */}
           <div className="grid grid-cols-4 gap-4 mb-8">
             {stats.map(s => (
               <div key={s.label} className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
@@ -70,11 +72,12 @@ export default function FarmerIndex() {
             ))}
           </div>
 
+          {/* Orders + sidebar */}
           <div className="grid gap-6" style={{ gridTemplateColumns: '1fr 280px' }}>
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-green-900">Recent Orders</h3>
-                <Link to="/farmer/orders" className="text-orange-500 hover:text-orange-600 text-sm font-medium transition-colors">
+                <Link to="/farmer/dashboard/orders" className="text-orange-500 hover:text-orange-600 text-sm font-medium transition-colors">
                   View all →
                 </Link>
               </div>

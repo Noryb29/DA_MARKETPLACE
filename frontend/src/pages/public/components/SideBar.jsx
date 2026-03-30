@@ -5,15 +5,14 @@ const navItems = [
   {
     group: 'Overview',
     items: [
-      { label: 'Dashboard', icon: '🏠', to: '/shop/dashboard/' },
-      { label: 'Farms',  icon: '🚜', to: '/shop/dashboard/farm' },
+      { label: 'Dashboard', icon: '🏠', to: '/shop/dashboard' },
+      { label: 'Farms',  icon: '🚜', to: '/shop/farms' },
     ],
   },
   {
     group: 'Store',
     items: [
-      { label: 'Produce', icon: '🌿', to: '/shop/dashboard/products' },
-      { label: 'Inventory',   icon: '🗂️',  to: '/shop/dashboard/inventory' },
+      { label: 'Produce', icon: '🌿', to: '/shop/products' },
     ],
   },
 ]

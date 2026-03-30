@@ -1,15 +1,15 @@
 import React, { useState } from 'react'
 import Header from '../public/components/Header'
 import FarmerSidebar from './components/FarmerSidebar'
-import useUserStore from '../../store/UserStore'
 import Swal from 'sweetalert2'
 import axios from 'axios'
+import useFarmerAuthStore from '../../store/FarmerAuthStore'
 
 const PORT = import.meta.env.VITE_PORT
 
 const FarmerProfile = () => {
-  const user = useUserStore((state) => state.user)
-  const logout = useUserStore((state) => state.logout)
+  const user = useFarmerAuthStore((state) => state.farmer)
+  const logout = useFarmerAuthStore((state) => state.logout)
 
   const [editing, setEditing] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -28,9 +28,9 @@ const FarmerProfile = () => {
   const handleSave = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('farmer_token')
       await axios.put(
-        `http://localhost:${PORT}/api/users/me`,
+        `http://localhost:${PORT}/api/auth/farmer/me`,
         form,
         { headers: { Authorization: `Bearer ${token}` } }
       )

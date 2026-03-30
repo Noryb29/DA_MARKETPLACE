@@ -13,20 +13,13 @@ const useUserStore = create((set) => ({
   register: async (userData) => {
     set({ loading: true })
     try {
-      const response = await axios.post(`http://localhost:${PORT}/api/users/register`, userData)
-
+      const response = await axios.post(
+        `http://localhost:${PORT}/api/auth/user/register`,
+        userData
+      )
       const { user, token } = response.data
-
-      // Store token in localStorage
       localStorage.setItem('token', token)
-      localStorage.setItem('role', user.role)
-
-      set({
-        user,
-        isAuthenticated: true,
-        loading: false,
-      })
-
+      set({ user, isAuthenticated: true, loading: false })
       return user
     } catch (error) {
       set({ loading: false })
@@ -37,23 +30,13 @@ const useUserStore = create((set) => ({
   login: async (email, password) => {
     set({ loading: true })
     try {
-      const response = await axios.post(`http://localhost:${PORT}/api/users/login`, {
-        email,
-        password,
-      })
-
+      const response = await axios.post(
+        `http://localhost:${PORT}/api/auth/user/login`,
+        { email, password }
+      )
       const { user, token } = response.data
-
-      // Store token in localStorage
       localStorage.setItem('token', token)
-      localStorage.setItem('role', user.role)
-
-      set({
-        user,
-        isAuthenticated: true,
-        loading: false,
-      })
-
+      set({ user, isAuthenticated: true, loading: false })
       return user
     } catch (error) {
       set({ loading: false })
@@ -62,44 +45,31 @@ const useUserStore = create((set) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('role')
     localStorage.removeItem('token')
     Swal.fire({
-        title:'Logout Success',
-        text:'User Logged Out Succesfully',
-        icon:"success",
-        timer:'1000'
+      title: 'Logged Out',
+      text: 'See you next time!',
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false,
     })
-    set({
-      user: null,
-      isAuthenticated: false,
-    })
+    set({ user: null, isAuthenticated: false })
   },
 
   checkAuth: async () => {
     set({ isCheckingAuth: true })
     const token = localStorage.getItem('token')
-    if (token) {
-      try {
-        const response = await axios.get(`http://localhost:${PORT}/api/users/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        set({
-          user: response.data.user,
-          isAuthenticated: true,
-          isCheckingAuth: false,
-        })
-      } catch (error) {
-        localStorage.removeItem('role')
-        localStorage.removeItem('token')
-        set({
-          user: null,
-          isAuthenticated: false,
-          isCheckingAuth: false,
-        })
-      }
-    } else {
-      set({ isCheckingAuth: false })
+    if (!token) return set({ isCheckingAuth: false })
+    try {
+      const response = await axios.get(
+        `http://localhost:${PORT}/api/auth/me`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      set({ user: response.data.user, isAuthenticated: true, isCheckingAuth: false })
+    } catch (error) {
+      console.error('Auth check failed:', error.response?.status, error.response?.data?.message)
+      localStorage.removeItem('token')
+      set({ user: null, isAuthenticated: false, isCheckingAuth: false })
     }
   },
 }))

@@ -12,8 +12,9 @@ const navItems = [
   {
     group: 'Store',
     items: [
-      { label: 'Orders',      icon: '📦', to: '/user/dashboard/orders' },
+      { label: 'Produce', icon: '🌿', to: '/user/shop' },
       { label: 'Cart',   icon: '🛒',  to: '/user/dashboard/cart' },
+      { label: 'Orders',      icon: '📦', to: '/user/dashboard/orders' },
     ],
   },
   {

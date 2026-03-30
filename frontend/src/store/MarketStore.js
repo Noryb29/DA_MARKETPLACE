@@ -18,6 +18,8 @@ const useMarketStore = create((set) => ({
       set({ loading: false, initialized: true })
     }
   },
+
+  
 }))
 
 export default useMarketStore

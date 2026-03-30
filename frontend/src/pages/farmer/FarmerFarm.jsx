@@ -274,7 +274,7 @@ const FarmerFarm = () => {
   useEffect(() => {
     getFarm();
     getFarms();
-  }, []);
+  }, [getFarm,getFarms]);
 
   useEffect(() => {
     if (hasFarm) getCrops();

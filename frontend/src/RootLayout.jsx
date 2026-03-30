@@ -2,18 +2,21 @@ import React, { useEffect } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { router } from './router'
 import useUserStore from './store/UserStore'
+import useFarmerAuthStore from './store/FarmerAuthStore'
 
 const RootLayout = () => {
-  const checkAuth = useUserStore((state) => state.checkAuth)
-  const isCheckingAuth = useUserStore((state) => state.isCheckingAuth)
+  const checkUserAuth = useUserStore((state) => state.checkAuth)
+  const isCheckingUserAuth = useUserStore((state) => state.isCheckingAuth)
+  const checkFarmerAuth = useFarmerAuthStore((state) => state.checkAuth)
+  const isCheckingFarmerAuth = useFarmerAuthStore((state) => state.isCheckingAuth)
 
   useEffect(() => {
-    // Restore authentication state on app load
-    checkAuth()
-  }, [checkAuth])
+    // Restore both auth states on app load so route guards can resolve correctly.
+    checkUserAuth()
+    checkFarmerAuth()
+  }, [checkUserAuth, checkFarmerAuth])
 
-  // Show loading state while checking auth
-  if (isCheckingAuth) {
+  if (isCheckingUserAuth || isCheckingFarmerAuth) {
     return <div className="min-h-screen bg-gray-50" />
   }
 

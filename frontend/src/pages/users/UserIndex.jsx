@@ -47,7 +47,7 @@ export default function UserIndex() {
 
         <div className='flex flex-row justify-around gap-x-190'>
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-green-900">Good Day,{user.firstname} {user.lastname} 🌤️</h2>
+            <h2 className="text-2xl font-bold text-green-900">Good Day,{user?.firstname} {user?.lastname} 🌤️</h2>
             <p className="text-gray-500 text-sm mt-1">Here's an overview of your farm today.</p>
           </div>
 

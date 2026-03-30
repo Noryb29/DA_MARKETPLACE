@@ -1,11 +1,11 @@
 import express from 'express'
 import { addFarm, getCrops, getFarm, getFarms } from '../controllers/farmerControllers.js'
-import { authMiddleware } from '../middleware/authMiddleware.js'
+import { farmerAuthMiddleware } from '../middleware/authMiddleware.js'
 
 export const farmerRoutes = express.Router()
 
-farmerRoutes.post("/addFarm", authMiddleware, addFarm)
+farmerRoutes.post("/addFarm", farmerAuthMiddleware, addFarm)
 
-farmerRoutes.get("/getFarm",authMiddleware,getFarm)
-farmerRoutes.get("/getCrops",authMiddleware,getCrops)
-farmerRoutes.get("/getFarms",authMiddleware,getFarms)
+farmerRoutes.get("/getFarm", farmerAuthMiddleware, getFarm)
+farmerRoutes.get("/getCrops", farmerAuthMiddleware, getCrops)
+farmerRoutes.get("/getFarms", farmerAuthMiddleware, getFarms)

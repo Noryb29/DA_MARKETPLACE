@@ -2,159 +2,146 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import useUserStore from '../../store/UserStore'
-import { IoMdArrowRoundBack } from "react-icons/io";
-
+import useFarmerAuthStore from '../../store/FarmerAuthStore'
+import { IoMdArrowRoundBack } from 'react-icons/io'
+import { User, Tractor } from 'lucide-react'
 
 const Login = () => {
+  const [activeTab, setActiveTab] = useState('user')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  //LOGIN STATE FROM STORE
-  const login = useUserStore((state) => state.login)
+  const userLogin = useUserStore((s) => s.login)
+  const farmerLogin = useFarmerAuthStore((s) => s.login)
 
-  // Email validation regex
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
 
-    // Validation checks
     if (!email.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Email Required',
-        text: 'Please enter your email address',
-        confirmButtonColor: '#166534',
-      })
-      setLoading(false)
-      return
+      Swal.fire({ icon: 'warning', title: 'Email Required', confirmButtonColor: '#166534' })
+      return setLoading(false)
     }
-
     if (!isValidEmail(email)) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Invalid Email',
-        text: 'Please enter a valid email address',
-        confirmButtonColor: '#166534',
-      })
-      setLoading(false)
-      return
+      Swal.fire({ icon: 'error', title: 'Invalid Email', confirmButtonColor: '#166534' })
+      return setLoading(false)
     }
-
-    if (!password.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Password Required',
-        text: 'Please enter your password',
-        confirmButtonColor: '#166534',
-      })
-      setLoading(false)
-      return
-    }
-
-    if (password.length < 6) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Invalid Password',
-        text: 'Password must be at least 6 characters long',
-        confirmButtonColor: '#166534',
-      })
-      setLoading(false)
-      return
+    if (!password.trim() || password.length < 6) {
+      Swal.fire({ icon: 'error', title: 'Invalid Password', text: 'At least 6 characters required', confirmButtonColor: '#166534' })
+      return setLoading(false)
     }
 
     try {
-      const user = await login(email, password)
-
-      // Success alert
-      await Swal.fire({
-        icon: 'success',
-        title: 'Login Successful!',
-        text: 'Welcome!',
-        confirmButtonColor: '#166534',
-      })
-
-      // Redirect based on user role
-      if (user?.role === 'user') {
-        navigate('/')
-      } else if (user?.role === 'farmer') {
-        navigate('/farmer/dashboard/index')
-      } else if (user?.role === 'admin') {
-        navigate('/admin/dashboard')
+      if (activeTab === 'user') {
+        const user = await userLogin(email, password)
+        await Swal.fire({ icon: 'success', title: 'Welcome!', timer: 1500, showConfirmButton: false })
+        navigate(user?.role === 'admin' ? '/admin/dashboard' : '/user/index', { replace: true })
       } else {
-        navigate('/')
+        await farmerLogin(email, password)
+        await Swal.fire({ icon: 'success', title: 'Welcome back!', timer: 1500, showConfirmButton: false })
+        navigate('/farmer/dashboard/index', { replace: true })
       }
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Login Failed',
-        text: err.message || 'An error occurred during login. Please try again.',
-        confirmButtonColor: '#166534',
-      })
+      Swal.fire({ icon: 'error', title: 'Login Failed', text: err.message, confirmButtonColor: '#166534' })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-green-900 to-green-700 flex items-center justify-center px-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-        
-        <Link to={'/'}><IoMdArrowRoundBack size={30} className='mb-5  ' /></Link>
+    <div className="min-h-screen bg-gradient-to-br from-green-900 to-green-700 flex items-center justify-center px-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
 
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-green-900 mb-2">🌾 Farmer's Marketplace</h1>
-          <p className="text-gray-600">Login Using your Account</p>
-        </div>
+        <div className="p-8">
+          <Link to="/">
+            <IoMdArrowRoundBack size={24} className="mb-5 text-gray-500 hover:text-green-700 transition-colors" />
+          </Link>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              placeholder="you@example.com"
-            />
+          <div className="text-center mb-7">
+            <h1 className="text-2xl font-bold text-green-900">🌾 Farmer's Marketplace</h1>
+            <p className="text-gray-500 text-sm mt-1">Sign in to your account</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              placeholder="••••••••"
-            />
+          {/* Toggle */}
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-xl mb-6">
+            <button
+              type="button"
+              onClick={() => setActiveTab('user')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200
+                ${activeTab === 'user' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              <User className="w-4 h-4" />
+              Customer
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('farmer')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200
+                ${activeTab === 'farmer' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              <Tractor className="w-4 h-4" />
+              Farmer
+            </button>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-green-900 hover:bg-green-800 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                  focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                  outline-none text-sm text-gray-800 font-medium transition-all"
+              />
+            </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                  focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                  outline-none text-sm text-gray-800 font-medium transition-all"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl font-semibold text-sm text-white
+                bg-gradient-to-r from-green-600 to-emerald-600
+                hover:from-green-700 hover:to-emerald-700
+                active:scale-[0.98] transition-all shadow-md shadow-green-200
+                disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+            >
+              {loading
+                ? <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                    Signing in...
+                  </span>
+                : `Sign in as ${activeTab === 'user' ? 'Customer' : 'Farmer'}`}
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
             Don't have an account?{' '}
-            <a href="/register" className="text-green-900 hover:text-green-700 font-medium">
+            <Link to="/register" className="text-green-700 hover:text-green-600 font-semibold">
               Sign up here
-            </a>
+            </Link>
           </p>
         </div>
       </div>

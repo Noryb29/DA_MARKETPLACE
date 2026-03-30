@@ -3,4 +3,4 @@ import { getAllCrops } from '../controllers/marketControllers.js'
 
 export const marketRoutes = express.Router()
 
-marketRoutes.get("/getAllCrops",getAllCrops)
+marketRoutes.get("/getAllCrops", getAllCrops)

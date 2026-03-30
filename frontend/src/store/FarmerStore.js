@@ -16,7 +16,7 @@ const useFarmerStore = create((set, get) => ({
   
   addFarm: async (farmData) => {
   set({ loading: true })
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('farmer_token')
   try {
     const response = await axios.post(
       `http://localhost:${PORT}/api/farmers/addFarm`,
@@ -39,7 +39,7 @@ const useFarmerStore = create((set, get) => ({
 },
   getFarm: async () => {
     set({ farmLoading: true })
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('farmer_token')
 
     try {
       const response = await axios.get(
@@ -60,7 +60,7 @@ const useFarmerStore = create((set, get) => ({
   },
 
   getCrops: async () => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('farmer_token')
 
     try {
       const response = await axios.get(
@@ -75,7 +75,7 @@ const useFarmerStore = create((set, get) => ({
   farms: [],
 
 getFarms: async () => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('farmer_token')
   try {
     const response = await axios.get(
       `http://localhost:${PORT}/api/farmers/getFarms`,
