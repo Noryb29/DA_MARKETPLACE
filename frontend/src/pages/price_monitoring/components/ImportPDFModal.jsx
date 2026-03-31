@@ -273,7 +273,7 @@ const ImportPDFModal = ({ isOpen, OnClose }) => {
   if (!isOpen) return null
 
   return (
-    <div className="modal modal-open">
+    <div className="modal modal-open fixed inset-0 z-25">
       <div
         className="modal-box w-11/12 max-w-5xl"
         style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}

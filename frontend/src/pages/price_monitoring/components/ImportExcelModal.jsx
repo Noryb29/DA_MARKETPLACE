@@ -431,7 +431,7 @@ const ImportExcelModal = ({ isOpen, OnClose }) => {
   if (!isOpen) return null
 
   return (
-    <div className="modal modal-open fixed inset-1 z-100">
+    <div className="modal modal-open fixed inset-0 z-25">
       <div
         className="modal-box w-300 max-w-2xl"
         style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}

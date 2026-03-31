@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { useCropstore } from '../../../store/CropsStore.js'
+import  useUserStore  from '../../../store/UserStore.js'
 
 const navItems = [
   {
@@ -30,9 +30,10 @@ const Sidebar = ({
   onImportExcel,
   onImportPDF,
 }) => {
+  const user = useUserStore((state) => state.user)
+  const hasuser = !!user
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
-
   const hasFilters = categoryFilter || searchTerm
   const isPriceMonitoringPage = location.pathname === '/shop/price_monitoring'
 
@@ -191,19 +192,22 @@ const Sidebar = ({
         )}
       </nav>
 
-      {/* Logout */}
+            {/* Logout */}
       <div className="px-2 pb-4 pt-3 border-t border-green-800">
-        <button
-          onClick={onLogout}
-          title={collapsed ? 'Logout' : ''}
-          className={`flex items-center gap-3 px-3 py-2 rounded text-sm font-medium text-green-200 hover:bg-green-800 hover:text-white transition-colors w-full ${
-            collapsed ? 'justify-center' : ''
-          }`}
-        >
-          <span className="text-base">🚪</span>
-          {!collapsed && <span>Logout</span>}
-        </button>
+        {hasuser && (
+          <button
+            onClick={onLogout}
+            title={collapsed ? 'Logout' : ''}
+            className={`flex items-center gap-3 px-3 py-2 rounded text-sm font-medium text-green-200 hover:bg-green-800 hover:text-white transition-colors w-full ${
+              collapsed ? 'justify-center' : ''
+            }`}
+          >
+            <span className="text-base">🚪</span>
+            {!collapsed && <span>Logout</span>}
+          </button>
+        )}
       </div>
+
     </aside>
   )
 }
