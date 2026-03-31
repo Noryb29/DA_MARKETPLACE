@@ -1,3 +1,4 @@
+import React from "react"
 import { useState,useEffect } from "react"
 import { useCropstore } from "../../../store/CropsStore"
 
@@ -27,7 +28,7 @@ const EditCommodityModal = ({ commodity, categories, isOpen, onClose, onSave }) 
   }
 
   return (
-    <div className="modal modal-open">
+    <div className="modal modal-open fixed inset-0 z-25">
       <div className="modal-box max-w-md">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-green-800">Edit Commodity</h3>
