@@ -6,13 +6,13 @@ import { Wheat, Loader2, AlertCircle, Plus, X, Pencil, Trash2, Calendar, Package
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 const EMPTY_FORM = {
-  crop_name: '', variety: '', volume: '', stock: '',
+  crop_name: '', variety: '', volume: '', stock: '', farm_id: '',
   specification_1: '', specification_2: '', specification_3: '',
   specification_4: '', specification_5: '',
   planting_date: '', expected_harvest: '',
 }
 
-const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData }) => {
+const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = [] }) => {
   const isEdit = !!initialData
   const [form, setForm] = useState(EMPTY_FORM)
 
@@ -20,7 +20,6 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData }) => {
     setForm(initialData
       ? {
           ...EMPTY_FORM, ...initialData,
-          // format dates to yyyy-mm-dd for input[type=date]
           planting_date: initialData.planting_date?.slice(0, 10) || '',
           expected_harvest: initialData.expected_harvest?.slice(0, 10) || '',
         }
@@ -74,36 +73,57 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData }) => {
               {field('variety', 'Variety', 'e.g. IR64, Sweet Corn')}
             </div>
 
-            {/* Volume + Stock */}
-          <div className="grid grid-cols-2 gap-3">
+            {/* Farm */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Volume</label>
-              <div className="relative">
-                <input
-                  type="number" placeholder="0" value={form.volume}
-                  onChange={(e) => setForm({ ...form, volume: e.target.value })}
-                  className="w-full px-3 py-2.5 pr-10 rounded-xl border-2 border-gray-200 hover:border-gray-300
-                    focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
-                    outline-none text-sm text-gray-800 font-medium transition-all duration-200"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">kg</span>
-              </div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                Farm <span className="text-red-400">*</span>
+              </label>
+              <select
+                value={form.farm_id ?? ''}
+                onChange={(e) => setForm({ ...form, farm_id: e.target.value })}
+                className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                  focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                  outline-none text-sm text-gray-800 font-medium transition-all duration-200 bg-white"
+              >
+                <option value="">Select a farm...</option>
+                {farms.map((f) => (
+                  <option key={f.farm_id} value={f.farm_id}>
+                    {f.farm_name}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Stock</label>
-              <div className="relative">
-                <input
-                  type="number" placeholder="0" value={form.stock}
-                  onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                  className="w-full px-3 py-2.5 pr-12 rounded-xl border-2 border-gray-200 hover:border-gray-300
-                    focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
-                    outline-none text-sm text-gray-800 font-medium transition-all duration-200"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">pcs</span>
+            {/* Volume + Stock */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Volume</label>
+                <div className="relative">
+                  <input
+                    type="number" placeholder="0" value={form.volume}
+                    onChange={(e) => setForm({ ...form, volume: e.target.value })}
+                    className="w-full px-3 py-2.5 pr-10 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                      focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                      outline-none text-sm text-gray-800 font-medium transition-all duration-200"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">kg</span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Stock</label>
+                <div className="relative">
+                  <input
+                    type="number" placeholder="0" value={form.stock}
+                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                    className="w-full px-3 py-2.5 pr-12 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                      focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                      outline-none text-sm text-gray-800 font-medium transition-all duration-200"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">pcs</span>
+                </div>
               </div>
             </div>
-          </div>
 
             {/* Planting Date + Expected Harvest */}
             <div className="grid grid-cols-2 gap-3">
@@ -150,7 +170,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData }) => {
             </button>
             <button
               onClick={() => onSubmit(form)}
-              disabled={loading || !form.crop_name}
+              disabled={loading || !form.crop_name || !form.farm_id}
               className="flex-1 py-2.5 rounded-xl bg-linear-to-r from-green-500 to-emerald-600
                 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold
                 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-md shadow-green-200"
@@ -247,13 +267,13 @@ const CropCard = ({ crop, onEdit, onDelete }) => {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const FarmerProduce = () => {
-  const { farm, hasFarm, farmInitialized, getFarm } = useFarmerStore()
+  const { farm, farms, hasFarm, farmInitialized, getFarm, getFarms } = useFarmerStore()
   const { crops, cropsLoading, cropsInitialized, getCrops, addCrop, updateCrop, deleteCrop } = useProduceStore()
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
 
-  useEffect(() => { getFarm() }, [])
+  useEffect(() => { getFarm(); getFarms() }, [])
   useEffect(() => { if (hasFarm) getCrops() }, [hasFarm])
 
   const handleAdd = async (form) => { await addCrop(form); setModalOpen(false) }
@@ -296,16 +316,15 @@ const FarmerProduce = () => {
                   <h2 className="text-2xl font-bold text-gray-800">My Produce</h2>
                   <p className="text-gray-500 text-sm mt-0.5">Farm: {farm?.farm_name}</p>
 
-                   <button
-                  onClick={() => { setEditTarget(null); setModalOpen(true) }}
-                  className="mt-5 flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-green-500 to-emerald-600
-                    hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl
-                    shadow-md shadow-green-200 active:scale-[0.98] transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Crop
-                </button>
-
+                  <button
+                    onClick={() => { setEditTarget(null); setModalOpen(true) }}
+                    className="mt-5 flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-green-500 to-emerald-600
+                      hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl
+                      shadow-md shadow-green-200 active:scale-[0.98] transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Crop
+                  </button>
                 </div>
               </div>
 
@@ -349,6 +368,7 @@ const FarmerProduce = () => {
         onSubmit={editTarget ? handleUpdate : handleAdd}
         loading={cropsLoading}
         initialData={editTarget}
+        farms={farms}
       />
     </div>
   )

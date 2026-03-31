@@ -79,7 +79,6 @@ export const getFarmerOrders = async (req, res) => {
     `
     try {
         const [rows] = await db.execute(query, [user_id])
-        console.log('getFarmerOrders rows found:', rows.length)
         res.status(200).json({ orders: rows })
     } catch (error) {
         console.error('getFarmerOrders error:', error.message)
