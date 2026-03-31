@@ -7,20 +7,28 @@ export const db = mysql2.createPool({
     password:'',
 })
 
+const pool = mysql2.createPool({
+    host:'localhost',
+    user:'root',
+    password:'',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+})
+
 
 export const createDB = async() => {
-    
+    await pool.query('CREATE DATABASE IF NOT EXISTS farmers_marketplace');
+    await pool.query('USE farmers_marketplace');
     try {
         
 
         console.log('✓ Connected to MySQL');
 
         // Create the database if it doesn't exist
-        await db.query('CREATE DATABASE IF NOT EXISTS farmers_marketplace');
         console.log('✓ Database "farmers_marketplace" created or already exists');
 
         // Select the database
-        await db.query('USE farmers_marketplace');
         console.log('✓ Switched to "farmers_marketplace" database');
 
         // Create farmer table
@@ -145,20 +153,79 @@ export const createDB = async() => {
                 INDEX idx_farm_id (farm_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
         `);
+
+                // MARKETS
+            await db.query(`
+            CREATE TABLE IF NOT EXISTS markets (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                city VARCHAR(100) NOT NULL
+            )
+            `)
+
+            // CATEGORIES
+            await db.query(`
+            CREATE TABLE IF NOT EXISTS categories (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL
+            )
+            `)
+
+            // COMMODITIES
+            await db.query(`
+            CREATE TABLE IF NOT EXISTS commodities (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                category_id INT NOT NULL,
+                name VARCHAR(150) NOT NULL,
+                specification VARCHAR(150),
+                FOREIGN KEY (category_id) REFERENCES categories(id)
+            )
+            `)
+
+            // PRICE RECORDS
+            await db.query(`
+            CREATE TABLE IF NOT EXISTS price_records (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                commodity_id INT NOT NULL,
+                market_id INT NOT NULL,
+                price_date DATE NOT NULL,
+                prevailing_price DECIMAL(10,2),
+                high_price DECIMAL(10,2),
+                low_price DECIMAL(10,2),
+                respondent_1 FLOAT(10,2) NULL,
+                respondent_2 FLOAT(10,2) NULL,
+                respondent_3 FLOAT(10,2) NULL,
+                respondent_4 FLOAT(10,2) NULL,
+                respondent_5 FLOAT(10,2) NULL,
+                FOREIGN KEY (commodity_id) REFERENCES commodities(id),
+                FOREIGN KEY (market_id) REFERENCES markets(id)
+            )
+            `);
+
         console.log('✓ Table "crop_orders" created');
 
         console.log('\n✅ Database setup completed successfully!');
-        console.log('All tables have been created in the "farmers_marketplace" database.');
+        console.log('Database and tables created successfully');
 
-        return { success: true, message: 'Database and tables created successfully' };
+        return { success: true, message: 'Database and tables created successfully, Please click Ctrl + C to stop the process and run "npm run" to start the server.' };
 
     } catch (error) {
-        console.error('❌ Error creating database:', error.message);
+        console.error('❌ Error creating database:', error.message, "Please go to localhost/phpmyadmin and create the database named 'farmers_marketplace' and try again.");
         return { success: false, error: error.message };
     } finally {
         if (db) {
             await db.end();
             console.log('✓ Database connection closed');
+            console.log('Please click Ctrl + C to stop the process and run "npm run dev" to start the server.');
         }
     }
 };
+
+if (import.meta.url === `file://${process.argv[1]}` || process.argv[1].endsWith('db.js')) {
+    try{
+        createDB();
+    }catch(error){
+        console.log("Error creating database: ", error)
+    }
+}
+

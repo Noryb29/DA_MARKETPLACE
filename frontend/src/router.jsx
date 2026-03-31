@@ -28,6 +28,7 @@ import UserOrdersPage from "./pages/users/UserOrdersPage.jsx"
 import ShoppingPage from "./pages/public/ShoppingPage.jsx";
 import FarmList from "./pages/public/FarmList.jsx";
 import UserShoppingPage from "./pages/users/UserShoppingPage.jsx";
+import PriceMonitoring from "./pages/price_monitoring/PriceMonitoring.jsx";
 import ShopDashboard from "./pages/public/ShopDashboard.jsx";
 
 export const router = createBrowserRouter([
@@ -50,6 +51,7 @@ export const router = createBrowserRouter([
           { path: "/shop/dashboard",  element: <ShopDashboard /> },
           { path: "/shop/products",   element: <ShoppingPage /> },
           { path: "/shop/farms",      element: <FarmList /> },
+          { path: "/shop/price_monitoring", element: <PriceMonitoring/>}
         ],
       },
     ],

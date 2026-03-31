@@ -5,8 +5,10 @@ import { farmerRoutes } from './routes/farmerRoutes.js'
 import { produceRoutes } from './routes/produceRoutes.js'
 import { orderRoutes } from './routes/orderRoutes.js'
 import { marketRoutes } from './routes/marketRoutes.js'
+import { vegetableRouter } from './routes/VegetableRoutes.js'
+import {analyticsRoutes} from './routes/AnalyticsRoutes.js'
 import authRouter from './routes/authRoutes.js'
-import { createDB } from './db.js'
+
 
 dotenv.config()
 const app = express()
@@ -20,19 +22,15 @@ app.use('/api/farmers', farmerRoutes)
 app.use('/api/produce', produceRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/auth', authRouter)
+app.use('/api/crops',vegetableRouter)
+app.use('/api/analytics', analyticsRoutes)  // For simplicity, using the same router for analytics endpoints
 
-const run = async() =>{
 
-  try{
-    createDB()
-    app.listen(PORT, () => {
-      console.log(`Server is running at http://localhost:${PORT}`)
-    })
-  }catch(error){
-    console.error("Something Went Wrong: ",error)
-    console.log("Please Check Code")
-  }
-}
 
-run()
+app.listen(PORT, () => {
+  console.log(`Server is running at http://localhost:${PORT}`)
+  console.log('If Database is not created, please run "npm run database"')
+
+})
+  
 

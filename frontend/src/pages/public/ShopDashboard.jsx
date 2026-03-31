@@ -4,11 +4,11 @@ import Sidebar from './components/SideBar'
 
 const ShopDashboard = () => {
   return (
-    <div className='min-h-screen'>
-      <Header/>
-      <div>
-        <Sidebar/>
-      </div>
+    <div className='max-w-screen'>
+        <Header/>
+        <div>
+            <Sidebar/>
+        </div>
     </div>
   )
 }
