@@ -20,11 +20,11 @@ export function RequireGuest() {
     return <Navigate to="/farmer/dashboard/index" replace />
   }
 
-  // User is logged in → send to their area
-  if (userAuth && user) {
-    if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />
-    return <Navigate to="/user/index" replace />
-  }
+  // // User is logged in → send to their area
+  // if (userAuth && user) {
+  //   if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />
+  //   return <Navigate to="/user/index" replace />
+  // }
 
   // Not authenticated → allow through
   return <Outlet />

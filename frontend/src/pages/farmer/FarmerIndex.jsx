@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import useFarmerAuthStore from '../../store/FarmerAuthStore'
 import Sidebar from '../public/components/SideBar'
+import { HomeIcon } from 'lucide-react'
 
 const stats = [
   { label: 'Total Sales',     value: '₱24,850', change: '+12%', up: true },
@@ -45,7 +46,11 @@ export default function FarmerIndex() {
           {/* Header row */}
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-green-900">
+              <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+                <HomeIcon className="w-3.5 h-3.5" />
+                Homepage
+              </div>
+              <h2 className="text-3xl font-bold text-green-900">
                 Good morning, {firstName}! 🌤️
               </h2>
               <p className="text-gray-500 text-sm mt-1">Here's an overview of your farm today.</p>

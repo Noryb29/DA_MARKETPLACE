@@ -92,9 +92,9 @@ const Register = () => {
   // ── Role selection screen ────────────────────────────────────────────────────
   if (!roleSelected) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-900 to-green-700 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-linear-to-br from-green-900 to-green-700 flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-          <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
+          <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
           <div className="p-8">
             <Link to={-1}>
               <IoMdArrowRoundBack size={24} className="mb-5 text-gray-500 hover:text-green-700 transition-colors" />
@@ -106,7 +106,7 @@ const Register = () => {
             <div className="space-y-3">
               <button
                 onClick={() => handleSelectRole('user')}
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700
+                className="w-full bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700
                   text-white font-bold py-5 px-6 rounded-2xl transition-all active:scale-[0.98] shadow-md"
               >
                 <div className="flex items-center gap-4">
@@ -122,7 +122,7 @@ const Register = () => {
 
               <button
                 onClick={() => handleSelectRole('farmer')}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700
+                className="w-full bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700
                   text-white font-bold py-5 px-6 rounded-2xl transition-all active:scale-[0.98] shadow-md"
               >
                 <div className="flex items-center gap-4">
@@ -148,9 +148,9 @@ const Register = () => {
 
   // ── Registration form ────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 to-green-700 flex items-center justify-center px-4 py-6">
+    <div className="min-h-screen bg-linear-to-br from-green-900 to-green-700 flex items-center justify-center px-4 py-6">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
+        <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
 
         <div className="p-7">
           <button type="button" onClick={() => setRoleSelected(false)}>
@@ -212,7 +212,7 @@ const Register = () => {
               type="submit"
               disabled={loading}
               className="w-full py-3 rounded-xl font-semibold text-sm text-white mt-2
-                bg-gradient-to-r from-green-600 to-emerald-600
+                bg-linear-to-r from-green-600 to-emerald-600
                 hover:from-green-700 hover:to-emerald-700
                 active:scale-[0.98] transition-all shadow-md shadow-green-200
                 disabled:opacity-60 disabled:cursor-not-allowed"

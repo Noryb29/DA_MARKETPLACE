@@ -22,7 +22,7 @@ const Header = () => {
   )
    const farmernavLinks = (
     <>
-      <Link to="/"              className="hover:text-green-300 font-medium transition-colors">Home</Link>
+      {/* <Link to="/"              className="hover:text-green-300 font-medium transition-colors">Home</Link> */}
       <Link to="/farmer/dashboard/products" className="hover:text-green-300 font-medium transition-colors">Products</Link>
       <Link to="/farmer/dashboard/farm"    className="hover:text-green-300 font-medium transition-colors">Farms</Link>
       <Link to="#"              className="hover:text-green-300 font-medium transition-colors">About</Link>

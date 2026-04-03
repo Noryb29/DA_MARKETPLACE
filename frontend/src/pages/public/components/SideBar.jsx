@@ -73,6 +73,7 @@ const Sidebar = ({
           group: 'Store',
           items: [
             { label: 'Produce', icon: '🌿', to: '/user/shop' },
+            { label: 'Farms', icon: '🚜', to: '/shop/farms' },
             { label: 'Orders', icon: '📦', to: '/user/dashboard/orders' },
           ],
         },

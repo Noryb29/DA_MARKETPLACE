@@ -25,10 +25,11 @@ import UserProfile from "./pages/users/UserProfile.jsx";
 import UserAnalytics from "./pages/users/UserAnalytics.jsx";
 import UserOrdersPage from "./pages/users/UserOrdersPage.jsx"
 import ShoppingPage from "./pages/public/ShoppingPage.jsx";
-import FarmList from "./pages/public/FarmList.jsx";
 import UserShoppingPage from "./pages/users/UserShoppingPage.jsx";
 import PriceMonitoring from "./pages/price_monitoring/PriceMonitoring.jsx";
 import ShopDashboard from "./pages/public/ShopDashboard.jsx";
+import FarmsPage from "./pages/public/FarmsPage.jsx";
+import FarmDetailsPage from "./pages/public/components/FarmDetailsPage.jsx";
 
 export const router = createBrowserRouter([
 
@@ -49,7 +50,8 @@ export const router = createBrowserRouter([
           { path: "/register",        element: <Register /> },
           { path: "/shop/dashboard",  element: <ShopDashboard /> },
           { path: "/shop/products",   element: <ShoppingPage /> },
-          { path: "/shop/farms",      element: <FarmList /> },
+          { path: "/shop/farms",      element:<FarmsPage/>},
+          { path: "/shop/farm/:id", element: <FarmDetailsPage/>},
           { path: "/shop/price_monitoring", element: <PriceMonitoring/>}
         ],
       },

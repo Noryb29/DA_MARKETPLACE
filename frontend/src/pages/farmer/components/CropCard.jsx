@@ -1,0 +1,78 @@
+import { Wheat,Pencil, Trash2, Calendar, Package } from 'lucide-react'
+
+const CropCard = ({ crop, onEdit, onDelete }) => {
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : null
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-green-200 transition-all duration-200 flex flex-col gap-3">
+
+      {/* Top row */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="bg-green-100 p-2.5 rounded-xl shrink-0">
+            <Wheat className="w-5 h-5 text-green-600" />
+          </div>
+          <div>
+            <p className="font-bold text-gray-800 text-sm leading-tight">{crop.crop_name}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{crop.variety || 'No variety'}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <button onClick={() => onEdit(crop)} className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-500 transition-colors" title="Edit">
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={() => onDelete(crop.crop_id)} className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Volume */}
+      {crop.volume && (
+        <div className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2">
+          <Package className="w-3.5 h-3.5 text-green-500 shrink-0" />
+          <span className="text-xs font-semibold text-green-700">{Number(crop.volume).toLocaleString()} kg</span>
+        </div>
+      )}
+
+      {/* Dates */}
+      {(crop.planting_date || crop.expected_harvest) && (
+        <div className="grid grid-cols-2 gap-2">
+          {crop.planting_date && (
+            <div className="bg-gray-50 rounded-lg px-2.5 py-2">
+              <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Planted</p>
+              <p className="text-xs font-semibold text-gray-700 mt-0.5 flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-gray-400" />
+                {formatDate(crop.planting_date)}
+              </p>
+            </div>
+          )}
+          {crop.expected_harvest && (
+            <div className="bg-amber-50 rounded-lg px-2.5 py-2">
+              <p className="text-[10px] text-amber-500 font-semibold uppercase tracking-wide">Harvest</p>
+              <p className="text-xs font-semibold text-amber-700 mt-0.5 flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-amber-400" />
+                {formatDate(crop.expected_harvest)}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Specs */}
+      {[1, 2, 3, 4, 5].some(n => crop[`specification_${n}`]) && (
+        <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
+          {[1, 2, 3, 4, 5].map((n) =>
+            crop[`specification_${n}`] ? (
+              <span key={n} className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
+                {crop[`specification_${n}`]}
+              </span>
+            ) : null
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default CropCard

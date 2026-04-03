@@ -49,7 +49,7 @@ export const getMyOrders = async (req, res) => {
     `
     try {
         const [rows] = await db.execute(query, [user_id])
-        console.log('getMyOrders rows found:', rows.length)
+        // console.log('getMyOrders rows found:', rows.length)
         res.status(200).json({ orders: rows })
     } catch (error) {
         console.error('getMyOrders error:', error.message)

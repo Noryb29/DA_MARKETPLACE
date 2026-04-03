@@ -4,6 +4,7 @@ import Swal from 'sweetalert2'
 import axios from 'axios'
 import useFarmerAuthStore from '../../store/FarmerAuthStore'
 import Sidebar from '../public/components/SideBar'
+import { CircleUser } from 'lucide-react'
 
 const PORT = import.meta.env.VITE_PORT
 
@@ -68,10 +69,14 @@ const FarmerProfile = () => {
         <Sidebar onLogout={logout} />
 
         <main className="flex-1 overflow-auto p-8">
+          <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+                <CircleUser className="w-3.5 h-3.5" />
+                Profile Management
+              </div>
 
           {/* Heading */}
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-green-900">My Profile</h2>
+            <h2 className="text-3xl font-bold text-green-900">My Profile</h2>
             <p className="text-gray-500 text-sm mt-1">View and manage your account information.</p>
           </div>
 
