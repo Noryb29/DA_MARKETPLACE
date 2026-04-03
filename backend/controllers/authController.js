@@ -129,7 +129,7 @@ export const loginUser = async (req, res) => {
     try {
       const [rows] = await connection.query(
         `SELECT user_id, email, password, firstname, lastname, address, contact_number, role, created_at
-         FROM users WHERE email = ? AND role = 'user'`,
+         FROM users WHERE email = ? AND (role = 'user' OR role = 'admin')`,
         [email.trim()]
       )
 
@@ -209,7 +209,7 @@ export const getCurrentUser = async (req, res) => {
     try {
       const [rows] = await connection.query(
         `SELECT user_id, email, firstname, lastname, address, contact_number, role, created_at
-         FROM users WHERE user_id = ? AND role = 'user'`,
+         FROM users WHERE user_id = ? AND (role = 'user' OR role = 'admin')`,
         [req.user.user_id]
       )
       if (rows.length === 0)

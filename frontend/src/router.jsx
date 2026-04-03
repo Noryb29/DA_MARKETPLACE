@@ -4,7 +4,6 @@ import AdminLayout from "./layouts/AdminLayout.jsx";
 import UserLayout from "./layouts/UserLayout.jsx";
 import FarmerLayout from "./layouts/FarmerLayout.jsx"
 
-import Dashboard from "./pages/admin/Dashboard";
 import Login from "./pages/public/Login.jsx"
 import Register from "./pages/public/Register.jsx";
 import App from "./App.jsx"
@@ -30,6 +29,15 @@ import PriceMonitoring from "./pages/price_monitoring/PriceMonitoring.jsx";
 import ShopDashboard from "./pages/public/ShopDashboard.jsx";
 import FarmsPage from "./pages/public/FarmsPage.jsx";
 import FarmDetailsPage from "./pages/public/components/FarmDetailsPage.jsx";
+
+// ADMIN
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminAnalytics from "./pages/admin/AdminAnalytics.jsx";
+import AdminProducts from "./pages/admin/AdminProducts.jsx";
+import AdminFarms from "./pages/admin/AdminFarms.jsx";
+import AdminFarmers from "./pages/admin/AdminFarmers.jsx";
+import AdminOrders from "./pages/admin/AdminOrders.jsx";
+import AdminUsers from "./pages/admin/AdminUsers.jsx";
 
 export const router = createBrowserRouter([
 
@@ -101,7 +109,13 @@ export const router = createBrowserRouter([
       {
         element: <AdminLayout />,
         children: [
-          { path: "/admin/dashboard", element: <Dashboard /> },
+          { path: "/admin/dashboard", element: <AdminDashboard /> },
+          { path: "/admin/dashboard/analytics",element:<AdminAnalytics/>},
+          { path: "/admin/dashboard/products", element:<AdminProducts/>},
+          { path: "/admin/dashboard/farms", element:<AdminFarms/>},
+          { path: "/admin/dashboard/users", element:<AdminUsers/>},
+          { path: "/admin/dashboard/farmers", element:<AdminFarmers/>},
+          { path: "/admin/dashboard/orders", element:<AdminOrders/>}
         ],
       },
     ],

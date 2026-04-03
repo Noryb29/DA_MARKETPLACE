@@ -8,7 +8,7 @@ import { marketRoutes } from './routes/marketRoutes.js'
 import { vegetableRouter } from './routes/VegetableRoutes.js'
 import {analyticsRoutes} from './routes/AnalyticsRoutes.js'
 import authRouter from './routes/authRoutes.js'
-
+import adminRoutes from './routes/adminRoutes.js'
 
 dotenv.config()
 const app = express()
@@ -24,7 +24,7 @@ app.use('/api/orders', orderRoutes)
 app.use('/api/auth', authRouter)
 app.use('/api/crops',vegetableRouter)
 app.use('/api/analytics', analyticsRoutes)  // For simplicity, using the same router for analytics endpoints
-
+app.use('/api/admin', adminRoutes)
 
 
 app.listen(PORT, () => {

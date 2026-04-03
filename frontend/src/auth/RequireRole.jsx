@@ -44,7 +44,7 @@ export function RequireRole({ role }) {
     if (user.role !== 'admin') return (
     Swal.fire({
       icon:'error',
-      title:'User Not Authenticated',
+      title:'Admin Access Denied',
       text:'Please Login First'
     }),
       <Navigate to="/login" replace />
@@ -62,7 +62,7 @@ export function RequireRole({ role }) {
     if (!userAuth || !user) return (
     Swal.fire({
       icon:'error',
-      title:'User Not Authenticated',
+      title:'User Access Denied',
       text:'Please Login First'
     }),
       <Navigate to="/login" replace />

@@ -23,9 +23,10 @@ const Sidebar = ({
   const farmer = useFarmerAuthStore((state) => state.farmer)
 
   // Determine user role and auth status
+  const isAdmin = !!user && user.role === 'admin'
+  const isRegularUser = !!user && user.role === 'user'
   const isFarmer = !!farmer
-  const isUser = !!user
-  const isUnauthenticated = !farmer && !user
+  const isUnauthenticated = !user && !farmer
 
   // Check if on price monitoring page (shop-specific)
   const isPriceMonitoringPage = location.pathname === '/shop/price_monitoring'
@@ -33,6 +34,34 @@ const Sidebar = ({
 
   // Define navigation items based on role
   const getNavItems = () => {
+    if (isAdmin) {
+      return [
+        {
+          group: 'Overview',
+          items: [
+            { label: 'Dashboard', icon: '📊', to: '/admin/dashboard' },
+            { label: 'Analytics', icon: '📈', to: '/admin/dashboard/analytics' },
+          ],
+        },
+        {
+          group: 'Management',
+          items: [
+            { label: 'Products', icon: '🌿', to: '/admin/dashboard/products' },
+            { label: 'Farms', icon: '🚜', to: '/admin/dashboard/farms' },
+            { label: 'Users', icon: '👥', to: '/admin/dashboard/users' },
+            { label: 'Farmers', icon: '👨‍🌾', to: '/admin/dashboard/farmers' },
+            { label: 'Orders', icon: '📦', to: '/admin/dashboard/orders' },
+          ],
+        },
+        // {
+        //   group: 'Account',
+        //   items: [
+        //     { label: 'Profile', icon: '👤', to: '/admin/profile' },
+        //   ],
+        // },
+      ]
+    }
+
     if (isFarmer) {
       return [
         {
@@ -60,7 +89,7 @@ const Sidebar = ({
       ]
     }
 
-    if (isUser) {
+    if (isRegularUser) {
       return [
         {
           group: 'Overview',
@@ -262,7 +291,7 @@ const Sidebar = ({
       </nav>
 
       {/* Logout - shown if authenticated */}
-      {(isUser || isFarmer) && (
+      {(isRegularUser || isAdmin || isFarmer) && (
         <div className="px-2 pb-4 pt-3 border-t border-green-800">
           <button
             onClick={onLogout}
