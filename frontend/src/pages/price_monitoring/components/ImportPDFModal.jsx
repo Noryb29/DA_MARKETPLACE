@@ -293,11 +293,11 @@ const ImportPDFModal = ({ isOpen, OnClose }) => {
         >
 
           {/* ── Header ── */}
-          <div className="flex items-start justify-between px-7 pt-6 pb-5 border-b border-slate-100 flex-shrink-0">
+          <div className="flex items-start justify-between px-7 pt-6 pb-5 border-b border-slate-100 shrink-0">
             <div className="flex items-center gap-3.5">
               {/* Icon */}
               <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                 style={{ background: "linear-gradient(135deg,#16a34a 0%,#15803d 100%)", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
               >
                 <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={1.75}>
@@ -377,7 +377,7 @@ const ImportPDFModal = ({ isOpen, OnClose }) => {
                     "Missing categories, commodities, and markets are auto-created on import",
                   ].map((item, i) => (
                     <div key={i} className="flex gap-2 items-start py-0.5">
-                      <span className="text-emerald-500 text-[0.625rem] mt-1 flex-shrink-0">●</span>
+                      <span className="text-emerald-500 text-[0.625rem] mt-1 shrink-0">●</span>
                       <span className="text-[0.8125rem] text-slate-500">{item}</span>
                     </div>
                   ))}
@@ -410,7 +410,7 @@ const ImportPDFModal = ({ isOpen, OnClose }) => {
                   {newEntryRows.length > 0 && <Pill color="yellow">+ {newEntryRows.length} auto-create</Pill>}
                   {noPriceRows.length > 0  && <Pill color="blue">— {noPriceRows.length} no price</Pill>}
                   {errorRows.length > 0    && <Pill color="red">✕ {errorRows.length} error{errorRows.length !== 1 ? "s" : ""}</Pill>}
-                  <span className="imp-pdf-mono text-[0.6875rem] text-slate-400 ml-auto truncate max-w-[180px]">{fileName}</span>
+                  <span className="imp-pdf-mono text-[0.6875rem] text-slate-400 ml-auto truncate max-w-45">{fileName}</span>
                   <button
                     className="text-xs text-emerald-600 font-medium hover:opacity-70 transition-opacity bg-transparent border-none cursor-pointer"
                     onClick={() => { setStep("upload"); setRows([]); setFileName("") }}
@@ -422,7 +422,7 @@ const ImportPDFModal = ({ isOpen, OnClose }) => {
                 {/* Notice */}
                 {newEntryRows.length > 0 && (
                   <div className="flex gap-2.5 items-start bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2.5 text-[0.8125rem] text-amber-800">
-                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="flex-shrink-0 mt-0.5">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="shrink-0 mt-0.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                     </svg>
                     <span>
@@ -452,7 +452,7 @@ const ImportPDFModal = ({ isOpen, OnClose }) => {
                         <React.Fragment key={category}>
                           {/* Category row */}
                           <tr className="imp-pdf-cat-row bg-emerald-50">
-                            <td colSpan={8} className="px-3 py-[7px] text-[0.6875rem] font-bold uppercase tracking-widest text-emerald-700">
+                            <td colSpan={8} className="px-3 py-1.75 text-[0.6875rem] font-bold uppercase tracking-widest text-emerald-700">
                               {category}
                             </td>
                           </tr>
@@ -508,7 +508,7 @@ const ImportPDFModal = ({ isOpen, OnClose }) => {
           </div>
 
           {/* ── Footer ── */}
-          <div className="flex items-center justify-end gap-2.5 px-7 pt-4 pb-5 border-t border-slate-100 flex-shrink-0">
+          <div className="flex items-center justify-end gap-2.5 px-7 pt-4 pb-5 border-t border-slate-100 shrink-0">
             <button
               onClick={handleClose}
               disabled={isParsing || isSubmitting}

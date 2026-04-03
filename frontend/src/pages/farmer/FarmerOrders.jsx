@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import FarmerSidebar from './components/FarmerSidebar'
 import useOrderStore from '../../store/OrderStore'
 import useFarmerAuthStore from '../../store/FarmerAuthStore'
 import {
@@ -7,6 +6,7 @@ import {
   ClipboardList, User, ChevronDown, ChevronUp,
   Archive, Store, MapPin
 } from 'lucide-react'
+import Sidebar from '../public/components/SideBar'
 
 const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
@@ -123,7 +123,7 @@ const FarmerOrders = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
-        <FarmerSidebar />
+        <Sidebar/>
         <main className="flex-1 px-6 py-8 overflow-y-auto">
           <div className="max-w-3xl mx-auto">
 

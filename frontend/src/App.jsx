@@ -26,7 +26,7 @@ const App = () => {
   }
 
   // Redirect authenticated users away from the landing page
-  if (farmerAuth) return <Navigate to="/farmer/dashboard/index" replace />
+  if (farmerAuth) return <Navigate to="/" replace /> //GI CHANGE
   if (userAuth && user?.role === 'admin') return <Navigate to="/admin/dashboard" replace />
   if (userAuth) return <Navigate to="/user/index" replace />
 

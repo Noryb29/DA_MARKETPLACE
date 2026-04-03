@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import Header from '../public/components/Header'
-import FarmerSidebar from './components/UserSidebar'
 import useUserStore from '../../store/UserStore'
 import Swal from 'sweetalert2'
 import axios from 'axios'
+import Sidebar from '../public/components/SideBar'
 
 const PORT = import.meta.env.VITE_PORT
 
@@ -66,7 +66,7 @@ const UserProfile = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
-        <FarmerSidebar onLogout={logout} />
+        <Sidebar onLogout={logout} />
 
         <main className="flex-1 overflow-auto p-8">
 

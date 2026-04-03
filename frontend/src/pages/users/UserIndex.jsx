@@ -1,8 +1,8 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../public/components/Header'
-import FarmerSidebar from './components/UserSidebar'
 import useUserStore from '../../store/UserStore'
+import Sidebar from '../public/components/SideBar'
 
 
 const stats = [
@@ -40,7 +40,7 @@ export default function UserIndex() {
       <Header />
 
       <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
-        <FarmerSidebar onLogout={handleLogout} />
+        <Sidebar onLogout={handleLogout} />
 
         <main className="flex-1 overflow-auto p-8">
           

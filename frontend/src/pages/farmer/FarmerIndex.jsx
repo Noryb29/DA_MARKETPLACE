@@ -1,8 +1,8 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
-import FarmerSidebar from './components/FarmerSidebar'
 import useFarmerAuthStore from '../../store/FarmerAuthStore'
+import Sidebar from '../public/components/SideBar'
 
 const stats = [
   { label: 'Total Sales',     value: '₱24,850', change: '+12%', up: true },
@@ -38,7 +38,7 @@ export default function FarmerIndex() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
-        <FarmerSidebar onLogout={handleLogout} />
+        <Sidebar onLogout={handleLogout} />
 
         <main className="flex-1 overflow-auto p-8">
 

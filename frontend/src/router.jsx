@@ -23,7 +23,6 @@ import FarmerProfile from "./pages/farmer/FarmerProfile.jsx";
 import FarmerFarm from "./pages/farmer/FarmerFarm.jsx";
 import UserProfile from "./pages/users/UserProfile.jsx";
 import UserAnalytics from "./pages/users/UserAnalytics.jsx";
-import UserCart from "./pages/users/UserCart.jsx";
 import UserOrdersPage from "./pages/users/UserOrdersPage.jsx"
 import ShoppingPage from "./pages/public/ShoppingPage.jsx";
 import FarmList from "./pages/public/FarmList.jsx";
@@ -68,7 +67,6 @@ export const router = createBrowserRouter([
           { path: "/user/dashboard/profile",  element: <UserProfile /> },
           { path: "/user/dashboard/orders",   element: <UserOrdersPage /> },
           { path: "/user/dashboard/analytics",element: <UserAnalytics /> },
-          { path: "/user/dashboard/cart",     element: <UserCart /> },
           { path: "/user/shop",               element: <UserShoppingPage /> },
         ],
       },

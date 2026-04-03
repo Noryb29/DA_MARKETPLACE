@@ -6,7 +6,6 @@ import CropRow from './shopComponents/CropRow'
 import MarketFilterPanel from './shopComponents/MarketFilterPanel'
 import CartDrawer from './shopComponents/CartDrawer'
 import useCartStore from '../../store/CartStore'
-import useUserStore from '../../store/UserStore'
 import { getDaysUntilHarvest } from './shopComponents/HarvestBadge'
 import { Wheat, Search, SlidersHorizontal, X, Loader2, Sprout,ShoppingCart } from 'lucide-react'
 

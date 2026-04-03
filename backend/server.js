@@ -30,6 +30,7 @@ app.use('/api/analytics', analyticsRoutes)  // For simplicity, using the same ro
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`)
   console.log('If Database is not created, please run "npm run database"')
+  console.log('To start frontend, navigate to frontend and run "npm run dev"')
 
 })
   

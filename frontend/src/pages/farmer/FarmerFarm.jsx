@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import useFarmerStore from '../../store/FarmerStore';
-import FarmerSidebar from './components/FarmerSidebar';
+import useFarmerStore from '../../store/FarmsStore.js';
 import { MapPin, Wheat, ChevronRight, Plus, X, List, LayoutGrid, Calendar, Ruler, Mountain } from 'lucide-react';
+import Sidebar from '../public/components/SideBar';
 
 // ─── Map Placeholder ──────────────────────────────────────────────────────────
 const MapSelector = ({ onLocationSelect, selectedCoords }) => {
@@ -293,8 +293,7 @@ const FarmerFarm = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
-        <FarmerSidebar />
-
+        <Sidebar/>
         <main className="flex-1 px-6 py-10 overflow-y-auto">
           <div className="w-full max-w-2xl mx-auto">
 

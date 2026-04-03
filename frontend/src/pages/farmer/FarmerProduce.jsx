@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import FarmerSidebar from './components/FarmerSidebar'
-import useFarmerStore from '../../store/FarmerStore'
+import useFarmerStore from '../../store/FarmsStore'
 import useProduceStore from '../../store/ProduceStore'
 import { Wheat, Loader2, AlertCircle, Plus, X, Pencil, Trash2, Calendar, Package } from 'lucide-react'
+import Sidebar from '../public/components/SideBar'
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 const EMPTY_FORM = {
@@ -284,7 +284,7 @@ const FarmerProduce = () => {
   return (
     <div className="min-h-screen">
       <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
-        <FarmerSidebar />
+        <Sidebar/>
 
         <main className="flex-1 p-6 bg-gray-50">
 

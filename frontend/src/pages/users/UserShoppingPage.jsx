@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import Header from '../public/components/Header'
-import UserSidebar from './components/UserSidebar'
 import useMarketStore from '../../store/MarketStore'
 import CropRow from '../public/shopComponents/CropRow'
 import MarketFilterPanel from '../public/shopComponents/MarketFilterPanel'
@@ -9,6 +8,7 @@ import useCartStore from '../../store/CartStore'
 import useUserStore from '../../store/UserStore'
 import { getDaysUntilHarvest } from '../public/shopComponents/HarvestBadge'
 import { Wheat, Search, SlidersHorizontal, X, Loader2, Sprout,ShoppingCart } from 'lucide-react'
+import Sidebar from '../public/components/SideBar'
 
 const UserShoppingPage = () => {
   const { items, openCart } = useCartStore()
@@ -63,7 +63,7 @@ const UserShoppingPage = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
-        <UserSidebar />
+        <Sidebar />
 
         <main className="flex-1 px-6 py-8 overflow-y-auto">
           

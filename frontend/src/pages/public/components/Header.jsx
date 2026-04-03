@@ -20,6 +20,14 @@ const Header = () => {
       <Link to="#"              className="hover:text-green-300 font-medium transition-colors">About</Link>
     </>
   )
+   const farmernavLinks = (
+    <>
+      <Link to="/"              className="hover:text-green-300 font-medium transition-colors">Home</Link>
+      <Link to="/farmer/dashboard/products" className="hover:text-green-300 font-medium transition-colors">Products</Link>
+      <Link to="/farmer/dashboard/farm"    className="hover:text-green-300 font-medium transition-colors">Farms</Link>
+      <Link to="#"              className="hover:text-green-300 font-medium transition-colors">About</Link>
+    </>
+  )
 
   return (
     <header className="sticky top-0 z-50 bg-green-900 text-white shadow-md">
@@ -50,7 +58,7 @@ const Header = () => {
             {/* Farmer */}
             {isFarmer && (
               <>
-                {navLinks}
+                {farmernavLinks}
                 <Link to="/farmer/dashboard/index" className="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded transition-colors font-medium">Dashboard</Link>
               </>
             )}

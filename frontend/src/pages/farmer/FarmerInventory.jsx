@@ -1,11 +1,11 @@
 import React from 'react'
-import FarmerSidebar from './components/FarmerSidebar'
+import Sidebar from '../public/components/SideBar'
 
 const FarmerInventory = () => {
   return (
     <div className='min-h-screen'>
       <div className='flex' style={{ minHeight: 'calc(100vh - 65px)'}}>
-        <FarmerSidebar/>
+        <Sidebar/>
 
       </div>
     </div>

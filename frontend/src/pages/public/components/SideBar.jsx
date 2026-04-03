@@ -1,41 +1,110 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import  useUserStore  from '../../../store/UserStore.js'
-
-const navItems = [
-  {
-    group: 'Overview',
-    items: [
-      { label: 'Dashboard', icon: '🏠', to: '/shop/dashboard' },
-      { label: 'Farms', icon: '🚜', to: '/shop/farms' },
-    ],
-  },
-  {
-    group: 'Store',
-    items: [
-      { label: 'Produce', icon: '🌿', to: '/shop/products' },
-      { label: 'Price Monitoring', icon: '📊', to: '/shop/price_monitoring' },
-    ],
-  },
-]
+import useUserStore from '../../../store/UserStore.js'
+import useFarmerAuthStore from '../../../store/FarmerAuthStore.js'
 
 const Sidebar = ({
   onLogout,
-  categoryFilter,
-  setCategoryFilter,
-  searchTerm,
-  setSearchTerm,
-  onAddRecord,
-  onAddCommodity,
-  onImportExcel,
-  onImportPDF,
+  // Shop-specific props (optional)
+  categoryFilter = null,
+  setCategoryFilter = null,
+  searchTerm = null,
+  setSearchTerm = null,
+  onAddRecord = null,
+  onAddCommodity = null,
+  onImportExcel = null,
+  onImportPDF = null,
 }) => {
-  const user = useUserStore((state) => state.user)
-  const hasuser = !!user
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
-  const hasFilters = categoryFilter || searchTerm
+
+  // Get user and farmer from stores
+  const user = useUserStore((state) => state.user)
+  const farmer = useFarmerAuthStore((state) => state.farmer)
+
+  // Determine user role and auth status
+  const isFarmer = !!farmer
+  const isUser = !!user
+  const isUnauthenticated = !farmer && !user
+
+  // Check if on price monitoring page (shop-specific)
   const isPriceMonitoringPage = location.pathname === '/shop/price_monitoring'
+  const hasFilters = categoryFilter || searchTerm
+
+  // Define navigation items based on role
+  const getNavItems = () => {
+    if (isFarmer) {
+      return [
+        {
+          group: 'Overview',
+          items: [
+            { label: 'Dashboard', icon: '🏠', to: '/farmer/dashboard/index' },
+            { label: 'Analytics', icon: '📊', to: '/farmer/dashboard/analytics' },
+            { label: 'Farm', icon: '🚜', to: '/farmer/dashboard/farm' },
+          ],
+        },
+        {
+          group: 'Store',
+          items: [
+            { label: 'My Produce', icon: '🌿', to: '/farmer/dashboard/products' },
+            { label: 'Orders', icon: '📦', to: '/farmer/dashboard/orders' },
+            { label: 'Inventory', icon: '🗂️', to: '/farmer/dashboard/inventory' },
+          ],
+        },
+        {
+          group: 'Account',
+          items: [
+            { label: 'Profile', icon: '👤', to: '/farmer/dashboard/profile' },
+          ],
+        },
+      ]
+    }
+
+    if (isUser) {
+      return [
+        {
+          group: 'Overview',
+          items: [
+            { label: 'Dashboard', icon: '🏠', to: '/user/index' },
+            { label: 'Analytics', icon: '📊', to: '/user/dashboard/analytics' },
+          ],
+        },
+        {
+          group: 'Store',
+          items: [
+            { label: 'Produce', icon: '🌿', to: '/user/shop' },
+            { label: 'Orders', icon: '📦', to: '/user/dashboard/orders' },
+          ],
+        },
+        {
+          group: 'Account',
+          items: [
+            { label: 'Profile', icon: '👤', to: '/user/dashboard/profile' },
+          ],
+        },
+      ]
+    }
+
+    // Unauthenticated / Shop visitor
+    return [
+      {
+        group: 'Overview',
+        items: [
+          { label: 'Dashboard', icon: '🏠', to: '/shop/dashboard' },
+          { label: 'Farms', icon: '🚜', to: '/shop/farms' },
+        ],
+      },
+      {
+        group: 'Store',
+        items: [
+          { label: 'Produce', icon: '🌿', to: '/shop/products' },
+          { label: 'Price Monitoring', icon: '📊', to: '/shop/price_monitoring' },
+        ],
+      },
+    ]
+  }
+
+  const navItems = getNavItems()
 
   return (
     <aside
@@ -83,20 +152,19 @@ const Sidebar = ({
           </div>
         ))}
 
-        {/* ── Filter Options (from reference) ── */}
-        {isPriceMonitoringPage && !collapsed && (
+        {/* ── Filter Options (Shop-specific, price monitoring page) ── */}
+        {isUnauthenticated && isPriceMonitoringPage && !collapsed && (
           <div className="collapse collapse-arrow bg-base-200 rounded-box mt-2">
             <input type="checkbox" defaultChecked />
             <div className="collapse-title font-semibold">Filter Options</div>
             <div className="collapse-content flex flex-col gap-4">
-
               {/* Category Filter */}
               <div>
                 <label className="text-sm font-semibold mb-1 block">Category</label>
                 <select
                   className="select select-bordered w-full"
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  value={categoryFilter || ''}
+                  onChange={(e) => setCategoryFilter?.(e.target.value)}
                 >
                   <option value="">All Categories</option>
                   <option value="Vegetables">Vegetables</option>
@@ -116,8 +184,8 @@ const Sidebar = ({
                     type="text"
                     className="grow"
                     placeholder="Search commodity..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    value={searchTerm || ''}
+                    onChange={(e) => setSearchTerm?.(e.target.value)}
                   />
                 </label>
               </div>
@@ -126,8 +194,8 @@ const Sidebar = ({
               {hasFilters && (
                 <button
                   onClick={() => {
-                    setCategoryFilter("")
-                    setSearchTerm("")
+                    setCategoryFilter?.('')
+                    setSearchTerm?.('')
                   }}
                   className="btn btn-error btn-sm w-full"
                 >
@@ -138,8 +206,8 @@ const Sidebar = ({
           </div>
         )}
 
-        {/* ── Action Buttons (from reference) ── */}
-        {isPriceMonitoringPage && !collapsed && (
+        {/* ── Action Buttons (Shop-specific, price monitoring page) ── */}
+        {isUnauthenticated && isPriceMonitoringPage && !collapsed && (
           <div className="flex flex-col gap-2 mt-2">
             <span className="text-green-400 text-xs font-semibold uppercase tracking-widest px-1">
               Actions
@@ -192,9 +260,9 @@ const Sidebar = ({
         )}
       </nav>
 
-            {/* Logout */}
-      <div className="px-2 pb-4 pt-3 border-t border-green-800">
-        {hasuser && (
+      {/* Logout - shown if authenticated */}
+      {(isUser || isFarmer) && (
+        <div className="px-2 pb-4 pt-3 border-t border-green-800">
           <button
             onClick={onLogout}
             title={collapsed ? 'Logout' : ''}
@@ -205,9 +273,8 @@ const Sidebar = ({
             <span className="text-base">🚪</span>
             {!collapsed && <span>Logout</span>}
           </button>
-        )}
-      </div>
-
+        </div>
+      )}
     </aside>
   )
 }

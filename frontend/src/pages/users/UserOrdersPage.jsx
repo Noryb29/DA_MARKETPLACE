@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import Header from '../public/components/Header'
-import UserSidebar from './components/UserSidebar'
 import useOrderStore from '../../store/OrderStore'
 import BuyerOrderCard from './components/BuyerOrderCard'
 import BuyerOrderModal from './components/BuyerOrderModal'
 import { Loader2, ClipboardList } from 'lucide-react'
+import Sidebar from '../public/components/SideBar'
 
 const UserOrdersPage = () => {
   const { myOrders, loading, initialized, getMyOrders } = useOrderStore()
@@ -16,7 +16,7 @@ const UserOrdersPage = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
-        <UserSidebar />
+        <Sidebar/>
 
         <main className="flex-1 px-6 py-8 overflow-y-auto">
           <div className="mx-10">
