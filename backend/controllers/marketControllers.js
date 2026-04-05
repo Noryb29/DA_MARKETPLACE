@@ -24,7 +24,14 @@ export const getAllCrops = async (req, res) => {
 
 export const getAllFarms = async (req, res) => {
   const query = `
-    SELECT * FROM farm
+    SELECT 
+      f.*,
+      u.firstname,
+      u.lastname,
+      u.email
+    FROM farm f
+    LEFT JOIN users u ON f.user_id = u.user_id
+    ORDER BY f.farm_id DESC
   `
   try {
     const [rows] = await db.execute(query)
@@ -37,30 +44,44 @@ export const getAllFarms = async (req, res) => {
 
 export const getFarmById = async (req, res) => {
   const { farmId } = req.params
+  
+  // Validate farmId
+  if (!farmId || isNaN(farmId)) {
+    return res.status(400).json({ message: 'Invalid farm ID' })
+  }
+
   const query = `
     SELECT 
-    f.*,
-    u.firstname,
-    u.lastname,
-    u.email
-  FROM farm f
-  INNER JOIN users u ON f.user_id = u.user_id
-  WHERE f.farm_id = ?
+      f.*,
+      u.firstname,
+      u.lastname,
+      u.email
+    FROM farm f
+    LEFT JOIN users u ON f.user_id = u.user_id
+    WHERE f.farm_id = ?
   `
   try {
     const [rows] = await db.execute(query, [farmId])
+    
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Farm not found' })
     }
+    
     res.status(200).json({ farm: rows[0] })
   } catch (error) {
-    console.error(error)
+    console.error('Error fetching farm:', error)
     res.status(500).json({ message: 'Database error', error: error.message })
   }
 }
 
 export const getCropsByFarmId = async (req, res) => {
   const { farmId } = req.params
+  
+  // Validate farmId
+  if (!farmId || isNaN(farmId)) {
+    return res.status(400).json({ message: 'Invalid farm ID' })
+  }
+
   const query = `
     SELECT 
       c.*,
@@ -78,7 +99,7 @@ export const getCropsByFarmId = async (req, res) => {
     const [rows] = await db.execute(query, [farmId])
     res.status(200).json({ crops: rows })
   } catch (error) {
-    console.error(error)
+    console.error('Error fetching crops:', error)
     res.status(500).json({ message: 'Database error', error: error.message })
   }
 }

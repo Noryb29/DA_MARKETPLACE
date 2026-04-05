@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Header from '../public/components/Header'
 import Sidebar from '../public/components/SideBar'
 import { useAdminStore } from '../../store/AdminStore'
-import { Search, Edit2, ChevronDown, X, Mail, Phone } from 'lucide-react'
+import { Search, Edit2, ChevronDown, X, AlertCircle } from 'lucide-react'
 
 const AdminUsers = () => {
   const { users, loading, error, getAllUsers, updateUser, clearError } = useAdminStore()
@@ -15,10 +15,11 @@ const AdminUsers = () => {
   const [sortOrder, setSortOrder] = useState('asc')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
+  const [updateSuccess, setUpdateSuccess] = useState(false)
 
   useEffect(() => {
     getAllUsers()
-  }, [])
+  }, [getAllUsers])
 
   // Search and filter logic
   useEffect(() => {
@@ -33,7 +34,6 @@ const AdminUsers = () => {
       )
     })
 
-    // Sort
     filtered.sort((a, b) => {
       let aVal = a[sortField]
       let bVal = b[sortField]
@@ -66,9 +66,10 @@ const AdminUsers = () => {
       await updateUser(selectedUser.user_id, editFormData)
       setShowEditModal(false)
       setSelectedUser(null)
-      alert('User updated successfully!')
+      setUpdateSuccess(true)
+      setTimeout(() => setUpdateSuccess(false), 3000)
     } catch (err) {
-      alert('Error updating user: ' + err.message)
+      console.error('Error updating user:', err)
     }
   }
 
@@ -102,10 +103,26 @@ const AdminUsers = () => {
               <p className="text-gray-600">Manage buyers and their business profiles</p>
             </div>
 
+            {/* Success Alert */}
+            {updateSuccess && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+                <span className="text-green-800">✓ User updated successfully!</span>
+                <button
+                  onClick={() => setUpdateSuccess(false)}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            )}
+
             {/* Error Alert */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
-                <span className="text-red-800">{error}</span>
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={20} className="text-red-600" />
+                  <span className="text-red-800">{error}</span>
+                </div>
                 <button
                   onClick={clearError}
                   className="text-red-600 hover:text-red-800"
@@ -199,7 +216,7 @@ const AdminUsers = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {paginatedUsers.map((user, idx) => (
+                        {paginatedUsers.map((user) => (
                           <tr key={user.user_id} className="border-b hover:bg-gray-50 transition">
                             <td className="px-6 py-4 text-sm text-gray-900">{user.user_id}</td>
                             <td className="px-6 py-4 text-sm">

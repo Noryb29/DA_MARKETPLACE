@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import Header from '../public/components/Header'
 import Sidebar from '../public/components/SideBar'
+import ProductDetailModal from './components/ProductDetailModal'
 import { useAdminStore } from '../../store/AdminStore'
-import { Search, ChevronDown, X, Calendar, Sprout, Package } from 'lucide-react'
+import { Search, ChevronDown, X, AlertCircle } from 'lucide-react'
 
 const AdminProducts = () => {
   const { products, loading, error, getAllProducts, clearError } = useAdminStore()
@@ -17,7 +18,7 @@ const AdminProducts = () => {
 
   useEffect(() => {
     getAllProducts()
-  }, [])
+  }, [getAllProducts])
 
   // Search and filter logic
   useEffect(() => {
@@ -66,6 +67,16 @@ const AdminProducts = () => {
     return { color: 'green', label: 'In Stock' }
   }
 
+  const handleOpenModal = (product) => {
+    setSelectedProduct(product)
+    setShowDetailModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setShowDetailModal(false)
+    setSelectedProduct(null)
+  }
+
   return (
     <div className='min-h-screen bg-gray-50'>
       <Header />
@@ -84,7 +95,10 @@ const AdminProducts = () => {
             {/* Error Alert */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
-                <span className="text-red-800">{error}</span>
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={20} className="text-red-600" />
+                  <span className="text-red-800">{error}</span>
+                </div>
                 <button
                   onClick={clearError}
                   className="text-red-600 hover:text-red-800"
@@ -129,26 +143,26 @@ const AdminProducts = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              <div className="bg-white rounded-lg shadow-sm p-4">
-                <p className="text-gray-600 text-sm">Total Products</p>
-                <p className="text-2xl font-bold text-gray-900">{products.length}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
+                <p className="text-gray-600 text-sm font-medium">Total Products</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{products.length}</p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-4">
-                <p className="text-gray-600 text-sm">Total Volume</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
+                <p className="text-gray-600 text-sm font-medium">Total Volume</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
                   {products.reduce((sum, p) => sum + (p.volume || 0), 0).toFixed(1)}
                 </p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-4">
-                <p className="text-gray-600 text-sm">Total Stock</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-500">
+                <p className="text-gray-600 text-sm font-medium">Total Stock</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
                   {products.reduce((sum, p) => sum + (p.stock || 0), 0)}
                 </p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-4">
-                <p className="text-gray-600 text-sm">Low Stock Items</p>
-                <p className="text-2xl font-bold text-red-600">
+              <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-red-500">
+                <p className="text-gray-600 text-sm font-medium">Low Stock Items</p>
+                <p className="text-2xl font-bold text-red-600 mt-1">
                   {products.filter(p => (p.stock || 0) < 10).length}
                 </p>
               </div>
@@ -167,7 +181,7 @@ const AdminProducts = () => {
                 <>
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead className="bg-gray-100 border-b">
+                      <thead className="bg-gray-100 border-b border-gray-200">
                         <tr>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Crop Name</th>
@@ -180,11 +194,11 @@ const AdminProducts = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {paginatedProducts.map((product, idx) => {
+                        {paginatedProducts.map((product) => {
                           const stockStatus = getStockStatus(product.stock)
                           return (
                             <tr key={product.crop_id} className="border-b hover:bg-gray-50 transition">
-                              <td className="px-6 py-4 text-sm text-gray-900">{product.crop_id}</td>
+                              <td className="px-6 py-4 text-sm text-gray-900 font-medium">{product.crop_id}</td>
                               <td className="px-6 py-4 text-sm">
                                 <div>
                                   <p className="font-medium text-gray-900">{product.crop_name}</p>
@@ -199,14 +213,14 @@ const AdminProducts = () => {
                                   {product.farm_name}
                                 </span>
                               </td>
-                              <td className="px-6 py-4 text-sm text-gray-600">{product.volume}</td>
+                              <td className="px-6 py-4 text-sm font-medium text-gray-900">{product.volume}</td>
                               <td className="px-6 py-4 text-sm">
                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                   stockStatus.color === 'red' ? 'bg-red-100 text-red-800' :
                                   stockStatus.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
                                   'bg-green-100 text-green-800'
                                 }`}>
-                                  {product.stock} {stockStatus.label}
+                                  {product.stock}
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-sm text-gray-600">
@@ -214,11 +228,8 @@ const AdminProducts = () => {
                               </td>
                               <td className="px-6 py-4 text-sm">
                                 <button
-                                  onClick={() => {
-                                    setSelectedProduct(product)
-                                    setShowDetailModal(true)
-                                  }}
-                                  className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition"
+                                  onClick={() => handleOpenModal(product)}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors font-medium"
                                 >
                                   View Details
                                 </button>
@@ -239,14 +250,14 @@ const AdminProducts = () => {
                       <button
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                       >
                         Previous
                       </button>
                       <button
                         disabled={currentPage === totalPages}
                         onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                       >
                         Next
                       </button>
@@ -263,89 +274,12 @@ const AdminProducts = () => {
         </main>
       </div>
 
-      {/* Detail Modal */}
-      {showDetailModal && selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-2xl font-bold">{selectedProduct.crop_name}</h2>
-              <button
-                onClick={() => setShowDetailModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Basic Info */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sprout size={20} className="text-gray-600" />
-                  <h3 className="font-semibold text-gray-900">Crop Information</h3>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <p><span className="text-gray-600">Crop Name:</span> <span className="font-medium">{selectedProduct.crop_name}</span></p>
-                  <p><span className="text-gray-600">Variety:</span> <span className="font-medium">{selectedProduct.variety}</span></p>
-                  <p><span className="text-gray-600">Farm:</span> <span className="font-medium">{selectedProduct.farm_name}</span></p>
-                  <p><span className="text-gray-600">Farmer:</span> <span className="font-medium">{selectedProduct.firstname} {selectedProduct.lastname}</span></p>
-                </div>
-              </div>
-
-              {/* Stock & Volume */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <Package size={20} className="text-gray-600" />
-                  <h3 className="font-semibold text-gray-900">Inventory</h3>
-                </div>
-                <div className="space-y-3 text-sm">
-                  <p><span className="text-gray-600">Volume:</span> <span className="font-medium">{selectedProduct.volume} units</span></p>
-                  <p><span className="text-gray-600">Stock:</span> 
-                    <span className={`ml-2 font-medium ${selectedProduct.stock < 10 ? 'text-red-600' : 'text-green-600'}`}>
-                      {selectedProduct.stock}
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              {/* Timeline */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <Calendar size={20} className="text-gray-600" />
-                  <h3 className="font-semibold text-gray-900">Timeline</h3>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <p><span className="text-gray-600">Planting Date:</span> <span className="font-medium">{new Date(selectedProduct.planting_date).toLocaleDateString()}</span></p>
-                  <p><span className="text-gray-600">Expected Harvest:</span> <span className="font-medium">{new Date(selectedProduct.expected_harvest).toLocaleDateString()}</span></p>
-                </div>
-              </div>
-
-              {/* Specifications */}
-              {(selectedProduct.specification_1 || selectedProduct.specification_2 || selectedProduct.specification_3 || selectedProduct.specification_4 || selectedProduct.specification_5) && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-4">Specifications</h3>
-                  <div className="space-y-2 text-sm">
-                    {selectedProduct.specification_1 && <p><span className="text-gray-600">•</span> {selectedProduct.specification_1}</p>}
-                    {selectedProduct.specification_2 && <p><span className="text-gray-600">•</span> {selectedProduct.specification_2}</p>}
-                    {selectedProduct.specification_3 && <p><span className="text-gray-600">•</span> {selectedProduct.specification_3}</p>}
-                    {selectedProduct.specification_4 && <p><span className="text-gray-600">•</span> {selectedProduct.specification_4}</p>}
-                    {selectedProduct.specification_5 && <p><span className="text-gray-600">•</span> {selectedProduct.specification_5}</p>}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-4 pt-6 border-t">
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        isOpen={showDetailModal}
+        product={selectedProduct}
+        onClose={handleCloseModal}
+      />
     </div>
   )
 }

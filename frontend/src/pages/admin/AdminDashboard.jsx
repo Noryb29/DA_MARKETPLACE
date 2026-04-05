@@ -1,179 +1,321 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Header from '../public/components/Header'
 import Sidebar from '../public/components/SideBar'
+import { useAdminStore } from '../../store/AdminStore'
 import useUserStore from '../../store/UserStore'
-import useOrderStore from '../../store/OrderStore'
+import { TrendingUp, Users, Leaf, Truck, AlertCircle, ChevronRight, Calendar, BarChart3 } from 'lucide-react'
 
 const AdminDashboard = () => {
   const user = useUserStore((state) => state.user)
   const logout = useUserStore((state) => state.logout)
-  const { myOrders, getMyOrders, loading } = useOrderStore()
+  const navigate = useNavigate()
+  
+  const {
+    products,
+    farms,
+    users: allUsers,
+    farmers,
+    orders,
+    loading,
+    error,
+    clearError,
+    getAllProducts,
+    getAllFarms,
+    getAllUsers,
+    getAllFarmers,
+    getAllOrders,
+  } = useAdminStore()
+
   const [animateCards, setAnimateCards] = useState(false)
 
   useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        await Promise.all([
+          getAllProducts(),
+          getAllFarms(),
+          getAllUsers(),
+          getAllFarmers(),
+          getAllOrders(),
+        ])
+      } catch (err) {
+        console.error('Error loading dashboard data:', err)
+      }
+    }
+    fetchAllData()
     setAnimateCards(true)
   }, [])
 
-  // Sample dashboard stats (replace with actual data)
   const stats = [
-    { label: 'Total Orders', value: '1,234', icon: '📦', color: 'from-blue-500 to-blue-600', trend: '+12%' },
-    { label: 'Total Users', value: '856', icon: '👥', color: 'from-purple-500 to-purple-600', trend: '+8%' },
-    { label: 'Total Farmers', value: '342', icon: '👨‍🌾', color: 'from-green-500 to-green-600', trend: '+5%' },
-    { label: 'Revenue', value: '₱125K', icon: '💰', color: 'from-orange-500 to-orange-600', trend: '+22%' },
+    {
+      label: 'Total Orders',
+      value: orders.length.toLocaleString(),
+      icon: <Truck className="w-5 h-5" />,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+    },
+    {
+      label: 'Total Users',
+      value: allUsers.length.toLocaleString(),
+      icon: <Users className="w-5 h-5" />,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+    },
+    {
+      label: 'Total Farmers',
+      value: farmers.length.toLocaleString(),
+      icon: <Leaf className="w-5 h-5" />,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+    },
+    {
+      label: 'Total Products',
+      value: products.length.toLocaleString(),
+      icon: <BarChart3 className="w-5 h-5" />,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+    },
+  ]
+
+  const recentOrders = orders.slice(0, 5)
+  const lowStockProducts = products.filter(p => (p.stock || 0) < 10).slice(0, 5)
+
+  const quickActions = [
+    { label: 'Users', to: '/admin/dashboard/users', icon: '👥' },
+    { label: 'Farmers', to: '/admin/dashboard/farmers', icon: '🌾' },
+    { label: 'Farms', to: '/admin/dashboard/farms', icon: '🚜' },
+    { label: 'Products', to: '/admin/dashboard/products', icon: '📦' },
+    { label: 'Orders', to: '/admin/dashboard/orders', icon: '📋' },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-white">
       <Header />
       <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
-        <Sidebar onLogout={logout} />
+        <Sidebar />
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-auto">
-          <div className="p-8 max-w-7xl mx-auto">
-            {/* Welcome Section */}
-            <div className="mb-12">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-4xl font-bold text-slate-900 mb-2">
-                    Welcome back, {user?.name || 'Admin'}
-                  </h1>
-                  <p className="text-slate-600 text-lg">
-                    Here's what's happening with your platform today
-                  </p>
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto bg-gray-50">
+          <div className="p-8 max-w-6xl mx-auto">
+            {/* Error Alert */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="text-red-500" size={20} />
+                  <span className="text-red-700 text-sm">{error}</span>
                 </div>
-                <div className="text-6xl">📊</div>
+                <button
+                  onClick={clearError}
+                  className="text-red-500 hover:text-red-700 font-semibold"
+                >
+                  ✕
+                </button>
               </div>
+            )}
+
+            {/* Header */}
+            <div className="mb-8 flex items-start justify-between border-b border-gray-200 pb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-1">
+                  Dashboard
+                </h1>
+                <p className="text-sm text-gray-500 flex items-center gap-2">
+                  <Calendar size={16} />
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </p>
+              </div>
+              
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {stats.map((stat, idx) => (
                 <div
                   key={idx}
-                  className={`group relative overflow-hidden rounded-2xl p-6 transition-all duration-500 transform hover:scale-105 hover:shadow-2xl ${
-                    animateCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                  className={`p-5 bg-white border border-gray-200 rounded-lg transition-all duration-300 ${
+                    animateCards ? 'opacity-100' : 'opacity-0'
                   }`}
                   style={{
-                    transitionDelay: animateCards ? `${idx * 100}ms` : '0ms',
+                    transitionDelay: animateCards ? `${idx * 50}ms` : '0ms',
                   }}
                 >
-                  {/* Gradient Background */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-90`}></div>
-
-                  {/* Light overlay for depth */}
-                  <div className="absolute inset-0 bg-white opacity-5 group-hover:opacity-10 transition-opacity"></div>
-
-                  {/* Content */}
-                  <div className="relative z-10">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="text-5xl">{stat.icon}</div>
-                      <span className="inline-block bg-white bg-opacity-20 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        {stat.trend}
-                      </span>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                      <div className={stat.color}>{stat.icon}</div>
                     </div>
-                    <p className="text-white text-sm font-medium opacity-90 mb-1">{stat.label}</p>
-                    <p className="text-white text-3xl font-bold">{stat.value}</p>
                   </div>
-
-                  {/* Decorative gradient blob */}
-                  <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-white opacity-10 rounded-full blur-3xl group-hover:opacity-20 transition-opacity"></div>
+                  <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                 </div>
               ))}
             </div>
 
-            {/* Quick Actions */}
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">Quick Actions</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                  { label: 'Manage Users', to: '/admin/dashboard/users', icon: '👥' },
-                  { label: 'View Products', to: '/admin/dashboard/products', icon: '🌿' },
-                  { label: 'Manage Farms', to: '/admin/dashboard/farms', icon: '🚜' },
-                ].map((action, idx) => (
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              {/* Quick Actions */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
+                <div className="space-y-2">
+                  {quickActions.map((action, idx) => (
+                    <Link
+                      key={idx}
+                      to={action.to}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border border-gray-100 hover:border-gray-300 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">{action.icon}</span>
+                        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                          {action.label}
+                        </span>
+                      </div>
+                      <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent Orders */}
+              <div className="lg:col-span-2 bg-white border border-gray-200 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-900">Recent Orders</h2>
                   <Link
-                    key={idx}
-                    to={action.to}
-                    className="group block p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-slate-100 hover:border-green-300"
+                    to="/admin/orders"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
                   >
-                    <div className="text-4xl mb-3">{action.icon}</div>
-                    <h3 className="text-lg font-semibold text-slate-900 group-hover:text-green-600 transition-colors">
-                      {action.label}
-                    </h3>
-                    <p className="text-slate-600 text-sm mt-1">Access now →</p>
+                    View all <ChevronRight size={16} />
                   </Link>
-                ))}
+                </div>
+
+                {loading ? (
+                  <div className="py-8 text-center">
+                    <div className="inline-block animate-spin">
+                      <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-3">Loading orders...</p>
+                  </div>
+                ) : recentOrders.length > 0 ? (
+                  <div className="space-y-2">
+                    {recentOrders.map((order, idx) => (
+                      <div
+                        key={idx}
+                        className="p-4 rounded-lg bg-gray-50 border border-gray-100 hover:border-gray-300 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-medium text-gray-900">Order #{order.crop_order_id}</p>
+                            <p className="text-xs text-gray-500">{order.crop_name} • {order.variety}</p>
+                          </div>
+                          <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">
+                            {order.quantity} units
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {order.buyer_firstname} {order.buyer_lastname} • {new Date(order.order_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 text-center py-8">No orders yet</p>
+                )}
               </div>
             </div>
 
-            {/* Recent Orders Section */}
-            <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-8">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Recent Orders</h2>
-                  <p className="text-slate-600 text-sm mt-1">Latest transactions from your platform</p>
+            {/* Low Stock Alert */}
+            {lowStockProducts.length > 0 && (
+              <div className="mb-8 bg-amber-50 border border-amber-200 rounded-lg p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <AlertCircle className="text-amber-600" size={20} />
+                  <h2 className="font-bold text-amber-900">Low Stock Alert</h2>
                 </div>
-                <Link
-                  to="/admin/dashboard/orders"
-                  className="text-green-600 hover:text-green-700 font-semibold text-sm"
-                >
-                  View all →
-                </Link>
+                <div className="space-y-2">
+                  {lowStockProducts.map((product, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-3 rounded-lg bg-white border border-amber-100"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{product.crop_name}</p>
+                        <p className="text-xs text-gray-500">{product.variety}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-amber-700">{product.stock} units left</p>
+                        <p className="text-xs text-gray-500">
+                          Harvest: {new Date(product.expected_harvest).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Platform Activity */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Platform Activity</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Active Orders</span>
+                    <span className="font-bold text-gray-900">{orders.filter(o => new Date(o.expected_arrival) >= new Date()).length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Total Volume</span>
+                    <span className="font-bold text-gray-900">{orders.reduce((sum, o) => sum + (o.volume || 0), 0)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Avg Order Size</span>
+                    <span className="font-bold text-gray-900">
+                      {orders.length > 0 ? Math.round(orders.reduce((sum, o) => sum + (o.quantity || 0), 0) / orders.length) : 0}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              {loading ? (
-                <div className="py-12 text-center">
-                  <div className="inline-block">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+              {/* User Metrics */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">User Metrics</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Total Users</span>
+                    <span className="font-bold text-gray-900">{allUsers.length}</span>
                   </div>
-                  <p className="text-slate-600 mt-4">Loading orders...</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Total Farmers</span>
+                    <span className="font-bold text-gray-900">{farmers.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Active Farms</span>
+                    <span className="font-bold text-gray-900">{farms.length}</span>
+                  </div>
                 </div>
-              ) : myOrders && myOrders.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-slate-200">
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700">Order ID</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700">Customer</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700">Amount</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700">Status</th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-700">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {myOrders.slice(0, 5).map((order, idx) => (
-                        <tr
-                          key={idx}
-                          className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
-                        >
-                          <td className="py-3 px-4 text-slate-900 font-medium">{order.id}</td>
-                          <td className="py-3 px-4 text-slate-600">{order.customer}</td>
-                          <td className="py-3 px-4 text-slate-900 font-semibold">₱{order.amount}</td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                                order.status === 'completed'
-                                  ? 'bg-green-100 text-green-800'
-                                  : order.status === 'pending'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}
-                            >
-                              {order.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-slate-600">{order.date}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              </div>
+
+              {/* Inventory Status */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Inventory</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Total Products</span>
+                    <span className="font-bold text-gray-900">{products.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Low Stock</span>
+                    <span className="font-bold text-gray-900">{products.filter(p => (p.stock || 0) < 10).length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Total Stock</span>
+                    <span className="font-bold text-gray-900">{products.reduce((sum, p) => sum + (p.stock || 0), 0)}</span>
+                  </div>
                 </div>
-              ) : (
-                <div className="py-12 text-center">
-                  <p className="text-slate-600">No orders yet</p>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </main>

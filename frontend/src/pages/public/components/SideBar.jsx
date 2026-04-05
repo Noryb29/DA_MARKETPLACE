@@ -120,15 +120,21 @@ const Sidebar = ({
       {
         group: 'Overview',
         items: [
-          { label: 'Dashboard', icon: '🏠', to: '/shop/dashboard' },
-          { label: 'Farms', icon: '🚜', to: '/shop/farms' },
+          { label: 'Home', icon: '🏠', to: '/shop/dashboard' },
         ],
       },
       {
         group: 'Store',
         items: [
           { label: 'Produce', icon: '🌿', to: '/shop/products' },
+          { label: 'Farms', icon: '🚜', to: '/shop/farms' },
           { label: 'Price Monitoring', icon: '📊', to: '/shop/price_monitoring' },
+        ],
+      },
+      {
+        group: 'Details',
+        items: [
+          { label: 'About', icon: '🕮', to: '/shop/about' },
         ],
       },
     ]

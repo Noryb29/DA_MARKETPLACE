@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Header from '../public/components/Header'
 import Sidebar from '../public/components/SideBar'
 import { useAdminStore } from '../../store/AdminStore'
-import { Search, ChevronDown, X, Truck, User, Calendar, DollarSign } from 'lucide-react'
+import { Search, ChevronDown, X, Truck, User, Calendar, AlertCircle,Package } from 'lucide-react'
 
 const AdminOrders = () => {
   const { orders, loading, error, getAllOrders, clearError } = useAdminStore()
@@ -18,7 +18,7 @@ const AdminOrders = () => {
 
   useEffect(() => {
     getAllOrders()
-  }, [])
+  }, [getAllOrders])
 
   // Search and filter logic
   useEffect(() => {
@@ -93,7 +93,10 @@ const AdminOrders = () => {
             {/* Error Alert */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
-                <span className="text-red-800">{error}</span>
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={20} className="text-red-600" />
+                  <span className="text-red-800">{error}</span>
+                </div>
                 <button
                   onClick={clearError}
                   className="text-red-600 hover:text-red-800"
@@ -190,7 +193,7 @@ const AdminOrders = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {paginatedOrders.map((order, idx) => {
+                        {paginatedOrders.map((order) => {
                           const orderStatus = getOrderStatus(order.order_date, order.expected_arrival)
                           return (
                             <tr key={order.crop_order_id} className="border-b hover:bg-gray-50 transition">
@@ -311,7 +314,7 @@ const AdminOrders = () => {
               {/* Crop Information */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <DollarSign size={20} className="text-gray-600" />
+                  <Truck size={20} className="text-gray-600" />
                   <h3 className="font-semibold text-gray-900">Crop Information</h3>
                 </div>
                 <div className="space-y-2 text-sm">
@@ -350,7 +353,7 @@ const AdminOrders = () => {
               {/* Order Details */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Truck size={20} className="text-gray-600" />
+                  <Package size={20} className="text-gray-600" />
                   <h3 className="font-semibold text-gray-900">Order Details</h3>
                 </div>
                 <div className="space-y-2 text-sm">

@@ -9,14 +9,13 @@ import {
   getAllOrders,
   getOrderById,
 } from "../controllers/adminControllers.js";
-import { authMiddleware } from "../middleware/authMiddleware.js";
-// import { adminauthMiddleware } from "../middleware/authMiddleware.js";
+import { adminAuthMiddleware } from "../middleware/authMiddleware.js";
 
 
 const adminRoutes = express.Router();
 
 // ==================== MIDDLEWARE AUTH
-adminRoutes.use(authMiddleware)
+adminRoutes.use(adminAuthMiddleware)
 
 // ==================== PRODUCT ROUTES ====================
 adminRoutes.get("/products", getAllProducts);

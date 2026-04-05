@@ -6,6 +6,7 @@ import FeaturedProducts from './pages/public/components/FeaturedProducts'
 import Footer from './pages/public/components/Footer'
 import useUserStore from './store/UserStore'
 import useFarmerAuthStore from './store/FarmerAuthStore'
+import ShopDashboard from './pages/public/ShopDashboard'
 
 const App = () => {
   const { checkAuth: checkUserAuth, isAuthenticated: userAuth, user, isCheckingAuth: userChecking } = useUserStore()
@@ -33,10 +34,7 @@ const App = () => {
   // Not logged in → show landing page
   return (
     <div className="min-h-screen">
-      <Header />
-      <Hero />
-      <FeaturedProducts />
-      <Footer />
+      <ShopDashboard/>
     </div>
   )
 }

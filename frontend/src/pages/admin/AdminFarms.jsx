@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Header from '../public/components/Header'
 import Sidebar from '../public/components/SideBar'
 import { useAdminStore } from '../../store/AdminStore'
-import { Search, MapPin, Crop, User, Calendar, ChevronDown, X } from 'lucide-react'
+import { Search, MapPin, Crop, User, Calendar, ChevronDown, X, AlertCircle } from 'lucide-react'
 
 const AdminFarms = () => {
   const { farms, loading, error, getAllFarms, clearError } = useAdminStore()
@@ -17,7 +17,7 @@ const AdminFarms = () => {
 
   useEffect(() => {
     getAllFarms()
-  }, [])
+  }, [getAllFarms])
 
   // Search and filter logic
   useEffect(() => {
@@ -77,7 +77,10 @@ const AdminFarms = () => {
             {/* Error Alert */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
-                <span className="text-red-800">{error}</span>
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={20} className="text-red-600" />
+                  <span className="text-red-800">{error}</span>
+                </div>
                 <button
                   onClick={clearError}
                   className="text-red-600 hover:text-red-800"
@@ -172,7 +175,7 @@ const AdminFarms = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {paginatedFarms.map((farm, idx) => (
+                      {paginatedFarms.map((farm) => (
                         <tr key={farm.farm_id} className="border-b hover:bg-gray-50 transition">
                           <td className="px-6 py-4 text-sm text-gray-900">{farm.farm_id}</td>
                           <td className="px-6 py-4 text-sm">

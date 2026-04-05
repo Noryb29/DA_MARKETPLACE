@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import Header from '../public/components/Header'
 import Sidebar from '../public/components/SideBar'
-import {useAdminStore} from '../../store/AdminStore.js'
-import { Search, Edit2, Trash2, ChevronDown, X } from 'lucide-react'
+import { useAdminStore } from '../../store/AdminStore'
+import { Search, Edit2, ChevronDown, X, AlertCircle } from 'lucide-react'
 
 const AdminFarmers = () => {
   const { farmers, loading, error, getAllFarmers, updateFarmer, clearError } = useAdminStore()
@@ -15,10 +15,11 @@ const AdminFarmers = () => {
   const [sortOrder, setSortOrder] = useState('asc')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
+  const [updateSuccess, setUpdateSuccess] = useState(false)
 
   useEffect(() => {
     getAllFarmers()
-  }, [])
+  }, [getAllFarmers])
 
   // Search and filter logic
   useEffect(() => {
@@ -66,9 +67,10 @@ const AdminFarmers = () => {
       await updateFarmer(selectedFarmer.user_id, editFormData)
       setShowEditModal(false)
       setSelectedFarmer(null)
-      alert('Farmer updated successfully!')
+      setUpdateSuccess(true)
+      setTimeout(() => setUpdateSuccess(false), 3000)
     } catch (err) {
-      alert('Error updating farmer: ' + err.message)
+      console.error('Error updating farmer:', err)
     }
   }
 
@@ -102,10 +104,26 @@ const AdminFarmers = () => {
               <p className="text-gray-600">Manage and update farmer profiles</p>
             </div>
 
+            {/* Success Alert */}
+            {updateSuccess && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+                <span className="text-green-800">✓ Farmer updated successfully!</span>
+                <button
+                  onClick={() => setUpdateSuccess(false)}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            )}
+
             {/* Error Alert */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
-                <span className="text-red-800">{error}</span>
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={20} className="text-red-600" />
+                  <span className="text-red-800">{error}</span>
+                </div>
                 <button
                   onClick={clearError}
                   className="text-red-600 hover:text-red-800"
@@ -198,7 +216,7 @@ const AdminFarmers = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {paginatedFarmers.map((farmer, idx) => (
+                      {paginatedFarmers.map((farmer) => (
                         <tr key={farmer.user_id} className="border-b hover:bg-gray-50 transition">
                           <td className="px-6 py-4 text-sm text-gray-900">{farmer.user_id}</td>
                           <td className="px-6 py-4 text-sm">

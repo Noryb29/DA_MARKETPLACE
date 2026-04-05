@@ -14,13 +14,15 @@ export function RequireRole({ role }) {
         <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
-    if (!farmerAuth || !farmer) 
-      return (
-    Swal.fire({
-      title:'User Not Authenticated',
-      text:'Please Login First'
-    }),
-    <Navigate to="/login" replace />)
+    if (!farmerAuth || !farmer) {
+      Swal.fire({
+        icon: 'error',
+        title: 'User Not Authenticated',
+        text: 'Please Login as Farmer First',
+        confirmButtonColor: '#166534'
+      })
+      return <Navigate to="/login" replace />
+    }
     return <Outlet />
   }
 
@@ -31,24 +33,29 @@ export function RequireRole({ role }) {
         <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
-    if (!userAuth || !user) 
-      return (
-    Swal.fire({
-      icon:'error',
-      title:'User Not Authenticated',
-      text:'Please Login First'
-    }),
-      <Navigate to="/login" replace />
-    )
+    
+    if (!userAuth || !user) {
+      Swal.fire({
+        icon: 'error',
+        title: 'User Not Authenticated',
+        text: 'Please Login First',
+        confirmButtonColor: '#166534'
+      })
+      return <Navigate to="/login" replace />
+    }
 
-    if (user.role !== 'admin') return (
-    Swal.fire({
-      icon:'error',
-      title:'Admin Access Denied',
-      text:'Please Login First'
-    }),
-      <Navigate to="/login" replace />
-    )
+    // CRITICAL FIX: Check if role is EXACTLY 'admin'
+    if (user.role !== 'admin') {
+      console.error(`Access denied: User role is '${user.role}', expected 'admin'`)
+      Swal.fire({
+        icon: 'error',
+        title: 'Admin Access Denied',
+        text: `DENIED ADMIN ACCESS, INVALID ROLE:${user.role}`,
+        confirmButtonColor: '#166534'
+      })
+      return <Navigate to="/login" replace />
+    }
+    
     return <Outlet />
   }
 
@@ -59,15 +66,26 @@ export function RequireRole({ role }) {
         <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
-    if (!userAuth || !user) return (
-    Swal.fire({
-      icon:'error',
-      title:'User Access Denied',
-      text:'Please Login First'
-    }),
-      <Navigate to="/login" replace />
-    )
-    if (user.role !== 'user') return <Navigate to="/login" replace />
+    
+    if (!userAuth || !user) {
+      Swal.fire({
+        icon: 'error',
+        title: 'User Access Denied',
+        text: 'Please Login First',
+        confirmButtonColor: '#166534'
+      })
+      return <Navigate to="/login" replace />
+    }
+    
+    // User role should NOT be admin
+    if (user.role === 'admin') {
+      return <Navigate to="/admin/dashboard" replace />
+    }
+    
+    if (user.role !== 'user') {
+      return <Navigate to="/login" replace />
+    }
+    
     return <Outlet />
   }
 

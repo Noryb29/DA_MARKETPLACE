@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 
-// ─── User middleware ──────────────────────────────────────────────────────────
+// ─── User middleware (for regular users AND admins) ────────────────────────────
 export const authMiddleware = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization
@@ -13,6 +13,7 @@ export const authMiddleware = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_USER)
 
+    // Allow both 'user' and 'admin' roles
     if (decoded.role !== 'user' && decoded.role !== 'admin')
       return res.status(403).json({ message: 'Access denied. Invalid Role detected' })
 
@@ -74,8 +75,8 @@ export const anyAuthMiddleware = (req, res, next) => {
   }
 }
 
-// ─── Admin middleware ─────────────────────────────────────────────────────────
-// Accepts admin users from JWT_SECRET_USER (admin role in users table)
+// ─── Admin middleware (STRICT - only admin role) ──────────────────────────────
+// Must be a user with role === 'admin' using JWT_SECRET_USER
 export const adminAuthMiddleware = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization
@@ -88,15 +89,18 @@ export const adminAuthMiddleware = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_USER)
 
-    // Check if role is admin
-    if (decoded.role !== 'admin')
+    // Check if role is EXACTLY 'admin'
+    if (decoded.role !== 'admin') {
+      console.log(`Access denied: User role is '${decoded.role}', expected 'admin'`)
       return res.status(403).json({ message: 'Access denied. Admin account required.' })
+    }
 
     req.user = decoded
     next()
   } catch (error) {
     if (error.message === 'JWT_SECRET_USER is not defined')
       return res.status(500).json({ message: 'Server configuration error' })
+    console.error('Admin auth error:', error.message)
     res.status(401).json({ message: 'Invalid or expired token' })
   }
 }

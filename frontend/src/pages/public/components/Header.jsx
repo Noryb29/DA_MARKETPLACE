@@ -49,7 +49,8 @@ const Header = () => {
       { label: 'Home', to: '/' },
       { label: 'Products', to: '/shop/products' },
       { label: 'Farms', to: '/shop/farms' },
-      { label: 'About', to: '#' },
+      { label: 'Price Monitoring', to: '/shop/price_monitoring' },
+      { label: 'About', to: '/shop/about' },
     ]
   }
 
