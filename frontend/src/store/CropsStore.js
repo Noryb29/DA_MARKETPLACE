@@ -14,34 +14,48 @@ export const useCropstore = create((set, get) => ({
   error: null,
 
   // =====================
-  // FETCH VEGETABLES
+  // FETCH CROPS WITH PROPER GROUPING
   // =====================
   fetchCrops: async () => {
+    if(get().isLoading) return;
+    
     set({ isLoading: true, error: null })
 
     try {
       const response = await axios.get(`${BASE_URL}/api/crops/`)
 
+      if (!response.data.data || response.data.data.length === 0) {
+        set({
+          crops: [],
+          isLoading: false
+        })
+        return
+      }
+
       const grouped = {}
 
       response.data.data.forEach((item) => {
+        // Initialize commodity if not exists
         if (!grouped[item.commodity_id]) {
-         grouped[item.commodity_id] = {
-          id: item.commodity_id,
-          name: item.name,
-          specification: item.specification,
-          categories: item.category,
-          price_date: item.price_date,
-          price_count: item.price_count,           // ✅ add this
-          respondent_count: item.respondent_count, // ✅ add this
-          markets: {}
-        }
+          grouped[item.commodity_id] = {
+            id: item.commodity_id,
+            name: item.name,
+            specification: item.specification || "",
+            categories: item.category, // Category name
+            price_date: item.price_date,
+            price_count: item.price_count,
+            respondent_count: item.respondent_count,
+            markets: {}
+          }
         }
 
-        grouped[item.commodity_id].markets[item.market_name] = {
-          prevailing: item.prevailing_price,
-          high: item.high_price,
-          low: item.low_price
+        // Add market data if it exists
+        if (item.market_name) {
+          grouped[item.commodity_id].markets[item.market_name] = {
+            prevailing: item.prevailing_price,
+            high: item.high_price,
+            low: item.low_price
+          }
         }
       })
 
@@ -52,8 +66,9 @@ export const useCropstore = create((set, get) => ({
 
     } catch (error) {
       set({
-        error: error.response?.data?.message, // || "Failed to fetch vegetables",
-        isLoading: false
+        error: error.response?.data?.message || "Failed to fetch commodities",
+        isLoading: false,
+        crops: []
       })
     }
   },
@@ -64,8 +79,9 @@ export const useCropstore = create((set, get) => ({
   fetchMarkets: async () => {
     try {
       const response = await axios.get(`${BASE_URL}/api/crops/markets`)
-      set({ markets: response.data.data })
-    } catch {
+      set({ markets: response.data.data || [] })
+    } catch (error) {
+      console.error("Failed to fetch markets:", error)
       set({ error: "Failed to fetch markets" })
     }
   },
@@ -76,8 +92,9 @@ export const useCropstore = create((set, get) => ({
   fetchCategories: async () => {
     try {
       const response = await axios.get(`${BASE_URL}/api/crops/categories`)
-      set({ categories: response.data.data })
-    } catch {
+      set({ categories: response.data.data || [] })
+    } catch (error) {
+      console.error("Failed to fetch categories:", error)
       set({ error: "Failed to fetch categories" })
     }
   },
@@ -88,8 +105,9 @@ export const useCropstore = create((set, get) => ({
   fetchCommodities: async () => {
     try {
       const response = await axios.get(`${BASE_URL}/api/crops/commodities`)
-      set({ commodities: response.data.data })
-    } catch {
+      set({ commodities: response.data.data || [] })
+    } catch (error) {
+      console.error("Failed to fetch commodities:", error)
       set({ error: "Failed to fetch commodities" })
     }
   },
@@ -102,10 +120,10 @@ export const useCropstore = create((set, get) => ({
       const response = await axios.get(
         `${BASE_URL}/api/crops/commodity/${commodityId}/prices`
       )
-      set({ commodityPrices: response.data.data })
-      return response.data.data
+      set({ commodityPrices: response.data.data || [] })
+      return response.data.data || []
     } catch (error) {
-      console.error("Failed to fetch commodity prices")
+      console.error("Failed to fetch commodity prices:", error)
       return []
     }
   },
@@ -114,70 +132,92 @@ export const useCropstore = create((set, get) => ({
   // ADD COMMODITY
   // =====================
   addCommodity: async (formData) => {
-  if (!formData.category_id || !formData.name) {
-    return { success: false, message: "Category and name are required" }
-  }
+    if (!formData.category_id || !formData.name) {
+      return { success: false, message: "Category and name are required" }
+    }
 
-  try {
-    const response = await axios.post(
-      `${BASE_URL}/api/crops/commodities`,
-      formData
-    )
-    return response.data  // { success: true, id: ... }
-  } catch (err) {
-    console.error("addCommodity error:", err)
-    return { success: false, message: "Failed to add commodity" }
-  }
-},
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/crops/commodities`,
+        formData
+      )
+
+      // Refresh crops list after adding
+      await get().fetchCrops()
+
+      return response.data
+    } catch (err) {
+      console.error("addCommodity error:", err)
+      return { success: false, message: err.response?.data?.message || "Failed to add commodity" }
+    }
+  },
 
   // =====================
   // ADD PRICE RECORD
   // =====================
   addPriceRecord: async (formData) => {
-  if (!formData.commodity_id || !formData.market_id || !formData.price_date) {
-    return { success: false, message: "Missing required fields" }
-  }
-
-  try {
-    const response = await axios.post(
-      `${BASE_URL}/api/crops/prices`,
-      formData
-    )
-    return response.data  // { success: true, id: ... }
-  } catch (err) {
-    // 409 = duplicate record — treat as non-fatal, return the response body
-    if (err.response?.status === 409) {
-      return err.response.data  // { success: false, duplicate: true }
+    if (!formData.commodity_id || !formData.market_id || !formData.price_date) {
+      return { success: false, message: "Missing required fields" }
     }
-    return { success: false, message: "Failed to add price record" }
-  }
-},
 
-addCategory: async (name) => {  
-  try {
-    const response = await axios.post(
-      `${BASE_URL}/api/crops/categories`,
-      { name }
-    )
-    return response.data  // { success: true, id: ... }
-  } catch (err) {
-    console.error("addCategory error:", err)
-    return { success: false, message: "Failed to add category" }
-  }
-},
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/crops/prices`,
+        formData
+      )
 
-addMarket: async (name) => {
-  try {
-    const response = await axios.post(
-      `${BASE_URL}/api/crops/markets`,
-      { name }
-    )
-    return response.data  // { success: true, id: ... }
-  } catch (err) {
-    console.error("addMarket error:", err)
-    return { success: false, message: "Failed to add market" }
-  }
-},
+      // Refresh crops list after adding price
+      await get().fetchCrops()
+
+      return response.data
+    } catch (err) {
+      // 409 = duplicate record
+      if (err.response?.status === 409) {
+        return err.response.data
+      }
+      return { success: false, message: err.response?.data?.message || "Failed to add price record" }
+    }
+  },
+
+  // =====================
+  // ADD CATEGORY
+  // =====================
+  addCategory: async (name) => {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/crops/categories`,
+        { name }
+      )
+
+      // Refresh categories list
+      await get().fetchCategories()
+
+      return response.data
+    } catch (err) {
+      console.error("addCategory error:", err)
+      return { success: false, message: err.response?.data?.message || "Failed to add category" }
+    }
+  },
+
+  // =====================
+  // ADD MARKET
+  // =====================
+  addMarket: async (name, city = "") => {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/crops/markets`,
+        { name, city }
+      )
+
+      // Refresh markets list
+      await get().fetchMarkets()
+
+      return response.data
+    } catch (err) {
+      console.error("addMarket error:", err)
+      return { success: false, message: err.response?.data?.message || "Failed to add market" }
+    }
+  },
 
   // =====================
   // IMPORT EXCEL FORM RECORDS
@@ -191,7 +231,7 @@ addMarket: async (name) => {
    * @param {"A1"|"B1"} form  - Which form sheet to import
    *
    * Shows a progress indicator while uploading, then a success/error alert.
-   * Re-fetches vegetables after a successful import so the UI reflects
+   * Re-fetches crops after a successful import so the UI reflects
    * the new data immediately.
    */
   importFormRecords: async (parsed, form) => {
@@ -240,8 +280,8 @@ addMarket: async (name) => {
           confirmButtonColor: "#15803d"
         })
 
-        // Refresh the main vegetables list so the table reflects new rows
-        get().fetchVegetables()
+        // Refresh the main crops list so the table reflects new rows
+        await get().fetchCrops()
 
         return response.data
       }

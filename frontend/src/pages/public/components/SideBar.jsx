@@ -3,18 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import useUserStore from '../../../store/UserStore.js'
 import useFarmerAuthStore from '../../../store/FarmerAuthStore.js'
 
-const Sidebar = ({
-  onLogout,
-  // Shop-specific props (optional)
-  categoryFilter = null,
-  setCategoryFilter = null,
-  searchTerm = null,
-  setSearchTerm = null,
-  onAddRecord = null,
-  onAddCommodity = null,
-  onImportExcel = null,
-  onImportPDF = null,
-}) => {
+const Sidebar = ({ onLogout }) => {
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
 
@@ -26,11 +15,6 @@ const Sidebar = ({
   const isAdmin = !!user && user.role === 'admin'
   const isRegularUser = !!user && user.role === 'user'
   const isFarmer = !!farmer
-  const isUnauthenticated = !user && !farmer
-
-  // Check if on price monitoring page (shop-specific)
-  const isPriceMonitoringPage = location.pathname === '/shop/price_monitoring'
-  const hasFilters = categoryFilter || searchTerm
 
   // Define navigation items based on role
   const getNavItems = () => {
@@ -41,6 +25,7 @@ const Sidebar = ({
           items: [
             { label: 'Dashboard', icon: '📊', to: '/admin/dashboard' },
             { label: 'Analytics', icon: '📈', to: '/admin/dashboard/analytics' },
+            { label: 'Price Monitoring', icon: '🏷️', to: '/admin/dashboard/price_monitoring' },
           ],
         },
         {
@@ -53,12 +38,6 @@ const Sidebar = ({
             { label: 'Orders', icon: '📦', to: '/admin/dashboard/orders' },
           ],
         },
-        // {
-        //   group: 'Account',
-        //   items: [
-        //     { label: 'Profile', icon: '👤', to: '/admin/profile' },
-        //   ],
-        // },
       ]
     }
 
@@ -187,113 +166,6 @@ const Sidebar = ({
             })}
           </div>
         ))}
-
-        {/* ── Filter Options (Shop-specific, price monitoring page) ── */}
-        {isUnauthenticated && isPriceMonitoringPage && !collapsed && (
-          <div className="collapse collapse-arrow bg-base-200 rounded-box mt-2">
-            <input type="checkbox" defaultChecked />
-            <div className="collapse-title font-semibold">Filter Options</div>
-            <div className="collapse-content flex flex-col gap-4">
-              {/* Category Filter */}
-              <div>
-                <label className="text-sm font-semibold mb-1 block">Category</label>
-                <select
-                  className="select select-bordered w-full"
-                  value={categoryFilter || ''}
-                  onChange={(e) => setCategoryFilter?.(e.target.value)}
-                >
-                  <option value="">All Categories</option>
-                  <option value="Vegetables">Vegetables</option>
-                  <option value="Fruits">Fruits</option>
-                  <option value="Grains">Grains</option>
-                  <option value="Legumes">Legumes</option>
-                  <option value="Herbs">Herbs</option>
-                </select>
-              </div>
-
-              {/* Search */}
-              <div>
-                <label className="text-sm font-semibold mb-1 block">Search</label>
-                <label className="input input-bordered flex items-center gap-2">
-                  🔍
-                  <input
-                    type="text"
-                    className="grow"
-                    placeholder="Search commodity..."
-                    value={searchTerm || ''}
-                    onChange={(e) => setSearchTerm?.(e.target.value)}
-                  />
-                </label>
-              </div>
-
-              {/* Clear Filters */}
-              {hasFilters && (
-                <button
-                  onClick={() => {
-                    setCategoryFilter?.('')
-                    setSearchTerm?.('')
-                  }}
-                  className="btn btn-error btn-sm w-full"
-                >
-                  Clear Filters
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── Action Buttons (Shop-specific, price monitoring page) ── */}
-        {isUnauthenticated && isPriceMonitoringPage && !collapsed && (
-          <div className="flex flex-col gap-2 mt-2">
-            <span className="text-green-400 text-xs font-semibold uppercase tracking-widest px-1">
-              Actions
-            </span>
-
-            <button
-              onClick={onAddRecord}
-              className="flex items-center gap-3 w-full rounded-xl border border-green-700 bg-green-800 hover:bg-green-700 transition-colors p-3 text-left"
-            >
-              <span className="text-xl">📝</span>
-              <div>
-                <p className="font-semibold text-sm text-white">Add Price Record</p>
-                <p className="text-xs text-green-400">Log a new price entry</p>
-              </div>
-            </button>
-
-            <button
-              onClick={onAddCommodity}
-              className="flex items-center gap-3 w-full rounded-xl border border-green-700 bg-green-800 hover:bg-green-700 transition-colors p-3 text-left"
-            >
-              <span className="text-xl">🌿</span>
-              <div>
-                <p className="font-semibold text-sm text-white">Add Commodity</p>
-                <p className="text-xs text-green-400">Register a new commodity</p>
-              </div>
-            </button>
-
-            <button
-              onClick={onImportExcel}
-              className="flex items-center gap-3 w-full rounded-xl border border-green-700 bg-green-800 hover:bg-green-700 transition-colors p-3 text-left"
-            >
-              <span className="text-xl">📊</span>
-              <div>
-                <p className="font-semibold text-sm text-white">Bulk Upload Excel</p>
-                <p className="text-xs text-green-400">Import from Form A1 spreadsheet</p>
-              </div>
-            </button>
-
-            <button
-              onClick={onImportPDF}
-              className="flex items-center gap-3 w-full rounded-xl border border-green-700 bg-green-800 hover:bg-green-700 transition-colors p-3 text-left"
-            >
-              <span className="text-xl">📄</span>
-              <div>
-                <p className="font-semibold text-sm text-white">Upload PDF</p>
-                <p className="text-xs text-green-400">Import from Bantay Presyo report</p>
-              </div>
-            </button>
-          </div>
-        )}
       </nav>
 
       {/* Logout - shown if authenticated */}

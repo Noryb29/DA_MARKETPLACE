@@ -122,7 +122,7 @@ const ProductDetailModal = ({ isOpen, product, onClose }) => {
                 </div>
                 <h3 className="font-semibold text-gray-900 text-lg">Specifications</h3>
               </div>
-              <ul className="space-y-2 flex-col flex">
+              <ul className="space-y-2">
                 {product.specification_1 && (
                   <li className="flex gap-3 text-sm text-gray-700">
                     <span className="text-gray-400 flex-shrink-0">•</span>

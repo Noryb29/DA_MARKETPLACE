@@ -39,6 +39,7 @@ import AdminFarmers from "./pages/admin/AdminFarmers.jsx";
 import AdminOrders from "./pages/admin/AdminOrders.jsx";
 import AdminUsers from "./pages/admin/AdminUsers.jsx";
 import AboutPage from "./pages/public/AboutPage.jsx";
+import AdminPriceMonitoring from "./pages/admin/AdminPriceMonitoring.jsx";
 
 export const router = createBrowserRouter([
 
@@ -117,7 +118,8 @@ export const router = createBrowserRouter([
           { path: "/admin/dashboard/farms", element:<AdminFarms/>},
           { path: "/admin/dashboard/users", element:<AdminUsers/>},
           { path: "/admin/dashboard/farmers", element:<AdminFarmers/>},
-          { path: "/admin/dashboard/orders", element:<AdminOrders/>}
+          { path: "/admin/dashboard/orders", element:<AdminOrders/>},
+          { path: "/admin/dashboard/price_monitoring", element:<AdminPriceMonitoring/>},
         ],
       },
     ],
