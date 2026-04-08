@@ -1,5 +1,5 @@
 import React, { useState, useEffect, forwardRef, useMemo } from "react"
-import { useCropstore } from "../../../store/CropsStore.js"
+import { useAdminPriceStore } from "../../../store/AdminPriceStore.js"
 import { IoCloseCircle, IoCalendar } from "react-icons/io5"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
@@ -30,7 +30,7 @@ const calcPrevailing = (nums) => {
 
 const AddPriceRecordModal = ({ isOpen, OnClose, defaultCommodity = null }) => {
   const { addPriceRecord, commodities, markets, fetchCommodities, fetchMarkets } =
-    useCropstore()
+    useAdminPriceStore()
 
   const emptyForm = {
     commodity_id: "",

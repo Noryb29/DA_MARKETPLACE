@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react"
 import Swal from "sweetalert2"
-import { useCropstore } from "../../../store/CropsStore"
+import { useAdminPriceStore } from "../../../store/AdminPriceStore"
 import extractPDF from "../../../utils/extractPDF"
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ const ImportPDFModal = ({ isOpen, OnClose }) => {
     commodities, markets, categories,
     fetchCommodities, fetchMarkets, fetchCategories,
     addPriceRecord, addCommodity, addCategory, addMarket, fetchVegetables,
-  } = useCropstore()
+  } = useAdminPriceStore()
 
   const fileInputRef = useRef(null)
   const [rows, setRows] = useState([])

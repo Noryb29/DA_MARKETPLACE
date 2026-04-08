@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react"
-import { useCropstore } from "../../store/CropsStore.js"
+import { useAdminPriceStore } from "../../store/AdminPriceStore.js"
 import AddPriceRecordModal from "../price_monitoring/components/AddPriceRecordModal.jsx"
 import AddCommodityModal from "../price_monitoring/components/AddCommodityModal"
 import CommodityTable from "../price_monitoring/components/CommoditiesTable.jsx"
@@ -9,17 +9,15 @@ import Header from "../public/components/Header.jsx"
 import Sidebar from "../public/components/SideBar.jsx"
 
 const AdminPriceMonitoring = () => {
-  // 1. USE SELECTORS: This prevents re-renders when unrelated store state changes
-  const crops = useCropstore((state) => state.crops)
-  const isLoading = useCropstore((state) => state.isLoading)
-  const error = useCropstore((state) => state.error)
+  const crops = useAdminPriceStore((state) => state.crops)
+  const isLoading = useAdminPriceStore((state) => state.isLoading)
+  const error = useAdminPriceStore((state) => state.error)
   
-  // Select actions separately
-  const fetchCrops = useCropstore((state) => state.fetchCrops)
-  const fetchMarkets = useCropstore((state) => state.fetchMarkets)
-  const fetchCategories = useCropstore((state) => state.fetchCategories)
-  const availableCategories = useCropstore((state) => state.categories)
-  const availableMarkets = useCropstore((state) => state.markets)
+  const fetchCrops = useAdminPriceStore((state) => state.fetchCrops)
+  const fetchMarkets = useAdminPriceStore((state) => state.fetchMarkets)
+  const fetchCategories = useAdminPriceStore((state) => state.fetchCategories)
+  const availableCategories = useAdminPriceStore((state) => state.categories)
+  const availableMarkets = useAdminPriceStore((state) => state.markets)
 
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isAddCommodityOpen, setIsAddCommodityOpen] = useState(false)
@@ -30,19 +28,10 @@ const AdminPriceMonitoring = () => {
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedMarket, setSelectedMarket] = useState("")
 
-  // 2. STRICT MOUNT EFFECT: 
-  // We use a ref to ensure this ONLY ever runs once, even if React Strict Mode 
-  // tries to double-mount or the store functions change.
-  const initialized = React.useRef(false)
-
   useEffect(() => {
-    if (!initialized.current) {
-      console.log("Fetching monitoring data...") // Check your console!
-      fetchCrops()
-      fetchMarkets()
-      fetchCategories()
-      initialized.current = true
-    }
+    fetchCrops()
+    fetchMarkets()
+    fetchCategories()
   }, [fetchCrops, fetchMarkets, fetchCategories])
   // 4. Corrected Filter Logic
   const filteredCrops = useMemo(() => {
@@ -258,22 +247,22 @@ const AdminPriceMonitoring = () => {
 
       <AddPriceRecordModal
         isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
+        OnClose={() => setIsAddOpen(false)}
       />
 
       <AddCommodityModal
         isOpen={isAddCommodityOpen}
-        onClose={() => setIsAddCommodityOpen(false)}
+        OnClose={() => setIsAddCommodityOpen(false)}
       />
 
       <ImportExcelModal
         isOpen={isExcelUploadOpen}
-        onClose={() => setExcelUploadOpen(false)}
+        OnClose={() => setExcelUploadOpen(false)}
       />
 
       <ImportPDFModal
         isOpen={isPDFuploadOpen}
-        onClose={() => setPDFUploadOpen(false)}
+        OnClose={() => setPDFUploadOpen(false)}
       />
     </div>
   )

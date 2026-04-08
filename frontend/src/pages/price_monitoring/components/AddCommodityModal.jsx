@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react"
-import { useCropstore } from "../../../store/CropsStore"
+import { useAdminPriceStore } from "../../../store/AdminPriceStore"
 import { IoCloseCircle } from "react-icons/io5"
 
 const AddCommodityModal = ({ isOpen, OnClose }) => {
-  const { categories, fetchCategories, addCommodity } = useCropstore()
+  const { categories, fetchCategories, addCommodity } = useAdminPriceStore()
 
   const [form, setForm] = useState({
     category_id: "",

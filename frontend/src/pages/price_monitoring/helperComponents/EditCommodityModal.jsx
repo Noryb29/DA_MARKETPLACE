@@ -1,6 +1,6 @@
 import React from "react"
 import { useState,useEffect } from "react"
-import { useCropstore } from "../../../store/CropsStore"
+import { useAdminPriceStore } from "../../../store/AdminPriceStore"
 
 // ─── Edit Commodity Modal ─────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react"
-import { useCropstore } from "../../../store/CropsStore"
+import { useAdminPriceStore } from "../../../store/AdminPriceStore"
 import Swal from "sweetalert2"
 import EditCommodityModal from "../helperComponents/EditCommodityModal.jsx"
 import PriceHistoryModal from "../helperComponents/PriceHistoryModal.jsx"
@@ -53,15 +53,15 @@ const ActionBtn = ({ onClick, title, children, danger, disabled }) => (
   </button>
 )
 
-const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" }) => {
-  const {
-    crops,
-    categories,
-    fetchCrops,
-    fetchCategories,
-    deleteCommodity,
-    updateCommodity,
-  } = useCropstore()
+const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "", data, filteredCount, totalCount }) => {
+  const storeCrops = useAdminPriceStore((state) => state.crops)
+  const categories = useAdminPriceStore((state) => state.categories)
+  const fetchCrops = useAdminPriceStore((state) => state.fetchCrops)
+  const fetchCategories = useAdminPriceStore((state) => state.fetchCategories)
+  const deleteCommodity = useAdminPriceStore((state) => state.deleteCommodity)
+  const updateCommodity = useAdminPriceStore((state) => state.updateCommodity)
+
+  const crops = data || storeCrops
 
   // Modal states
   const [editTarget, setEditTarget] = useState(null)
@@ -75,17 +75,19 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
   const [deleteLoading, setDeleteLoading] = useState(null)
   const rowsPerPage = 10
 
-  // Initialize data
+  // Initialize data (only if not provided externally)
   useEffect(() => {
-    const initData = async () => {
-      try {
-        await Promise.all([fetchCrops(), fetchCategories()])
-      } catch (error) {
-        console.error("Failed to initialize data:", error)
+    if (!data) {
+      const initData = async () => {
+        try {
+          await Promise.all([fetchCrops(), fetchCategories()])
+        } catch (error) {
+          console.error("Failed to initialize data:", error)
+        }
       }
+      initData()
     }
-    initData()
-  }, [fetchCrops, fetchCategories])
+  }, [fetchCrops, fetchCategories, data])
 
   // Get all unique markets
   const allMarkets = useMemo(
