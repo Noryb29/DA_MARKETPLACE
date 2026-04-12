@@ -17,8 +17,6 @@ export const useCropstore = create((set, get) => ({
   // FETCH CROPS WITH PROPER GROUPING
   // =====================
   fetchCrops: async () => {
-    if(get().isLoading) return;
-    
     set({ isLoading: true, error: null })
 
     try {
@@ -216,6 +214,37 @@ export const useCropstore = create((set, get) => ({
     } catch (err) {
       console.error("addMarket error:", err)
       return { success: false, message: err.response?.data?.message || "Failed to add market" }
+    }
+  },
+
+  // =====================
+  // UPDATE COMMODITY
+  // =====================
+  updateCommodity: async (id, formData) => {
+    try {
+      const response = await axios.put(
+        `${BASE_URL}/api/crops/commodities/${id}`,
+        formData
+      )
+      return response.data
+    } catch (err) {
+      console.error("updateCommodity error:", err)
+      throw err
+    }
+  },
+
+  // =====================
+  // DELETE COMMODITY
+  // =====================
+  deleteCommodity: async (id) => {
+    try {
+      const response = await axios.delete(
+        `${BASE_URL}/api/crops/commodities/${id}`
+      )
+      return response.data
+    } catch (err) {
+      console.error("deleteCommodity error:", err)
+      throw err
     }
   },
 

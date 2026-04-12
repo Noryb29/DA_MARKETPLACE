@@ -53,14 +53,12 @@ const ActionBtn = ({ onClick, title, children, danger, disabled }) => (
   </button>
 )
 
-const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" }) => {
+// FIX: Accept props from parent component
+const CommodityTable = ({ crops = [], categories = [], markets = [], totalCount = 0 }) => {
   const {
-    crops,
-    categories,
-    fetchCrops,
-    fetchCategories,
     deleteCommodity,
     updateCommodity,
+    fetchCrops,
   } = useCropstore()
 
   // Modal states
@@ -75,19 +73,7 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
   const [deleteLoading, setDeleteLoading] = useState(null)
   const rowsPerPage = 10
 
-  // Initialize data
-  useEffect(() => {
-    const initData = async () => {
-      try {
-        await Promise.all([fetchCrops(), fetchCategories()])
-      } catch (error) {
-        console.error("Failed to initialize data:", error)
-      }
-    }
-    initData()
-  }, [fetchCrops, fetchCategories])
-
-  // Get all unique markets
+  // Get all unique markets from crops
   const allMarkets = useMemo(
     () =>
       [...new Set(crops.flatMap((v) => Object.keys(v.markets ?? {})))]
@@ -96,44 +82,22 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
     [crops]
   )
 
-  // Filter markets based on market filter input
-  const filteredMarkets = useMemo(
-    () =>
-      allMarkets.filter((m) => m.toLowerCase().includes(marketFilter.toLowerCase())),
-    [allMarkets, marketFilter]
-  )
-
   // Initialize selected market
   useEffect(() => {
-    if (filteredMarkets.length > 0 && !selectedMarket) {
-      setSelectedMarket(filteredMarkets[0])
+    if (allMarkets.length > 0 && !selectedMarket) {
+      setSelectedMarket(allMarkets[0])
     }
-  }, [filteredMarkets.join(",")])
+  }, [allMarkets, selectedMarket])
 
-  // Filter crops based on search and category
-  const filtered = useMemo(
-    () =>
-      crops.filter((v) => {
-        const matchSearch = search
-          ? v.name?.toLowerCase().includes(search.toLowerCase())
-          : true
-        const matchCat = categoryFilter
-          ? v.categories?.toLowerCase() === categoryFilter.toLowerCase()
-          : true
-        return matchSearch && matchCat
-      }),
-    [crops, search, categoryFilter]
-  )
-
-  // Group filtered data by category
+  // Group crops by category
   const grouped = useMemo(() => {
-    return filtered.reduce((acc, v) => {
+    return crops.reduce((acc, v) => {
       const cat = v.categories || "Uncategorized"
       if (!acc[cat]) acc[cat] = []
       acc[cat].push(v)
       return acc
     }, {})
-  }, [filtered])
+  }, [crops])
 
   // Flatten and paginate
   const flattenedRows = useMemo(
@@ -161,10 +125,10 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
     }, {})
   }, [paginatedRows])
 
-  // Reset page on filter change
+  // Reset page when crops change
   useEffect(() => {
     setCurrentPage(1)
-  }, [search, categoryFilter, marketFilter])
+  }, [crops])
 
   // Handlers
   const visibleMarkets = selectedMarket ? [selectedMarket] : []
@@ -241,7 +205,7 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
   }, [fetchCrops])
 
   // Empty state
-  if (filtered.length === 0) {
+  if (crops.length === 0) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-12">
         <div className="flex flex-col items-center justify-center gap-3 text-slate-500">
@@ -262,11 +226,7 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
           </svg>
           <div className="text-center">
             <p className="font-semibold text-slate-600">No commodities found</p>
-            <p className="text-sm mt-1">
-              {search || categoryFilter || marketFilter
-                ? "Try adjusting your filters."
-                : "Add your first commodity to get started."}
-            </p>
+            <p className="text-sm mt-1">Try adjusting your filters or add your first commodity.</p>
           </div>
         </div>
       </div>
@@ -291,10 +251,10 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
         {/* Toolbar */}
         <div className="flex items-center justify-between px-1">
           <span className="text-xs text-slate-500 font-medium">
-            {filtered.length} commodit{filtered.length !== 1 ? "ies" : "y"}
-            {filtered.length > 0 && (
+            {crops.length} commodit{crops.length !== 1 ? "ies" : "y"}
+            {crops.length > 0 && (
               <span className="text-slate-400 ml-3">
-                (showing {startIndex + 1}–{Math.min(endIndex, filtered.length)} per page)
+                (showing {startIndex + 1}–{Math.min(endIndex, crops.length)} per page)
               </span>
             )}
           </span>
@@ -364,7 +324,7 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
                       <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-slate-600">
                         Market
                       </span>
-                      {filteredMarkets.length > 1 && (
+                      {allMarkets.length > 1 && (
                         <div className="relative">
                           <select
                             className="appearance-none bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent cursor-pointer"
@@ -373,7 +333,7 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
                               if (e.target.value) setSelectedMarket(e.target.value)
                             }}
                           >
-                            {filteredMarkets.map((m) => (
+                            {allMarkets.map((m) => (
                               <option key={m} value={m}>
                                 {m}
                               </option>
@@ -449,7 +409,7 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
                           />
                         </svg>
                         <span className="text-sm font-medium text-slate-500">
-                          {marketFilter ? "No markets match" : "Select a market"}
+                          Select a market
                         </span>
                       </div>
                     </td>
@@ -688,7 +648,7 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
         </div>
 
         {/* Pagination Controls */}
-        {filtered.length > 0 && totalPages > 1 && (
+        {crops.length > 0 && totalPages > 1 && (
           <div className="flex items-center justify-between px-1">
             <span className="text-xs text-slate-500 font-medium">
               Page {currentPage} of {totalPages}
@@ -737,7 +697,7 @@ const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" })
       <AddPriceRecordModal
         isOpen={!!addPriceTarget}
         defaultCommodity={addPriceTarget}
-        OnClose={handleAddPriceClose}
+        onClose={handleAddPriceClose}
       />
       <RespondentHistoryModal
         commodity={respondentTarget}
