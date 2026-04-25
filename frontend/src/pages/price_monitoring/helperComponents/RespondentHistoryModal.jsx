@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useCropstore } from "../../../store/CropsStore"
+import { useAdminPriceStore } from "../../../store/AdminPriceStore"
 
 const formatDate = (raw) => {
   if (!raw) return "—"
@@ -10,7 +10,7 @@ const formatDate = (raw) => {
 const fmtPrice = (val) => val != null ? `₱${Number(val).toFixed(2)}` : null
 
 const RespondentHistoryModal = ({ commodity, isOpen, onClose }) => {
-  const { fetchCommodityPrices, commodityPrices } = useCropstore()
+  const { fetchCommodityPrices, commodityPrices } = useAdminPriceStore()
   const [loading, setLoading]         = useState(false)
   const [activeMarket, setActiveMarket] = useState(null)
 

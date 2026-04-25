@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useCropstore } from "../../../store/CropsStore"
+import { useAdminPriceStore } from "../../../store/AdminPriceStore"
 import {
   Chart as ChartJS,
   CategoryScale, LinearScale,
@@ -20,7 +20,7 @@ const MARKET_COLORS = [
 const getColor = (i) => MARKET_COLORS[i % MARKET_COLORS.length]
 
 const PriceHistoryModal = ({ commodity, isOpen, onClose }) => {
-  const { fetchCommodityPrices, commodityPrices } = useCropstore()
+  const { fetchCommodityPrices, commodityPrices } = useAdminPriceStore()
   const [loading, setLoading]     = useState(false)
   const [activeTab, setActiveTab] = useState("table")
   const [priceField, setPriceField] = useState("prevailing_price")

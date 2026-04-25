@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react"
 import { useCropstore } from "../../store/CropsStore.js"
-
 import AddPriceRecordModal from "../price_monitoring/components/AddPriceRecordModal.jsx"
 import AddCommodityModal from "../price_monitoring/components/AddCommodityModal"
 import CommodityTable from "../price_monitoring/components/CommoditiesTable.jsx"
@@ -12,37 +11,40 @@ import Sidebar from "../public/components/SideBar.jsx"
 import { TrendingUp, AlertCircle, Calendar, BarChart3 } from 'lucide-react'
 
 const AdminPriceMonitoring = () => {
+  // 1. USE SELECTORS: This prevents re-renders when unrelated store state changes
   const crops = useCropstore((state) => state.crops)
-  const markets = useCropstore((state) => state.markets)
-  const categories = useCropstore((state) => state.categories)
   const isLoading = useCropstore((state) => state.isLoading)
   const error = useCropstore((state) => state.error)
-
+  
+  // Select actions separately
   const fetchCrops = useCropstore((state) => state.fetchCrops)
   const fetchMarkets = useCropstore((state) => state.fetchMarkets)
   const fetchCategories = useCropstore((state) => state.fetchCategories)
+  const availableCategories = useCropstore((state) => state.categories)
+  const availableMarkets = useCropstore((state) => state.markets)
+
+  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [isAddCommodityOpen, setIsAddCommodityOpen] = useState(false)
+  const [isExcelUploadOpen, setExcelUploadOpen] = useState(false)
+  const [isPDFuploadOpen, setPDFUploadOpen] = useState(false)
 
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedMarket, setSelectedMarket] = useState("")
 
-  const [isAddPriceOpen, setIsAddPriceOpen] = useState(false)
-  const [isAddCommodityOpen, setIsAddCommodityOpen] = useState(false)
-  const [isExcelOpen, setExcelOpen] = useState(false)
-  const [isPDFOpen, setPDFOpen] = useState(false)
-  const [animateCards, setAnimateCards] = useState(false)
+  // 2. STRICT MOUNT EFFECT: 
+  // We use a ref to ensure this ONLY ever runs once, even if React Strict Mode 
+  // tries to double-mount or the store functions change.
+  const initialized = React.useRef(false)
 
-  // Fetch data on mount
   useEffect(() => {
-    const initData = async () => {
-      try {
-        await Promise.all([fetchCrops(), fetchMarkets(), fetchCategories()])
-        setAnimateCards(true)
-      } catch (err) {
-        console.error("Failed to initialize data:", err)
-      }
+    if (!initialized.current) {
+      console.log("Fetching monitoring data...") // Check your console!
+      fetchCrops()
+      fetchMarkets()
+      fetchCategories()
+      initialized.current = true
     }
-    initData()
   }, [fetchCrops, fetchMarkets, fetchCategories])
 
   // Filter crops based on search, category, and market
@@ -474,8 +476,8 @@ const AdminPriceMonitoring = () => {
 
       {/* Modals */}
       <AddPriceRecordModal
-        isOpen={isAddPriceOpen}
-        OnClose={() => setIsAddPriceOpen(false)}
+        isOpen={isAddOpen}
+        onClose={() => setIsAddOpen(false)}
       />
 
       <AddCommodityModal
@@ -484,13 +486,13 @@ const AdminPriceMonitoring = () => {
       />
 
       <ImportExcelModal
-        isOpen={isExcelOpen}
-        OnClose={() => setExcelOpen(false)}
+        isOpen={isExcelUploadOpen}
+        onClose={() => setExcelUploadOpen(false)}
       />
 
       <ImportPDFModal
-        isOpen={isPDFOpen}
-        OnClose={() => setPDFOpen(false)}
+        isOpen={isPDFuploadOpen}
+        onClose={() => setPDFUploadOpen(false)}
       />
     </div>
   )

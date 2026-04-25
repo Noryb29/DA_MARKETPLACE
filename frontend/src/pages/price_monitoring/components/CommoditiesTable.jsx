@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react"
-import { useCropstore } from "../../../store/CropsStore"
+import { useAdminPriceStore } from "../../../store/AdminPriceStore"
 import Swal from "sweetalert2"
 import EditCommodityModal from "../helperComponents/EditCommodityModal.jsx"
 import PriceHistoryModal from "../helperComponents/PriceHistoryModal.jsx"
@@ -53,12 +53,14 @@ const ActionBtn = ({ onClick, title, children, danger, disabled }) => (
   </button>
 )
 
-// FIX: Accept props from parent component
-const CommodityTable = ({ crops = [], categories = [], markets = [], totalCount = 0 }) => {
+const CommodityTable = ({ search = "", categoryFilter = "", marketFilter = "" }) => {
   const {
+    crops,
+    categories,
+    fetchCrops,
+    fetchCategories,
     deleteCommodity,
     updateCommodity,
-    fetchCrops,
   } = useCropstore()
 
   // Modal states
@@ -73,7 +75,19 @@ const CommodityTable = ({ crops = [], categories = [], markets = [], totalCount 
   const [deleteLoading, setDeleteLoading] = useState(null)
   const rowsPerPage = 10
 
-  // Get all unique markets from crops
+  // Initialize data
+  useEffect(() => {
+    const initData = async () => {
+      try {
+        await Promise.all([fetchCrops(), fetchCategories()])
+      } catch (error) {
+        console.error("Failed to initialize data:", error)
+      }
+    }
+    initData()
+  }, [fetchCrops, fetchCategories])
+
+  // Get all unique markets
   const allMarkets = useMemo(
     () =>
       [...new Set(crops.flatMap((v) => Object.keys(v.markets ?? {})))]

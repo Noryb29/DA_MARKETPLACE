@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react"
 import * as XLSX from "xlsx"
 import Swal from "sweetalert2"
-import { useCropstore } from "../../../store/CropsStore"
+import { useAdminPriceStore } from "../../../store/AdminPriceStore"
 
 // ─── Helper: robust numeric parsing ──────────────────────────────────────────
 const parseNumeric = (val) => {
@@ -181,7 +181,7 @@ const ImportExcelModal = ({ isOpen, OnClose }) => {
     commodities, markets, categories,
     fetchCommodities, fetchMarkets, fetchCategories,
     addPriceRecord, addCommodity, addCategory, addMarket, fetchCrops,
-  } = useCropstore()
+  } = useAdminPriceStore()
 
   const fileInputRef = useRef(null)
   const [rows, setRows] = useState([])
