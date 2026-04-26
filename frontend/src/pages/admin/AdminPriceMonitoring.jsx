@@ -5,41 +5,38 @@ import AddCommodityModal from "../price_monitoring/components/AddCommodityModal"
 import CommodityTable from "../price_monitoring/components/CommoditiesTable.jsx"
 import ImportExcelModal from "../price_monitoring/components/ImportExcelModal.jsx"
 import ImportPDFModal from "../price_monitoring/components/ImportPDFModal.jsx"
-
 import Header from "../public/components/Header.jsx"
 import Sidebar from "../public/components/SideBar.jsx"
-import { TrendingUp, AlertCircle, Calendar, BarChart3 } from 'lucide-react'
+import { TrendingUp, AlertCircle, Calendar, BarChart3, Search, X } from 'lucide-react'
 
 const AdminPriceMonitoring = () => {
-  // 1. USE SELECTORS: This prevents re-renders when unrelated store state changes
+  // Store selectors
   const crops = useCropstore((state) => state.crops)
   const isLoading = useCropstore((state) => state.isLoading)
   const error = useCropstore((state) => state.error)
-  
-  // Select actions separately
+  const markets = useCropstore((state) => state.markets)
+  const categories = useCropstore((state) => state.categories)
+
   const fetchCrops = useCropstore((state) => state.fetchCrops)
   const fetchMarkets = useCropstore((state) => state.fetchMarkets)
   const fetchCategories = useCropstore((state) => state.fetchCategories)
-  const availableCategories = useCropstore((state) => state.categories)
-  const availableMarkets = useCropstore((state) => state.markets)
 
-  const [isAddOpen, setIsAddOpen] = useState(false)
+  // Modal states
+  const [isAddPriceOpen, setIsAddPriceOpen] = useState(false)
   const [isAddCommodityOpen, setIsAddCommodityOpen] = useState(false)
   const [isExcelUploadOpen, setExcelUploadOpen] = useState(false)
   const [isPDFuploadOpen, setPDFUploadOpen] = useState(false)
 
+  // Filter states
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedMarket, setSelectedMarket] = useState("")
+  const [showFilters, setShowFilters] = useState(false)
 
-  // 2. STRICT MOUNT EFFECT: 
-  // We use a ref to ensure this ONLY ever runs once, even if React Strict Mode 
-  // tries to double-mount or the store functions change.
+  // Initialize on mount
   const initialized = React.useRef(false)
-
   useEffect(() => {
     if (!initialized.current) {
-      console.log("Fetching monitoring data...") // Check your console!
       fetchCrops()
       fetchMarkets()
       fetchCategories()
@@ -47,40 +44,27 @@ const AdminPriceMonitoring = () => {
     }
   }, [fetchCrops, fetchMarkets, fetchCategories])
 
-  // Filter crops based on search, category, and market
+  // Filter crops
   const filteredCrops = useMemo(() => {
     const search = searchTerm.toLowerCase()
-
     return crops.filter((crop) => {
       const matchesSearch =
         !search ||
         crop.name.toLowerCase().includes(search) ||
         (crop.specification || "").toLowerCase().includes(search)
-
       const matchesCategory =
         !selectedCategory || crop.categories === selectedCategory
-
       const matchesMarket =
         !selectedMarket ||
         (crop.markets && selectedMarket in crop.markets)
-
       return matchesSearch && matchesCategory && matchesMarket
     })
   }, [crops, searchTerm, selectedCategory, selectedMarket])
 
-  const clearFilters = () => {
-    setSearchTerm("")
-    setSelectedCategory("")
-    setSelectedMarket("")
-  }
-
-  const hasFilters = searchTerm || selectedCategory || selectedMarket
-  const resultsCount = filteredCrops.length
-
-  // Calculate analytics
-  const priceStats = useMemo(() => {
+  // Analytics
+  const analytics = useMemo(() => {
     if (filteredCrops.length === 0) {
-      return { avgPrice: 0, highestPrice: 0, lowestPrice: 0, priceChange: 0 }
+      return { totalCommodities: 0, avgPrice: 0, priceRange: "—" }
     }
 
     const prices = filteredCrops
@@ -88,386 +72,388 @@ const AdminPriceMonitoring = () => {
       .map((crop) => parseFloat(crop.price))
 
     if (prices.length === 0) {
-      return { avgPrice: 0, highestPrice: 0, lowestPrice: 0, priceChange: 0 }
+      return { totalCommodities: filteredCrops.length, avgPrice: 0, priceRange: "—" }
     }
 
     const avgPrice = (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2)
-    const highestPrice = Math.max(...prices).toFixed(2)
-    const lowestPrice = Math.min(...prices).toFixed(2)
+    const highestPrice = Math.max(...prices)
+    const lowestPrice = Math.min(...prices)
 
     return {
-      avgPrice,
-      highestPrice,
-      lowestPrice,
-      priceChange: parseFloat(avgPrice) > 0 ? 5.2 : -2.1, // Placeholder
+      totalCommodities: filteredCrops.length,
+      avgPrice: `₱${avgPrice}`,
+      priceRange: `₱${lowestPrice.toFixed(2)} - ₱${highestPrice.toFixed(2)}`
     }
   }, [filteredCrops])
 
-  const topMarkets = useMemo(() => {
-    const marketCount = {}
-    filteredCrops.forEach((crop) => {
-      if (crop.markets) {
-        Object.keys(crop.markets).forEach((market) => {
-          marketCount[market] = (marketCount[market] || 0) + 1
-        })
-      }
-    })
-    return Object.entries(marketCount)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 3)
-  }, [filteredCrops])
+  const clearAllFilters = () => {
+    setSearchTerm("")
+    setSelectedCategory("")
+    setSelectedMarket("")
+  }
 
-  const categoryDistribution = useMemo(() => {
-    const catCount = {}
-    filteredCrops.forEach((crop) => {
-      if (crop.categories) {
-        catCount[crop.categories] = (catCount[crop.categories] || 0) + 1
-      }
-    })
-    return Object.entries(catCount)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 3)
-  }, [filteredCrops])
+  const hasActiveFilters = searchTerm || selectedCategory || selectedMarket
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #f8fafc 0%, #e8f4f0 100%)" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        .admin-price-monitoring {
+          font-family: 'Outfit', sans-serif;
+        }
+
+        .admin-price-monitoring h1 {
+          font-family: 'Syne', sans-serif;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+        }
+
+        .admin-price-monitoring h2 {
+          font-family: 'Syne', sans-serif;
+          font-weight: 600;
+        }
+
+        .btn-primary {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-primary:active {
+          transform: translateY(0);
+        }
+
+        .btn-secondary {
+          background: rgba(255, 255, 255, 0.8);
+          backdrop-filter: blur(10px);
+          border: 1.5px solid rgba(16, 185, 129, 0.2);
+          transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+          background: white;
+          border-color: rgba(16, 185, 129, 0.5);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .input-elegant {
+          background: rgba(255, 255, 255, 0.9);
+          border: 1.5px solid rgba(16, 185, 129, 0.15);
+          transition: all 0.3s ease;
+          font-family: 'Outfit', sans-serif;
+        }
+
+        .input-elegant:focus {
+          background: white;
+          border-color: #10b981;
+          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+          outline: none;
+        }
+
+        .stat-card {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(16, 185, 129, 0.1);
+          transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(16, 185, 129, 0.3);
+          box-shadow: 0 8px 24px rgba(16, 185, 129, 0.1);
+        }
+
+        .filter-badge {
+          background: rgba(16, 185, 129, 0.1);
+          color: #047857;
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .action-button {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .action-button::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: rgba(255, 255, 255, 0.2);
+          transition: left 0.5s ease;
+        }
+
+        .action-button:hover::before {
+          left: 100%;
+        }
+
+        .glow-accent {
+          position: relative;
+        }
+
+        .glow-accent::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.1), transparent);
+          border-radius: inherit;
+          pointer-events: none;
+        }
+      `}</style>
+
       <Header />
 
-      <div className="flex" style={{ minHeight: "calc(100vh - 65px)" }}>
+      <div className="admin-price-monitoring flex" style={{ minHeight: "calc(100vh - 65px)" }}>
         <Sidebar />
 
         <main className="flex-1 overflow-auto">
-          <div className="p-8 max-w-7xl mx-auto">
-            {/* Page Header */}
-            <div className="mb-8 border-b border-gray-200 pb-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">
+          <div className="p-8 max-w-7xl mx-auto w-full">
+            {/* Hero Section */}
+            <div className="mb-10">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-3 h-3 rounded-full" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}></div>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-emerald-700">Market Intelligence</span>
+                  </div>
+                  <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 leading-tight">
                     Price Monitoring
                   </h1>
-                  <p className="text-sm text-gray-500 flex items-center gap-2 mt-2">
-                    <Calendar size={16} />
-                    Manage commodities and track market prices across regions
+                  <p className="text-gray-600 mt-3 flex items-center gap-2">
+                    <Calendar size={18} className="text-emerald-600" />
+                    Track commodities and monitor market prices in real-time
                   </p>
                 </div>
               </div>
+
+              {/* Error Alert */}
+              {error && (
+                <div className="mb-6 p-4 bg-red-50/80 backdrop-blur border border-red-200/50 rounded-xl flex items-center justify-between animate-pulse">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
+                    <span className="text-red-700 text-sm font-medium">{error}</span>
+                  </div>
+                  <button className="text-red-400 hover:text-red-600 transition-colors">
+                    <X size={18} />
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Error Alert */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="text-red-500" size={20} />
-                  <span className="text-red-700 text-sm">{error}</span>
-                </div>
-                <button className="text-red-500 hover:text-red-700 font-semibold">
-                  ✕
-                </button>
+            {/* Analytics Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              <div className="stat-card rounded-xl p-5 glow-accent">
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Total Commodities</p>
+                <p className="text-3xl font-bold text-gray-900">{analytics.totalCommodities}</p>
+                <p className="text-xs text-gray-400 mt-2">In current filters</p>
               </div>
-            )}
+              <div className="stat-card rounded-xl p-5 glow-accent">
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Average Price</p>
+                <p className="text-3xl font-bold text-emerald-600">{analytics.avgPrice}</p>
+                <p className="text-xs text-gray-400 mt-2">Across selected items</p>
+              </div>
+              <div className="stat-card rounded-xl p-5 glow-accent">
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Price Range</p>
+                <p className="text-lg font-bold text-gray-900">{analytics.priceRange}</p>
+                <p className="text-xs text-gray-400 mt-2">Min - Max in filters</p>
+              </div>
+            </div>
 
-            {/* Search & Filter Panel - Top */}
-            <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6">
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Search Commodities
-                </label>
-                <div className="relative group">
-                  <svg
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-gray-600 transition-colors"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            {/* Main Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+              {/* Left Sidebar - Controls */}
+              <div className="lg:col-span-1 space-y-5">
+                {/* Search */}
+                <div className="bg-white/80 backdrop-blur rounded-xl p-5 border border-gray-200/50 shadow-sm">
+                  <label className="block text-xs font-semibold uppercase tracking-widest text-gray-600 mb-3">
+                    Quick Search
+                  </label>
+                  <div className="relative group">
+                    <Search
+                      size={18}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors"
                     />
-                  </svg>
-                  <input
-                    type="text"
-                    placeholder="Search by name, specification..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-gray-900 placeholder-gray-400 transition-all"
-                  />
+                    <input
+                      type="text"
+                      placeholder="Commodity name..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 input-elegant rounded-lg text-sm"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {/* Category Filter */}
+                <div className="bg-white/80 backdrop-blur rounded-xl p-5 border border-gray-200/50 shadow-sm">
+                  <label className="block text-xs font-semibold uppercase tracking-widest text-gray-600 mb-3">
                     Category
                   </label>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-gray-900 font-medium appearance-none cursor-pointer transition-all"
+                    className="w-full px-4 py-3 input-elegant rounded-lg text-sm appearance-none cursor-pointer bg-right"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2310b981' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 12px center",
+                      paddingRight: "36px"
+                    }}
                   >
                     <option value="">All Categories</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
                     ))}
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {/* Market Filter */}
+                <div className="bg-white/80 backdrop-blur rounded-xl p-5 border border-gray-200/50 shadow-sm">
+                  <label className="block text-xs font-semibold uppercase tracking-widest text-gray-600 mb-3">
                     Market
                   </label>
                   <select
                     value={selectedMarket}
                     onChange={(e) => setSelectedMarket(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 text-gray-900 font-medium appearance-none cursor-pointer transition-all"
+                    className="w-full px-4 py-3 input-elegant rounded-lg text-sm appearance-none cursor-pointer bg-right"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2310b981' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 12px center",
+                      paddingRight: "36px"
+                    }}
                   >
                     <option value="">All Markets</option>
-                    {markets.map((m) => (
-                      <option key={m.id} value={m.name}>
-                        {m.name}
-                      </option>
+                    {markets.map((market) => (
+                      <option key={market.id} value={market.name}>{market.name}</option>
                     ))}
                   </select>
                 </div>
 
-                <div className="flex items-end gap-2">
-                  {hasFilters && (
+                {/* Active Filters */}
+                {hasActiveFilters && (
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      {searchTerm && (
+                        <span className="filter-badge px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2">
+                          {searchTerm}
+                          <button
+                            onClick={() => setSearchTerm("")}
+                            className="hover:text-red-600 transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      )}
+                      {selectedCategory && (
+                        <span className="filter-badge px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2">
+                          {selectedCategory}
+                          <button
+                            onClick={() => setSelectedCategory("")}
+                            className="hover:text-red-600 transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      )}
+                      {selectedMarket && (
+                        <span className="filter-badge px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2">
+                          {selectedMarket}
+                          <button
+                            onClick={() => setSelectedMarket("")}
+                            className="hover:text-red-600 transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      )}
+                    </div>
                     <button
-                      onClick={clearFilters}
-                      className="w-full text-sm font-semibold px-4 py-2 rounded-lg text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                      onClick={clearAllFilters}
+                      className="w-full text-xs font-semibold px-4 py-2 rounded-lg text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all"
                     >
-                      ✕ Clear Filters
+                      Clear All
                     </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Main Content Grid - Controls on left, Full-width table on right */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6" style={{ minHeight: "calc(100vh - 360px)" }}>
-              {/* Left Sidebar - Controls & Analytics */}
-              <div className="space-y-4 " style={{ maxHeight: "calc(100vh - 360px)" }}>
+                  </div>
+                )}
 
                 {/* Action Buttons */}
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
-                  <p className="text-xs uppercase tracking-widest font-semibold text-gray-500 mb-3">
+                <div className="pt-4 space-y-3 border-t border-gray-200">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-600 mb-4">
                     Quick Actions
                   </p>
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => setIsAddPriceOpen(true)}
-                      className="w-full h-12 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all flex items-center justify-center gap-2 text-xs"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Add Price
-                    </button>
 
-                    <button
-                      onClick={() => setIsAddCommodityOpen(true)}
-                      className="w-full h-15 px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition-all flex items-center justify-center gap-2 text-xs"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Add Commodity
-                    </button>
+                  <button
+                    onClick={() => setIsAddPriceOpen(true)}
+                    className="w-full btn-primary action-button text-white font-semibold rounded-lg py-3 px-4 text-sm flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Price Record
+                  </button>
 
-                    <button
-                      onClick={() => setExcelOpen(true)}
-                      className="w-full h-15 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-md transition-all flex items-center justify-center gap-2 text-xs"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Import Excel
-                    </button>
+                  <button
+                    onClick={() => setIsAddCommodityOpen(true)}
+                    className="w-full btn-secondary action-button text-gray-700 font-semibold rounded-lg py-3 px-4 text-sm flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    New Commodity
+                  </button>
 
-                    <button
-                      onClick={() => setPDFOpen(true)}
-                      className="w-full h-15 px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition-all flex items-center justify-center gap-2 text-xs"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Import PDF
-                    </button>
-                  </div>
-                </div>
+                  <button
+                    onClick={() => setExcelUploadOpen(true)}
+                    className="w-full btn-secondary action-button text-gray-700 font-semibold rounded-lg py-3 px-4 text-sm flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Import Excel
+                  </button>
 
-                {/* Price Statistics Card */}
-                <div
-                  className={`bg-white border border-gray-200 rounded-lg p-4 transition-all duration-300 ${
-                    animateCards ? "opacity-100" : "opacity-0"
-                  }`}
-                  style={{
-                    transitionDelay: animateCards ? "100ms" : "0ms",
-                  }}
-                >
-                  <h3 className="text-xs font-bold text-gray-900 mb-3 uppercase tracking-wide flex items-center gap-2">
-                    <BarChart3 size={14} className="text-blue-600" />
-                    Price Stats
-                  </h3>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-xs text-gray-500 font-medium mb-1">Average Price</p>
-                      <div className="flex items-baseline gap-2">
-                        <p className="text-xl font-bold text-gray-900">₱{priceStats.avgPrice}</p>
-                        <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded">
-                          +{priceStats.priceChange}%
-                        </span>
-                      </div>
-                    </div>
-                    <div className="border-t border-gray-100 pt-2">
-                      <div className="flex items-center justify-between mb-2 text-xs">
-                        <span className="text-gray-600">Highest</span>
-                        <span className="font-bold text-gray-900">₱{priceStats.highestPrice}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-600">Lowest</span>
-                        <span className="font-bold text-gray-900">₱{priceStats.lowestPrice}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Top Markets Card */}
-                <div
-                  className={`bg-white border border-gray-200 rounded-lg p-4 transition-all duration-300 ${
-                    animateCards ? "opacity-100" : "opacity-0"
-                  }`}
-                  style={{
-                    transitionDelay: animateCards ? "150ms" : "0ms",
-                  }}
-                >
-                  <h3 className="text-xs font-bold text-gray-900 mb-3 uppercase tracking-wide">Top Markets</h3>
-                  <div className="space-y-2">
-                    {topMarkets.length > 0 ? (
-                      topMarkets.map(([market, count], idx) => (
-                        <div key={idx} className="flex items-center justify-between text-xs">
-                          <span className="text-gray-600 truncate">{market}</span>
-                          <div className="flex items-center gap-1 ml-2">
-                            <div className="w-8 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-blue-600 rounded-full"
-                                style={{
-                                  width: `${(count / Math.max(...topMarkets.map(([, c]) => c))) * 100}%`,
-                                }}
-                              ></div>
-                            </div>
-                            <span className="font-medium text-gray-900 w-4 text-right">{count}</span>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-xs text-gray-500 text-center py-2">No data</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Category Distribution Card */}
-                <div
-                  className={`bg-white border border-gray-200 rounded-lg p-4 transition-all duration-300 ${
-                    animateCards ? "opacity-100" : "opacity-0"
-                  }`}
-                  style={{
-                    transitionDelay: animateCards ? "200ms" : "0ms",
-                  }}
-                >
-                  <h3 className="text-xs font-bold text-gray-900 mb-3 uppercase tracking-wide">Categories</h3>
-                  <div className="space-y-2">
-                    {categoryDistribution.length > 0 ? (
-                      categoryDistribution.map(([category, count], idx) => (
-                        <div key={idx} className="flex items-center justify-between p-1.5 bg-gray-50 rounded text-xs">
-                          <span className="font-medium text-gray-700 truncate">{category}</span>
-                          <span className="font-bold text-gray-900 bg-white px-2 py-0.5 rounded ml-2">
-                            {count}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-xs text-gray-500 text-center py-2">No data</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Summary Stats */}
-                <div
-                  className={`bg-white border border-gray-200 rounded-lg p-4 transition-all duration-300 ${
-                    animateCards ? "opacity-100" : "opacity-0"
-                  }`}
-                  style={{
-                    transitionDelay: animateCards ? "250ms" : "0ms",
-                  }}
-                >
-                  <h3 className="text-xs font-bold text-gray-900 mb-3 uppercase tracking-wide">Summary</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">Total Commodities</span>
-                      <span className="font-bold text-gray-900">{crops.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">Filtered Results</span>
-                      <span className="font-bold text-gray-900">{resultsCount}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">Total Markets</span>
-                      <span className="font-bold text-gray-900">{markets.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">Categories</span>
-                      <span className="font-bold text-gray-900">{categories.length}</span>
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => setPDFUploadOpen(true)}
+                    className="w-full btn-secondary action-button text-gray-700 font-semibold rounded-lg py-3 px-4 text-sm flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    Import PDF
+                  </button>
                 </div>
               </div>
 
-              {/* Right Side - Full Width Table */}
-              <div className="lg:col-span-3 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col" style={{ minHeight: "calc(100vh - 360px)" }}>
-                {/* Table Header */}
-                <div className="p-4 border-b border-gray-200 bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-base font-bold text-gray-900">Commodities</h2>
-                      <p className="text-xs text-gray-500 mt-0.5">{resultsCount} results</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Table Content */}
-                <div className="flex-1 overflow-auto">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <div className="inline-block animate-spin mb-4">
-                          <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
-                        </div>
-                        <p className="text-sm text-gray-500">Loading commodities...</p>
-                      </div>
-                    </div>
-                  ) : resultsCount === 0 ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
-                        </svg>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No commodities found</h3>
-                        <p className="text-gray-500 text-sm">Try adjusting your filters or add a new commodity</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <CommodityTable
-                      crops={filteredCrops}
-                      categories={categories}
-                      markets={markets}
-                      totalCount={crops.length}
-                    />
-                  )}
-                </div>
+              {/* Right Content - Table */}
+              <div className="lg:col-span-4">
+                <CommodityTable
+                  filteredData={filteredCrops}
+                  allCrops={crops}
+                  isLoading={isLoading}
+                  search={searchTerm}
+                  categoryFilter={selectedCategory}
+                  marketFilter={selectedMarket}
+                />
               </div>
             </div>
           </div>
@@ -476,23 +462,20 @@ const AdminPriceMonitoring = () => {
 
       {/* Modals */}
       <AddPriceRecordModal
-        isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
+        isOpen={isAddPriceOpen}
+        OnClose={() => setIsAddPriceOpen(false)}
       />
-
       <AddCommodityModal
         isOpen={isAddCommodityOpen}
         OnClose={() => setIsAddCommodityOpen(false)}
       />
-
       <ImportExcelModal
         isOpen={isExcelUploadOpen}
         onClose={() => setExcelUploadOpen(false)}
       />
-
       <ImportPDFModal
         isOpen={isPDFuploadOpen}
-        onClose={() => setPDFUploadOpen(false)}
+        OnClose={() => setPDFUploadOpen(false)}
       />
     </div>
   )

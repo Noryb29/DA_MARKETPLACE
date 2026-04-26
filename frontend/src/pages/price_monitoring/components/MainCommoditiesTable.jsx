@@ -1,10 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react"
-import { useAdminPriceStore } from "../../../store/AdminPriceStore"
 import Swal from "sweetalert2"
-import EditCommodityModal from "../helperComponents/EditCommodityModal.jsx"
 import PriceHistoryModal from "../helperComponents/PriceHistoryModal.jsx"
 import RespondentHistoryModal from "../helperComponents/RespondentHistoryModal.jsx"
-import AddPriceRecordModal from "./AddPriceRecordModal.jsx"
 import { useCropstore } from "../../../store/CropsStore.js"
 
 const fmt = (val) => (val != null ? `₱${Number(val).toFixed(2)}` : null)
@@ -54,25 +51,18 @@ const ActionBtn = ({ onClick, title, children, danger, disabled }) => (
   </button>
 )
 
-const CommodityTable = ({ 
+const MainCommodityTable = ({ 
   filteredData = [],
   allCrops = [],
-  isLoading = false,
   search = "",
-  categoryFilter = "",
-  marketFilter = ""
+  categoryFilter = ""
 }) => {
   const {
-    categories,
-    fetchCategories,
     deleteCommodity,
-    updateCommodity,
   } = useCropstore()
 
   // Modal states
-  const [editTarget, setEditTarget] = useState(null)
   const [historyTarget, setHistoryTarget] = useState(null)
-  const [addPriceTarget, setAddPriceTarget] = useState(null)
   const [respondentTarget, setRespondentTarget] = useState(null)
 
   // Filter and pagination states
@@ -81,15 +71,10 @@ const CommodityTable = ({
   const [deleteLoading, setDeleteLoading] = useState(null)
   const rowsPerPage = 10
 
-  // Initialize data
-  useEffect(() => {
-    fetchCategories()
-  }, [fetchCategories])
-
-  // Use filtered data from parent, or fallback to allCrops
+  // Use filtered data from parent, fallback to all crops
   const dataToDisplay = filteredData.length > 0 ? filteredData : allCrops
 
-  // Get all unique markets from the data
+  // Get all unique markets from the displayed data
   const allMarkets = useMemo(
     () =>
       [...new Set(dataToDisplay.flatMap((v) => Object.keys(v.markets ?? {})))]
@@ -178,7 +163,6 @@ const CommodityTable = ({
             text: `${commodity.name} has been deleted.`,
             confirmButtonColor: "#15803d",
           })
-          // Note: Parent component should refresh data
         } catch (error) {
           setDeleteLoading(null)
           await Swal.fire({
@@ -193,66 +177,7 @@ const CommodityTable = ({
     [deleteCommodity]
   )
 
-  const handleSaveEdit = useCallback(
-    async (id, form) => {
-      try {
-        await updateCommodity(id, form)
-        setEditTarget(null)
-        // Note: Parent component should refresh data
-      } catch (error) {
-        await Swal.fire({
-          icon: "error",
-          title: "Update Failed",
-          text: error?.message || "Failed to update commodity. Please try again.",
-          confirmButtonColor: "#dc2626",
-        })
-      }
-    },
-    [updateCommodity]
-  )
-
-  const handleAddPriceClose = useCallback(async () => {
-    setAddPriceTarget(null)
-    // Note: Parent component should refresh data
-  }, [])
-
   // Empty state
-  if (isLoading) {
-    return (
-      <div className="rounded-xl border border-slate-200 bg-white p-12 flex items-center justify-center">
-        <div className="flex flex-col items-center justify-center gap-3 text-slate-500">
-          <svg
-            className="animate-spin"
-            width="32"
-            height="32"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <circle
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="2"
-              fill="none"
-              opacity="0.25"
-            />
-            <path
-              d="M12 2a10 10 0 0110 10"
-              stroke="currentColor"
-              strokeWidth="2"
-              fill="none"
-              strokeLinecap="round"
-            />
-          </svg>
-          <p className="font-semibold text-slate-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
   if (dataToDisplay.length === 0) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-12">
@@ -274,7 +199,7 @@ const CommodityTable = ({
           </svg>
           <div className="text-center">
             <p className="font-semibold text-slate-600">No commodities found</p>
-            <p className="text-sm mt-1">Try adjusting your filters or add your first commodity.</p>
+            <p className="text-sm mt-1">Try adjusting your filters or search term.</p>
           </div>
         </div>
       </div>
@@ -589,100 +514,6 @@ const CommodityTable = ({
                                 </ActionBtn>
                                 <CountBadge count={veg.price_count} />
                               </div>
-
-                              {/* Add Price */}
-                              <ActionBtn
-                                onClick={() => setAddPriceTarget(veg)}
-                                title="Add price record"
-                              >
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={2}
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M12 4.5v15m7.5-7.5h-15"
-                                  />
-                                </svg>
-                              </ActionBtn>
-
-                              {/* Edit */}
-                              <ActionBtn
-                                onClick={() => setEditTarget(veg)}
-                                title="Edit commodity"
-                              >
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={2}
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"
-                                  />
-                                </svg>
-                              </ActionBtn>
-
-                              {/* Delete */}
-                              <ActionBtn
-                                onClick={() => handleDelete(veg)}
-                                title="Delete commodity"
-                                danger
-                                disabled={deleteLoading === veg.id}
-                              >
-                                {deleteLoading === veg.id ? (
-                                  <svg
-                                    className="animate-spin"
-                                    width="14"
-                                    height="14"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    strokeWidth={2}
-                                  >
-                                    <circle
-                                      cx="12"
-                                      cy="12"
-                                      r="10"
-                                      stroke="currentColor"
-                                      strokeWidth="3"
-                                      fill="none"
-                                      opacity="0.25"
-                                    />
-                                    <path
-                                      d="M12 2a10 10 0 0110 10"
-                                      stroke="currentColor"
-                                      strokeWidth="3"
-                                      fill="none"
-                                      strokeLinecap="round"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <svg
-                                    width="14"
-                                    height="14"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    strokeWidth={2}
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                    />
-                                  </svg>
-                                )}
-                              </ActionBtn>
                             </div>
                           </td>
                         </tr>
@@ -730,23 +561,12 @@ const CommodityTable = ({
       </div>
 
       {/* MODALS */}
-      <EditCommodityModal
-        commodity={editTarget}
-        categories={categories}
-        isOpen={!!editTarget}
-        OnClose={() => setEditTarget(null)}
-        onSave={handleSaveEdit}
-      />
       <PriceHistoryModal
         commodity={historyTarget}
         isOpen={!!historyTarget}
         OnClose={() => setHistoryTarget(null)}
       />
-      <AddPriceRecordModal
-        isOpen={!!addPriceTarget}
-        defaultCommodity={addPriceTarget}
-        OnClose={handleAddPriceClose}
-      />
+      
       <RespondentHistoryModal
         commodity={respondentTarget}
         isOpen={!!respondentTarget}
@@ -756,4 +576,4 @@ const CommodityTable = ({
   )
 }
 
-export default CommodityTable
+export default MainCommodityTable
