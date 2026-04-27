@@ -471,7 +471,7 @@ const AdminPriceMonitoring = () => {
       />
       <ImportExcelModal
         isOpen={isExcelUploadOpen}
-        onClose={() => setExcelUploadOpen(false)}
+        OnClose={() => setExcelUploadOpen(false)}
       />
       <ImportPDFModal
         isOpen={isPDFuploadOpen}
