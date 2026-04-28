@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 
-const BASE_URL = import.meta.env.VITE_BASE_URL
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 const useFarmerStore = create((set, get) => ({
   loading: false,
@@ -10,7 +10,6 @@ const useFarmerStore = create((set, get) => ({
   crops: [],
   farm: null,
   hasFarm: false,
-  farmLoading: false,
   farmLoading: false,
   farmInitialized: false,
   
@@ -72,7 +71,6 @@ const useFarmerStore = create((set, get) => ({
       console.error('Failed to fetch crops:', error)
     }
   },
-  farms: [],
 
 getFarms: async () => {
   const token = localStorage.getItem('farmer_token')

@@ -4,8 +4,6 @@ import { create } from "zustand";
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000";
 const API_URL = BASE_URL.replace(/\/api\/?$/, '');
 
-console.log('Admin Store - API URL:', API_URL);
-
 // Add axios interceptor to include auth token
 axios.interceptors.request.use(
   (config) => {

@@ -9,13 +9,18 @@ import useFarmerAuthStore from './store/FarmerAuthStore'
 import ShopDashboard from './pages/public/ShopDashboard'
 
 const App = () => {
-  const { checkAuth: checkUserAuth, isAuthenticated: userAuth, user, isCheckingAuth: userChecking } = useUserStore()
-  const { checkAuth: checkFarmerAuth, isAuthenticated: farmerAuth, isCheckingAuth: farmerChecking } = useFarmerAuthStore()
+  const checkUserAuth = useUserStore((state) => state.checkAuth)
+  const user = useUserStore((state) => state.user)
+  const userAuth = useUserStore((state) => state.isAuthenticated)
+  const userChecking = useUserStore((state) => state.isCheckingAuth)
+  const checkFarmerAuth = useFarmerAuthStore((state) => state.checkAuth)
+  const farmerAuth = useFarmerAuthStore((state) => state.isAuthenticated)
+  const farmerChecking = useFarmerAuthStore((state) => state.isCheckingAuth)
 
   useEffect(() => {
     checkUserAuth()
     checkFarmerAuth()
-  }, [])
+  }, [checkUserAuth, checkFarmerAuth])
 
   // Wait for both stores to finish before deciding anything
   if (userChecking || farmerChecking) {

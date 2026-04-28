@@ -6,6 +6,9 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 2000,
   },
+  optimizeDeps: {
+    include: ['axios', 'zustand', 'sweetalert2'],
+  },
   server: {
     proxy: {
       '/api': {

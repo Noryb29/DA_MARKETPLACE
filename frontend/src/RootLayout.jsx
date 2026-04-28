@@ -11,10 +11,9 @@ const RootLayout = () => {
   const isCheckingFarmerAuth = useFarmerAuthStore((state) => state.isCheckingAuth)
 
   useEffect(() => {
-    // Restore both auth states on app load so route guards can resolve correctly.
     checkUserAuth()
     checkFarmerAuth()
-  }, [checkUserAuth, checkFarmerAuth])
+  }, [])
 
   if (isCheckingUserAuth || isCheckingFarmerAuth) {
     return <div className="min-h-screen bg-gray-50" />
