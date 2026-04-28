@@ -10,7 +10,7 @@ import { addCategory,
     getCrops, 
     getLatestPrices, 
     getMarkets, 
-    updateCommodity } from '../controllers/VegetableControllers.js'
+    updateCommodity } from '../controllers/vegetableControllers.js'
 
 export const vegetableRouter = express.Router()
 
