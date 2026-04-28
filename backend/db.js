@@ -6,11 +6,11 @@ dotenv.config()
 const { Pool } = pg
 
 export const pool = new Pool({
-    host: process.env.PGHOST || 'localhost',
-    user: process.env.PGUSER || 'postgres',
-    database: process.env.PGDATABASE || 'neondb',
-    password: process.env.PGPASSWORD || '',
-    port: process.env.PGPORT || 5432,
+    host: process.env.PGHOST || process.env.LOCAL_HOST,
+    user: process.env.PGUSER || process.env.LOCAL_USER,
+    database: process.env.PGDATABASE || process.env.LOCAL_DATABASE,
+    password: process.env.PGPASSWORD || process.env.LOCAL_PASSWORD,
+    port: process.env.PGPORT,
     ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : false,
 })
 

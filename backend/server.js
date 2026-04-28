@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+
 import { farmerRoutes } from './routes/farmerRoutes.js'
 import { produceRoutes } from './routes/produceRoutes.js'
 import { orderRoutes } from './routes/orderRoutes.js'
@@ -11,6 +12,7 @@ import authRouter from './routes/authRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 
 dotenv.config()
+
 const app = express()
 const PORT = process.env.PORT
 
@@ -36,7 +38,14 @@ app.use('/api/admin', adminRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
-  console.log(`Using Neon DB: ${process.env.PGDATABASE}`)
+
+  // CHECK IF NEON IS CONNECTED
+  if(!process.env.PGDATABASE){
+    console.log("Local Development Ongoing")
+  }else{
+    console.log(`Using Neon DB: ${process.env.PGDATABASE}`)
+  }
+
   console.log('If tables not created, run "npm run database"')
   console.log('For frontend: cd frontend && npm run dev')
 })

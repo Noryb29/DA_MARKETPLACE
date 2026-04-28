@@ -1,0 +1,18 @@
+# FOR DEPLOYMENT (NEON)
+# PGHOST=hostlink
+# PGUSER=user
+# PGPASSWORD=password
+# PGDATABASE=database
+# PGSSL=true (always true)
+
+# FOR LOCAL TESTING
+LOCAL_HOST=localhost
+LOCAL_USER=postgres
+LOCAL_DATABASE=(create database in pgadmin)
+LOCAL_PASSWORD=(pgadmin password)
+PGPORT=5432 // necessary dont change
+PORT=3000 || 5000
+
+JWT_SECRET_USER=generate in terminal using "node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+JWT_SECRET_FARMER=generate in terminal using "node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+CORS_ORIGIN=FRONTEND_LINK
