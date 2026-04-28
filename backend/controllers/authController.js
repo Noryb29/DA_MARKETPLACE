@@ -4,6 +4,13 @@ import { db } from '../db.js'
 
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
+const signToken = (payload, secret) => jwt.sign(payload, secret, { expiresIn: '7d' })
+
+const removePassword = (user) => {
+  const { password, ...userWithoutPassword } = user
+  return userWithoutPassword
+}
+
 export const registerUser = async (req, res) => {
   try {
     const { email, password, firstname, lastname, contact_number, address } = req.body
@@ -17,15 +24,11 @@ export const registerUser = async (req, res) => {
     if (password.trim().length < 6)
       return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' })
 
-    const existing = await db.query(
-      'SELECT user_id FROM users WHERE email = $1',
-      [email.trim()]
-    )
+    const existing = await db.query('SELECT user_id FROM users WHERE email = $1', [email.trim()])
     if (existing.rows.length > 0)
       return res.status(400).json({ success: false, message: 'Email already registered' })
 
     const hashedPassword = await bcrypt.hash(password.trim(), 10)
-
     const result = await db.query(
       `INSERT INTO users (email, password, firstname, lastname, address, contact_number, role)
        VALUES ($1, $2, $3, $4, $5, $6, 'user')
@@ -33,15 +36,10 @@ export const registerUser = async (req, res) => {
       [email.trim(), hashedPassword, firstname.trim(), lastname.trim(), address || null, contact_number || null]
     )
 
-    const newUser = result.rows[0]
+    const user = result.rows[0]
+    const token = signToken({ user_id: user.user_id, email: user.email, role: 'user' }, process.env.JWT_SECRET_USER)
 
-    const token = jwt.sign(
-      { user_id: newUser.user_id, email: newUser.email, role: 'user' },
-      process.env.JWT_SECRET_USER,
-      { expiresIn: '7d' }
-    )
-
-    res.status(201).json({ success: true, user: newUser, token })
+    res.status(201).json({ success: true, user: removePassword(user), token })
   } catch (error) {
     console.error('User register error:', error)
     res.status(500).json({ success: false, message: 'An error occurred during registration' })
@@ -65,15 +63,11 @@ export const registerFarmer = async (req, res) => {
     if (!rsbsaRegex.test(rsbsa_num.trim()))
       return res.status(400).json({ success: false, message: 'Invalid RSBSA format (XX-XXX-XX-XXX-XXXXXX)' })
 
-    const existing = await db.query(
-      'SELECT user_id FROM farmer WHERE email = $1',
-      [email.trim()]
-    )
+    const existing = await db.query('SELECT user_id FROM farmer WHERE email = $1', [email.trim()])
     if (existing.rows.length > 0)
       return res.status(400).json({ success: false, message: 'Email already registered' })
 
     const hashedPassword = await bcrypt.hash(password.trim(), 10)
-
     const result = await db.query(
       `INSERT INTO farmer (rsbsa_number, email, password, firstname, lastname, address, contact_number, role)
        VALUES ($1, $2, $3, $4, $5, $6, $7, 'farmer')
@@ -81,18 +75,59 @@ export const registerFarmer = async (req, res) => {
       [rsbsa_num.trim(), email.trim(), hashedPassword, firstname.trim(), lastname.trim(), address || null, contact_number || null]
     )
 
-    const newUser = result.rows[0]
+    const user = result.rows[0]
+    const token = signToken({ user_id: user.user_id, email: user.email, role: 'farmer' }, process.env.JWT_SECRET_FARMER)
 
-    const token = jwt.sign(
-      { user_id: newUser.user_id, email: newUser.email, role: 'farmer' },
-      process.env.JWT_SECRET_FARMER,
-      { expiresIn: '7d' }
-    )
-
-    res.status(201).json({ success: true, user: newUser, token })
+    res.status(201).json({ success: true, user: removePassword(user), token })
   } catch (error) {
     console.error('Farmer register error:', error)
     res.status(500).json({ success: false, message: 'An error occurred during registration' })
+  }
+}
+
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body
+
+    if (!email || !password)
+      return res.status(400).json({ success: false, message: 'Email and password are required' })
+
+    if (!isValidEmail(email.trim()))
+      return res.status(400).json({ success: false, message: 'Invalid email address' })
+
+    const emailTrimmed = email.trim()
+
+    const [userRows, farmerRows] = await Promise.all([
+      db.query(`SELECT user_id, email, password, firstname, lastname, address, contact_number, role, created_at FROM users WHERE email = $1`, [emailTrimmed]),
+      db.query(`SELECT user_id, rsbsa_number, email, password, firstname, lastname, address, contact_number, role, created_at FROM farmer WHERE email = $1`, [emailTrimmed])
+    ])
+
+    let user = null
+    let secret = null
+
+    if (userRows.rows.length > 0) {
+      user = userRows.rows[0]
+      secret = process.env.JWT_SECRET_USER
+    } else if (farmerRows.rows.length > 0) {
+      user = farmerRows.rows[0]
+      secret = process.env.JWT_SECRET_FARMER
+    }
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' })
+    }
+
+    const isMatch = await bcrypt.compare(password.trim(), user.password)
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' })
+    }
+
+    const token = signToken({ user_id: user.user_id, email: user.email, role: user.role }, secret)
+
+    res.status(200).json({ success: true, user: removePassword(user), token })
+  } catch (error) {
+    console.error('Login error:', error)
+    res.status(500).json({ success: false, message: 'An error occurred during login' })
   }
 }
 
@@ -106,30 +141,30 @@ export const loginUser = async (req, res) => {
     if (!isValidEmail(email.trim()))
       return res.status(400).json({ success: false, message: 'Invalid email address' })
 
-    const rows = await db.query(
-      `SELECT user_id, email, password, firstname, lastname, address, contact_number, role, created_at
-       FROM users WHERE email = $1 AND (role = 'user' OR role = 'admin')`,
-      [email.trim()]
-    )
+    const emailTrimmed = email.trim()
+    const [userRows, farmerRows] = await Promise.all([
+      db.query(`SELECT user_id, email, password, firstname, lastname, address, contact_number, role, created_at FROM users WHERE email = $1 AND role = 'user'`, [emailTrimmed]),
+      db.query(`SELECT user_id, rsbsa_number, email, password, firstname, lastname, address, contact_number, role, created_at FROM farmer WHERE email = $1 AND role = 'farmer'`, [emailTrimmed])
+    ])
 
-    if (rows.rows.length === 0)
+    if (userRows.rows.length === 0 && farmerRows.rows.length === 0)
       return res.status(401).json({ success: false, message: 'Invalid email or password' })
 
-    const user = rows.rows[0]
-    const isMatch = await bcrypt.compare(password.trim(), user.password)
-    if (!isMatch)
-      return res.status(401).json({ success: false, message: 'Invalid email or password' })
+    if (userRows.rows.length > 0) {
+      const user = userRows.rows[0]
+      const isMatch = await bcrypt.compare(password.trim(), user.password)
+      if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid email or password' })
+      const token = signToken({ user_id: user.user_id, email: user.email, role: 'user' }, process.env.JWT_SECRET_USER)
+      return res.status(200).json({ success: true, user: removePassword(user), token })
+    }
 
-    const token = jwt.sign(
-      { user_id: user.user_id, email: user.email, role: user.role },
-      process.env.JWT_SECRET_USER,
-      { expiresIn: '7d' }
-    )
-
-    const { password: _, ...userWithoutPassword } = user
-    res.status(200).json({ success: true, user: userWithoutPassword, token })
+    const farmer = farmerRows.rows[0]
+    const isMatch = await bcrypt.compare(password.trim(), farmer.password)
+    if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid email or password' })
+    const token = signToken({ user_id: farmer.user_id, email: farmer.email, role: 'farmer' }, process.env.JWT_SECRET_FARMER)
+    return res.status(200).json({ success: true, user: removePassword(farmer), token })
   } catch (error) {
-    console.error('User login error:', error)
+    console.error('Login error:', error)
     res.status(500).json({ success: false, message: 'An error occurred during login' })
   }
 }
@@ -158,14 +193,9 @@ export const loginFarmer = async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ success: false, message: 'Invalid email or password' })
 
-    const token = jwt.sign(
-      { user_id: user.user_id, email: user.email, role: user.role },
-      process.env.JWT_SECRET_FARMER,
-      { expiresIn: '7d' }
-    )
+    const token = signToken({ user_id: user.user_id, email: user.email, role: user.role }, process.env.JWT_SECRET_FARMER)
 
-    const { password: _, ...userWithoutPassword } = user
-    res.status(200).json({ success: true, user: userWithoutPassword, token })
+    res.status(200).json({ success: true, user: removePassword(user), token })
   } catch (error) {
     console.error('Farmer login error:', error)
     res.status(500).json({ success: false, message: 'An error occurred during login' })

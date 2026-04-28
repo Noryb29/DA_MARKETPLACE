@@ -51,10 +51,22 @@ const Login = () => {
   }
 
   try {
-    if (activeTab === 'user') {
-      const user = await userLogin(email, password)
-      if (!user) return
+    const result = activeTab === 'user'
+      ? await userLogin(email, password)
+      : await farmerLogin(email, password)
 
+    if (result?.error) {
+      setLoading(false)
+      return Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: result.error,
+        confirmButtonColor: '#166534'
+      })
+    }
+
+    const user = result
+    if (activeTab === 'user') {
       navigate(
         user?.role === 'admin'
           ? '/admin/dashboard'
@@ -62,9 +74,6 @@ const Login = () => {
         { replace: true }
       )
     } else {
-      const farmer = await farmerLogin(email, password)
-      if (!farmer) return
-
       navigate('/farmer/dashboard/index', { replace: true })
     }
   } finally {
