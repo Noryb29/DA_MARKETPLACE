@@ -2,7 +2,7 @@ import { create } from "zustand"
 import axios from "axios"
 import Swal from "sweetalert2"
 
-const BASE_URL = "http://localhost:5000"
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 export const useCropstore = create((set, get) => ({
   crops: [],

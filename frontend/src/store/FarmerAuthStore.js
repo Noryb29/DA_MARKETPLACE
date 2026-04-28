@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 
-const PORT = import.meta.env.VITE_PORT
+const BASE_URL = import.meta.env.VITE_BASE_URL
 
 const useFarmerAuthStore = create((set) => ({
   farmer: null,
@@ -14,7 +14,7 @@ const useFarmerAuthStore = create((set) => ({
     set({ loading: true })
     try {
       const response = await axios.post(
-        `http://localhost:${PORT}/api/auth/farmer/register`,
+        `${BASE_URL}/api/auth/farmer/register`,
         farmerData
       )
 
@@ -60,7 +60,7 @@ const useFarmerAuthStore = create((set) => ({
     set({ loading: true })
     try {
       const response = await axios.post(
-        `http://localhost:${PORT}/api/auth/farmer/login`,
+        `${BASE_URL}/api/auth/farmer/login`,
         { email, password }
       )
 
@@ -125,7 +125,7 @@ const useFarmerAuthStore = create((set) => ({
 
     try {
       const response = await axios.get(
-        `http://localhost:${PORT}/api/auth/farmer/me`,
+        `${BASE_URL}/api/auth/farmer/me`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
 

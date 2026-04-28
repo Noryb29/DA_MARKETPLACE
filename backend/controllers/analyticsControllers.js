@@ -1,6 +1,5 @@
 import { db } from "../db.js"
 
-// ─── Price Trend Over Time (per commodity, all markets or filtered) ───────────
 export const getPriceTrend = async (req, res) => {
   try {
     const { commodity_id, market_id, limit = 30 } = req.query
@@ -18,29 +17,27 @@ export const getPriceTrend = async (req, res) => {
         pr.low_price
       FROM price_records pr
       JOIN markets m ON pr.market_id = m.id
-      WHERE pr.commodity_id = ?
+      WHERE pr.commodity_id = $1
     `
     const params = [commodity_id]
 
     if (market_id) {
-      query += ` AND pr.market_id = ?`
+      query += ` AND pr.market_id = $${params.length + 1}`
       params.push(market_id)
     }
 
-    query += ` ORDER BY pr.price_date DESC LIMIT ?`
+    query += ` ORDER BY pr.price_date DESC LIMIT $${params.length + 1}`
     params.push(Number(limit))
 
-    const [rows] = await db.query(query, params)
+    const result = await db.query(query, params)
 
-    // Reverse so chart shows oldest → newest
-    return res.status(200).json({ success: true, data: rows.reverse() })
+    return res.status(200).json({ success: true, data: result.rows.reverse() })
   } catch (error) {
     console.error("Price Trend Error:", error)
     return res.status(500).json({ success: false, message: "Failed to fetch price trend" })
   }
 }
 
-// ─── Average Price Per Market (for a given commodity) ────────────────────────
 export const getAveragePriceByMarket = async (req, res) => {
   try {
     const { commodity_id } = req.query
@@ -49,7 +46,7 @@ export const getAveragePriceByMarket = async (req, res) => {
       return res.status(400).json({ success: false, message: "commodity_id is required" })
     }
 
-    const query = `
+    const result = await db.query(`
       SELECT
         m.name AS market_name,
         ROUND(AVG(pr.prevailing_price), 2) AS avg_prevailing,
@@ -58,21 +55,19 @@ export const getAveragePriceByMarket = async (req, res) => {
         COUNT(pr.id)                        AS record_count
       FROM price_records pr
       JOIN markets m ON pr.market_id = m.id
-      WHERE pr.commodity_id = ?
+      WHERE pr.commodity_id = $1
         AND pr.prevailing_price IS NOT NULL
       GROUP BY m.id, m.name
       ORDER BY avg_prevailing DESC
-    `
+    `, [commodity_id])
 
-    const [rows] = await db.query(query, [commodity_id])
-    return res.status(200).json({ success: true, data: rows })
+    return res.status(200).json({ success: true, data: result.rows })
   } catch (error) {
     console.error("Avg Price By Market Error:", error)
     return res.status(500).json({ success: false, message: "Failed to fetch average prices by market" })
   }
 }
 
-// ─── Price Comparison Across Commodities (latest date, one market) ───────────
 export const getPriceComparison = async (req, res) => {
   try {
     const { market_id, category_id } = req.query
@@ -101,26 +96,25 @@ export const getPriceComparison = async (req, res) => {
     const params = []
 
     if (market_id) {
-      query += ` AND pr.market_id = ?`
+      query += ` AND pr.market_id = $${params.length + 1}`
       params.push(market_id)
     }
 
     if (category_id) {
-      query += ` AND c.category_id = ?`
+      query += ` AND c.category_id = $${params.length + 1}`
       params.push(category_id)
     }
 
     query += ` ORDER BY cat.name, c.name`
 
-    const [rows] = await db.query(query, params)
-    return res.status(200).json({ success: true, data: rows })
+    const result = await db.query(query, params)
+    return res.status(200).json({ success: true, data: result.rows })
   } catch (error) {
     console.error("Price Comparison Error:", error)
     return res.status(500).json({ success: false, message: "Failed to fetch price comparison" })
   }
 }
 
-// ─── Price Volatility (std dev of prevailing price per commodity) ─────────────
 export const getPriceVolatility = async (req, res) => {
   try {
     const { market_id, category_id, limit = 10 } = req.query
@@ -143,12 +137,12 @@ export const getPriceVolatility = async (req, res) => {
     const params = []
 
     if (market_id) {
-      query += ` AND pr.market_id = ?`
+      query += ` AND pr.market_id = $${params.length + 1}`
       params.push(market_id)
     }
 
     if (category_id) {
-      query += ` AND c.category_id = ?`
+      query += ` AND c.category_id = $${params.length + 1}`
       params.push(category_id)
     }
 
@@ -156,22 +150,21 @@ export const getPriceVolatility = async (req, res) => {
       GROUP BY c.id, c.name, cat.name
       HAVING data_points > 1
       ORDER BY price_stddev DESC
-      LIMIT ?
+      LIMIT $${params.length + 1}
     `
     params.push(Number(limit))
 
-    const [rows] = await db.query(query, params)
-    return res.status(200).json({ success: true, data: rows })
+    const result = await db.query(query, params)
+    return res.status(200).json({ success: true, data: result.rows })
   } catch (error) {
     console.error("Price Volatility Error:", error)
     return res.status(500).json({ success: false, message: "Failed to fetch price volatility" })
   }
 }
 
-// ─── Market Coverage (how many commodities each market tracks) ────────────────
 export const getMarketCoverage = async (req, res) => {
   try {
-    const query = `
+    const result = await db.query(`
       SELECT
         m.id AS market_id,
         m.name AS market_name,
@@ -183,19 +176,17 @@ export const getMarketCoverage = async (req, res) => {
       LEFT JOIN price_records pr ON pr.market_id = m.id
       GROUP BY m.id, m.name
       ORDER BY commodity_count DESC
-    `
-    const [rows] = await db.query(query)
-    return res.status(200).json({ success: true, data: rows })
+    `)
+    return res.status(200).json({ success: true, data: result.rows })
   } catch (error) {
     console.error("Market Coverage Error:", error)
     return res.status(500).json({ success: false, message: "Failed to fetch market coverage" })
   }
 }
 
-// ─── Summary / Dashboard Stats ───────────────────────────────────────────────
 export const getDashboardStats = async (req, res) => {
   try {
-    const [[totals]] = await db.query(`
+    const totals = await db.query(`
       SELECT
         (SELECT COUNT(*) FROM commodities)    AS total_commodities,
         (SELECT COUNT(*) FROM markets)        AS total_markets,
@@ -204,7 +195,7 @@ export const getDashboardStats = async (req, res) => {
         (SELECT MAX(price_date) FROM price_records) AS latest_price_date
     `)
 
-    const [topCommodities] = await db.query(`
+    const topCommodities = await db.query(`
       SELECT
         c.name,
         cat.name AS category,
@@ -218,7 +209,7 @@ export const getDashboardStats = async (req, res) => {
       LIMIT 5
     `)
 
-    const [categoryBreakdown] = await db.query(`
+    const categoryBreakdown = await db.query(`
       SELECT
         cat.name AS category,
         COUNT(DISTINCT c.id)  AS commodity_count,
@@ -233,9 +224,9 @@ export const getDashboardStats = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        totals,
-        topCommodities,
-        categoryBreakdown
+        totals: totals.rows[0],
+        topCommodities: topCommodities.rows,
+        categoryBreakdown: categoryBreakdown.rows
       }
     })
   } catch (error) {
@@ -244,7 +235,6 @@ export const getDashboardStats = async (req, res) => {
   }
 }
 
-// ─── Price Range Heatmap (commodity × market matrix, latest prices) ───────────
 export const getPriceMatrix = async (req, res) => {
   try {
     const { category_id } = req.query
@@ -271,14 +261,14 @@ export const getPriceMatrix = async (req, res) => {
     const params = []
 
     if (category_id) {
-      query += ` AND c.category_id = ?`
+      query += ` AND c.category_id = $${params.length + 1}`
       params.push(category_id)
     }
 
     query += ` ORDER BY c.name, m.name`
 
-    const [rows] = await db.query(query, params)
-    return res.status(200).json({ success: true, data: rows })
+    const result = await db.query(query, params)
+    return res.status(200).json({ success: true, data: result.rows })
   } catch (error) {
     console.error("Price Matrix Error:", error)
     return res.status(500).json({ success: false, message: "Failed to fetch price matrix" })

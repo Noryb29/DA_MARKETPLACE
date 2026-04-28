@@ -1,11 +1,8 @@
 import axios from "axios";
 import { create } from "zustand";
 
-// ========================================
-// Correct API URL construction
-// ========================================
-const PORT = import.meta.env.VITE_PORT || 5000;
-const API_URL = import.meta.env.VITE_BASE_URL?.replace(/\/api\/?$/, '') || `http://localhost:${PORT}`;
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000";
+const API_URL = BASE_URL.replace(/\/api\/?$/, '');
 
 console.log('Admin Store - API URL:', API_URL);
 

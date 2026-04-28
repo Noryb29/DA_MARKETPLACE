@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 
-const PORT = import.meta.env.VITE_PORT
+const BASE_URL = import.meta.env.VITE_BASE_URL
 
 const useUserStore = create((set) => ({
   user: null,
@@ -14,7 +14,7 @@ const useUserStore = create((set) => ({
     set({ loading: true })
     try {
       const response = await axios.post(
-        `http://localhost:${PORT}/api/auth/user/register`,
+        `${BASE_URL}/api/auth/user/register`,
         userData
       )
 
@@ -59,7 +59,7 @@ const useUserStore = create((set) => ({
     set({ loading: true })
     try {
       const response = await axios.post(
-        `http://localhost:${PORT}/api/auth/user/login`,
+        `${BASE_URL}/api/auth/user/login`,
         { email, password }
       )
 
@@ -122,7 +122,7 @@ const useUserStore = create((set) => ({
 
     try {
       const response = await axios.get(
-        `http://localhost:${PORT}/api/auth/me`,
+        `${BASE_URL}/api/auth/me`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
 

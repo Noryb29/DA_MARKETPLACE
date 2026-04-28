@@ -6,7 +6,7 @@ import useFarmerAuthStore from '../../store/FarmerAuthStore'
 import Sidebar from '../public/components/SideBar'
 import { CircleUser } from 'lucide-react'
 
-const PORT = import.meta.env.VITE_PORT
+const BASE_URL = import.meta.env.VITE_BASE_URL
 
 const FarmerProfile = () => {
   const user = useFarmerAuthStore((state) => state.farmer)
@@ -31,7 +31,7 @@ const FarmerProfile = () => {
     try {
       const token = localStorage.getItem('farmer_token')
       await axios.put(
-        `http://localhost:${PORT}/api/auth/farmer/me`,
+        `${BASE_URL}/api/auth/farmer/me`,
         form,
         { headers: { Authorization: `Bearer ${token}` } }
       )

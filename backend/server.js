@@ -28,10 +28,9 @@ app.use('/api/admin', adminRoutes)
 
 
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`)
-  console.log('If Database is not created, please run "npm run database"')
-  console.log('To start frontend, navigate to frontend and run "npm run dev"')
-
+  console.log(`Server running on http://localhost:${PORT}`)
+  console.log(`Using Neon DB: ${process.env.PGDATABASE}`)
+  console.log('If tables not created, run "npm run database"')
+  console.log('For frontend: cd frontend && npm run dev')
 })
-  
 

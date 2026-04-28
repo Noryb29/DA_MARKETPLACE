@@ -1,9 +1,8 @@
 import { db } from "../db.js";
-// ==================== PRODUCT CONTROLLERS ====================
 
 export const getAllProducts = async (req, res) => {
   try {
-    const query = `
+    const result = await db.query(`
       SELECT 
         cif.crop_id,
         cif.farm_id,
@@ -26,14 +25,12 @@ export const getAllProducts = async (req, res) => {
       JOIN farm f ON cif.farm_id = f.farm_id
       JOIN farmer fm ON f.user_id = fm.user_id
       ORDER BY cif.crop_id DESC
-    `;
-
-    const [products] = await db.query(query);
+    `);
 
     res.status(200).json({
       success: true,
       message: "Products retrieved successfully",
-      data: products,
+      data: result.rows,
     });
   } catch (error) {
     console.error("Error fetching products:", error);
@@ -45,11 +42,9 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
-// ==================== FARM CONTROLLERS ====================
-
 export const getAllFarms = async (req, res) => {
   try {
-    const query = `
+    const result = await db.query(`
       SELECT 
         f.farm_id,
         f.user_id,
@@ -68,14 +63,12 @@ export const getAllFarms = async (req, res) => {
       LEFT JOIN crop_in_farm cif ON f.farm_id = cif.farm_id
       GROUP BY f.farm_id
       ORDER BY f.created_at DESC
-    `;
-
-    const [farms] = await db.query(query);
+    `);
 
     res.status(200).json({
       success: true,
       message: "Farms retrieved successfully",
-      data: farms,
+      data: result.rows,
     });
   } catch (error) {
     console.error("Error fetching farms:", error);
@@ -87,11 +80,9 @@ export const getAllFarms = async (req, res) => {
   }
 };
 
-// ==================== USER CONTROLLERS ====================
-
 export const getAllUsers = async (req, res) => {
   try {
-    const query = `
+    const result = await db.query(`
       SELECT 
         u.user_id,
         u.email,
@@ -113,14 +104,12 @@ export const getAllUsers = async (req, res) => {
       LEFT JOIN crop_orders co ON u.user_id = co.user_id
       GROUP BY u.user_id
       ORDER BY u.created_at DESC
-    `;
-
-    const [users] = await db.query(query);
+    `);
 
     res.status(200).json({
       success: true,
       message: "Users retrieved successfully",
-      data: users,
+      data: result.rows,
     });
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -137,20 +126,18 @@ export const updateUser = async (req, res) => {
     const { userId } = req.params;
     const updateData = req.body;
 
-    // Validate user exists
-    const [userExists] = await db.query(
-      "SELECT user_id FROM users WHERE user_id = ?",
+    const userExists = await db.query(
+      "SELECT user_id FROM users WHERE user_id = $1",
       [userId]
     );
 
-    if (userExists.length === 0) {
+    if (userExists.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
 
-    // Build dynamic update query
     const allowedFields = [
       "email",
       "firstname",
@@ -160,11 +147,13 @@ export const updateUser = async (req, res) => {
     ];
     const updateFields = [];
     const updateValues = [];
+    let paramIndex = 1;
 
     Object.keys(updateData).forEach((key) => {
       if (allowedFields.includes(key) && updateData[key] !== undefined) {
-        updateFields.push(`${key} = ?`);
+        updateFields.push(`${key} = $${paramIndex}`);
         updateValues.push(updateData[key]);
+        paramIndex++;
       }
     });
 
@@ -178,11 +167,10 @@ export const updateUser = async (req, res) => {
     updateValues.push(userId);
 
     await db.query(
-      `UPDATE users SET ${updateFields.join(", ")} WHERE user_id = ?`,
+      `UPDATE users SET ${updateFields.join(", ")} WHERE user_id = $${paramIndex}`,
       updateValues
     );
 
-    // Handle user_detail updates if preferences provided
     if (
       updateData.business_name ||
       updateData.preference1 ||
@@ -193,54 +181,60 @@ export const updateUser = async (req, res) => {
     ) {
       const detailFields = [];
       const detailValues = [];
+      paramIndex = 1;
 
       if (updateData.business_name) {
-        detailFields.push("business_name = ?");
+        detailFields.push(`business_name = $${paramIndex}`);
         detailValues.push(updateData.business_name);
+        paramIndex++;
       }
       if (updateData.preference1) {
-        detailFields.push("preference1 = ?");
+        detailFields.push(`preference1 = $${paramIndex}`);
         detailValues.push(updateData.preference1);
+        paramIndex++;
       }
       if (updateData.preference2) {
-        detailFields.push("preference2 = ?");
+        detailFields.push(`preference2 = $${paramIndex}`);
         detailValues.push(updateData.preference2);
+        paramIndex++;
       }
       if (updateData.preference3) {
-        detailFields.push("preference3 = ?");
+        detailFields.push(`preference3 = $${paramIndex}`);
         detailValues.push(updateData.preference3);
+        paramIndex++;
       }
       if (updateData.preference4) {
-        detailFields.push("preference4 = ?");
+        detailFields.push(`preference4 = $${paramIndex}`);
         detailValues.push(updateData.preference4);
+        paramIndex++;
       }
       if (updateData.preference5) {
-        detailFields.push("preference5 = ?");
+        detailFields.push(`preference5 = $${paramIndex}`);
         detailValues.push(updateData.preference5);
+        paramIndex++;
       }
 
       if (detailFields.length > 0) {
         detailValues.push(userId);
         await db.query(
-          `UPDATE user_detail SET ${detailFields.join(", ")} WHERE user_id = ?`,
+          `UPDATE user_detail SET ${detailFields.join(", ")} WHERE user_id = $${paramIndex}`,
           detailValues
         );
       }
     }
 
-    // Fetch updated user
-    const [updatedUser] = await db.query(
+    const updatedUser = await db.query(
       `SELECT u.*, ud.business_name, ud.preference1, ud.preference2, ud.preference3, ud.preference4, ud.preference5
        FROM users u
        LEFT JOIN user_detail ud ON u.user_id = ud.user_id
-       WHERE u.user_id = ?`,
+       WHERE u.user_id = $1`,
       [userId]
     );
 
     res.status(200).json({
       success: true,
       message: "User updated successfully",
-      data: updatedUser[0],
+      data: updatedUser.rows[0],
     });
   } catch (error) {
     console.error("Error updating user:", error);
@@ -252,11 +246,9 @@ export const updateUser = async (req, res) => {
   }
 };
 
-// ==================== FARMER CONTROLLERS ====================
-
 export const getAllFarmers = async (req, res) => {
   try {
-    const query = `
+    const result = await db.query(`
       SELECT 
         f.user_id,
         f.email,
@@ -278,14 +270,12 @@ export const getAllFarmers = async (req, res) => {
       LEFT JOIN crop_in_farm cif ON fm.farm_id = cif.farm_id
       GROUP BY f.user_id
       ORDER BY f.created_at DESC
-    `;
-
-    const [farmers] = await db.query(query);
+    `);
 
     res.status(200).json({
       success: true,
       message: "Farmers retrieved successfully",
-      data: farmers,
+      data: result.rows,
     });
   } catch (error) {
     console.error("Error fetching farmers:", error);
@@ -302,20 +292,18 @@ export const updateFarmer = async (req, res) => {
     const { farmerId } = req.params;
     const updateData = req.body;
 
-    // Validate farmer exists
-    const [farmerExists] = await db.query(
-      "SELECT user_id FROM farmer WHERE user_id = ?",
+    const farmerExists = await db.query(
+      "SELECT user_id FROM farmer WHERE user_id = $1",
       [farmerId]
     );
 
-    if (farmerExists.length === 0) {
+    if (farmerExists.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Farmer not found",
       });
     }
 
-    // Build dynamic update query for farmer table
     const allowedFarmerFields = [
       "email",
       "firstname",
@@ -325,83 +313,79 @@ export const updateFarmer = async (req, res) => {
     ];
     const updateFields = [];
     const updateValues = [];
+    let paramIndex = 1;
 
     Object.keys(updateData).forEach((key) => {
       if (allowedFarmerFields.includes(key) && updateData[key] !== undefined) {
-        updateFields.push(`${key} = ?`);
+        updateFields.push(`${key} = $${paramIndex}`);
         updateValues.push(updateData[key]);
+        paramIndex++;
       }
     });
 
     if (updateFields.length > 0) {
       updateValues.push(farmerId);
       await db.query(
-        `UPDATE farmer SET ${updateFields.join(", ")} WHERE user_id = ?`,
+        `UPDATE farmer SET ${updateFields.join(", ")} WHERE user_id = $${paramIndex}`,
         updateValues
       );
     }
 
-    // Handle farmer_details updates
     if (updateData.age || updateData.gender || updateData.ethnicity) {
       const detailFields = [];
       const detailValues = [];
+      paramIndex = 1;
 
       if (updateData.age !== undefined) {
-        detailFields.push("age = ?");
+        detailFields.push(`age = $${paramIndex}`);
         detailValues.push(updateData.age);
+        paramIndex++;
       }
       if (updateData.gender) {
-        detailFields.push("gender = ?");
+        detailFields.push(`gender = $${paramIndex}`);
         detailValues.push(updateData.gender);
+        paramIndex++;
       }
       if (updateData.ethnicity) {
-        detailFields.push("ethnicity = ?");
+        detailFields.push(`ethnicity = $${paramIndex}`);
         detailValues.push(updateData.ethnicity);
+        paramIndex++;
       }
 
       if (detailFields.length > 0) {
         detailValues.push(farmerId);
 
-        // Check if farmer_details exists
-        const [detailExists] = await db.query(
-          "SELECT user_id FROM farmer_details WHERE user_id = ?",
+        const detailExists = await db.query(
+          "SELECT user_id FROM farmer_details WHERE user_id = $1",
           [farmerId]
         );
 
-        if (detailExists.length === 0) {
-          // Insert new farmer_details
+        if (detailExists.rows.length === 0) {
           await db.query(
-            `INSERT INTO farmer_details (user_id, age, gender, ethnicity) VALUES (?, ?, ?, ?)`,
-            [
-              farmerId,
-              updateData.age || null,
-              updateData.gender || null,
-              updateData.ethnicity || null,
-            ]
+            `INSERT INTO farmer_details (user_id, age, gender, ethnicity) VALUES ($1, $2, $3, $4)`,
+            [farmerId, updateData.age || null, updateData.gender || null, updateData.ethnicity || null]
           );
         } else {
-          // Update existing farmer_details
           await db.query(
-            `UPDATE farmer_details SET ${detailFields.join(", ")} WHERE user_id = ?`,
+            `UPDATE farmer_details SET ${detailFields.join(", ")} WHERE user_id = $${paramIndex}`,
             detailValues
           );
         }
       }
     }
 
-    // Fetch updated farmer
-    const [updatedFarmer] = await db.query(
+    const updatedFarmer = await db.query(
       `SELECT f.*, fd.age, fd.gender, fd.ethnicity
        FROM farmer f
        LEFT JOIN farmer_details fd ON f.user_id = fd.user_id
-       WHERE f.user_id = ?`,
+       WHERE f.user_id = $1`,
       [farmerId]
     );
 
     res.status(200).json({
       success: true,
       message: "Farmer updated successfully",
-      data: updatedFarmer[0],
+      data: updatedFarmer.rows[0],
     });
   } catch (error) {
     console.error("Error updating farmer:", error);
@@ -413,11 +397,9 @@ export const updateFarmer = async (req, res) => {
   }
 };
 
-// ==================== ORDER CONTROLLERS ====================
-
 export const getAllOrders = async (req, res) => {
   try {
-    const query = `
+    const result = await db.query(`
       SELECT 
         co.crop_order_id,
         co.crop_id,
@@ -442,14 +424,12 @@ export const getAllOrders = async (req, res) => {
       JOIN farmer fm ON co.farmer_id = fm.user_id
       JOIN farm f ON co.farm_id = f.farm_id
       ORDER BY co.order_date DESC
-    `;
-
-    const [orders] = await db.query(query);
+    `);
 
     res.status(200).json({
       success: true,
       message: "Orders retrieved successfully",
-      data: orders,
+      data: result.rows,
     });
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -461,12 +441,11 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
-// Optional: Get order by ID for detailed view
 export const getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    const query = `
+    const result = await db.query(`
       SELECT 
         co.crop_order_id,
         co.crop_id,
@@ -499,12 +478,10 @@ export const getOrderById = async (req, res) => {
       JOIN users u ON co.user_id = u.user_id
       JOIN farmer fm ON co.farmer_id = fm.user_id
       JOIN farm f ON co.farm_id = f.farm_id
-      WHERE co.crop_order_id = ?
-    `;
+      WHERE co.crop_order_id = $1
+    `, [orderId]);
 
-    const [order] = await db.query(query, [orderId]);
-
-    if (order.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Order not found",
@@ -514,7 +491,7 @@ export const getOrderById = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Order retrieved successfully",
-      data: order[0],
+      data: result.rows[0],
     });
   } catch (error) {
     console.error("Error fetching order:", error);

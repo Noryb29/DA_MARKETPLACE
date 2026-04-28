@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import axios from 'axios'
 
-const PORT = import.meta.env.VITE_PORT
+const BASE_URL = import.meta.env.VITE_BASE_URL
 
 const useMarketStore = create((set) => ({
   farms: [],
@@ -17,7 +17,7 @@ const useMarketStore = create((set) => ({
   getAllCrops: async () => {
     set({ loading: true })
     try {
-      const response = await axios.get(`http://localhost:${PORT}/api/market/getAllCrops`)
+      const response = await axios.get(`${BASE_URL}/api/market/getAllCrops`)
       set({ crops: response.data.crops, loading: false, initialized: true })
     } catch (error) {
       console.error('Failed to fetch market crops:', error)
@@ -29,7 +29,7 @@ const useMarketStore = create((set) => ({
   getAllFarms: async () => {
     set({ loading: true })
     try {
-      const response = await axios.get(`http://localhost:${PORT}/api/market/getAllFarms`)
+      const response = await axios.get(`${BASE_URL}/api/market/getAllFarms`)
       set({ farms: response.data.farms, loading: false, initialized: true })
     } catch (error) {
       console.error('Failed to fetch Farms', error)
@@ -41,7 +41,7 @@ const useMarketStore = create((set) => ({
   getFarmById: async (farmId) => {
     set({ farmLoading: true })
     try {
-      const response = await axios.get(`http://localhost:${PORT}/api/market/farm/${farmId}`)
+      const response = await axios.get(`${BASE_URL}/api/market/farm/${farmId}`)
       set({ selectedFarm: response.data.farm, farmLoading: false })
     } catch (error) {
       console.error('Failed to fetch farm:', error)
@@ -54,7 +54,7 @@ const useMarketStore = create((set) => ({
   set({ farmLoading: true })
   try {
     const response = await axios.get(
-      `http://localhost:${PORT}/api/market/farm/${farmId}/crops`
+      `${BASE_URL}/api/market/farm/${farmId}/crops`
     )
     set({ farmCrops: response.data.crops, farmLoading: false })
   } catch (error) {
@@ -68,8 +68,8 @@ const useMarketStore = create((set) => ({
   set({ farmLoading: true })
   try {
     const [farmRes, cropsRes] = await Promise.all([
-      axios.get(`http://localhost:${PORT}/api/market/farm/${farmId}`),
-      axios.get(`http://localhost:${PORT}/api/market/farm/${farmId}/crops`)
+      axios.get(`${BASE_URL}/api/market/farm/${farmId}`),
+      axios.get(`${BASE_URL}/api/market/farm/${farmId}/crops`)
     ])
 
     set({

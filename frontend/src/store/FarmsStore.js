@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 
-const PORT = import.meta.env.VITE_PORT
+const BASE_URL = import.meta.env.VITE_BASE_URL
 
 const useFarmerStore = create((set, get) => ({
   loading: false,
@@ -19,7 +19,7 @@ const useFarmerStore = create((set, get) => ({
   const token = localStorage.getItem('farmer_token')
   try {
     const response = await axios.post(
-      `http://localhost:${PORT}/api/farmers/addFarm`,
+      `${BASE_URL}/api/farmers/addFarm`,
       farmData,
       { headers: { Authorization: `Bearer ${token}` } }
     )
@@ -43,7 +43,7 @@ const useFarmerStore = create((set, get) => ({
 
     try {
       const response = await axios.get(
-        `http://localhost:${PORT}/api/farmers/getFarm`,
+        `${BASE_URL}/api/farmers/getFarm`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
 
@@ -64,7 +64,7 @@ const useFarmerStore = create((set, get) => ({
 
     try {
       const response = await axios.get(
-        `http://localhost:${PORT}/api/farmers/getCrops`,
+        `${BASE_URL}/api/farmers/getCrops`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       set({ crops: response.data.crops })
@@ -78,7 +78,7 @@ getFarms: async () => {
   const token = localStorage.getItem('farmer_token')
   try {
     const response = await axios.get(
-      `http://localhost:${PORT}/api/farmers/getFarms`,
+      `${BASE_URL}/api/farmers/getFarms`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
     set({ farms: response.data.farms })

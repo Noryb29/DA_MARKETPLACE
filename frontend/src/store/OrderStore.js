@@ -2,8 +2,8 @@ import { create } from 'zustand'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 
-const PORT = import.meta.env.VITE_PORT
-const BASE  = `http://localhost:${PORT}/api/orders`
+const BASE_URL = import.meta.env.VITE_BASE_URL
+const BASE  = `${BASE_URL}/api/orders`
 
 const useOrderStore = create((set, get) => ({
   myOrders:           [],

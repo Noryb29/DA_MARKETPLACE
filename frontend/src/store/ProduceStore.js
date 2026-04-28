@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 
-const PORT = import.meta.env.VITE_PORT
+const BASE_URL = import.meta.env.VITE_BASE_URL
 
 const useProduceStore = create((set, get) => ({
   crops: [],
@@ -14,7 +14,7 @@ const useProduceStore = create((set, get) => ({
     const token = localStorage.getItem('farmer_token')
     try {
       const response = await axios.get(
-        `http://localhost:${PORT}/api/produce/getCrops`,
+        `${BASE_URL}/api/produce/getCrops`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       set({ crops: response.data.crops, cropsLoading: false, cropsInitialized: true })
@@ -29,7 +29,7 @@ const useProduceStore = create((set, get) => ({
     const token = localStorage.getItem('farmer_token')
     try {
       await axios.post(
-        `http://localhost:${PORT}/api/produce/addCrop`,
+        `${BASE_URL}/api/produce/addCrop`,
         cropData,
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -48,7 +48,7 @@ const useProduceStore = create((set, get) => ({
     const token = localStorage.getItem('farmer_token')
     try {
       await axios.put(
-        `http://localhost:${PORT}/api/produce/updateCrop/${crop_id}`,
+        `${BASE_URL}/api/produce/updateCrop/${crop_id}`,
         cropData,
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -77,7 +77,7 @@ const useProduceStore = create((set, get) => ({
 
     try {
       await axios.delete(
-        `http://localhost:${PORT}/api/produce/deleteCrop/${crop_id}`,
+        `${BASE_URL}/api/produce/deleteCrop/${crop_id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       Swal.fire({ title: 'Deleted!', text: 'Crop removed.', icon: 'success', timer: 2000, showConfirmButton: false })

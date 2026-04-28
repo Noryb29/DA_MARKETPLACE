@@ -5,7 +5,7 @@ import Swal from 'sweetalert2'
 import axios from 'axios'
 import Sidebar from '../public/components/SideBar'
 
-const PORT = import.meta.env.VITE_PORT
+const BASE_URL = import.meta.env.VITE_BASE_URL
 
 const UserProfile = () => {
   const user = useUserStore((state) => state.user)
@@ -30,7 +30,7 @@ const UserProfile = () => {
     try {
       const token = localStorage.getItem('token')
       await axios.put(
-        `http://localhost:${PORT}/api/users/me`,
+        `${BASE_URL}/api/users/me`,
         form,
         { headers: { Authorization: `Bearer ${token}` } }
       )
