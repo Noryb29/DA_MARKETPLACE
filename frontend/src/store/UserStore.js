@@ -17,7 +17,8 @@ const useUserStore = create((set) => ({
       return user
     } catch (error) {
       set({ loading: false })
-      return { error: error.response?.data?.message || error.message }
+      const message = error.response?.data?.message || error.message || 'Registration failed'
+      return { error: message }
     }
   },
 
@@ -31,7 +32,8 @@ const useUserStore = create((set) => ({
       return user
     } catch (error) {
       set({ loading: false })
-      return { error: error.response?.data?.message || error.message }
+      const message = error.response?.data?.message || error.message || 'Login failed'
+      return { error: message }
     }
   },
 

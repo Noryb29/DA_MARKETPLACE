@@ -64,10 +64,16 @@ const Register = () => {
     try {
       const { confirmPassword, ...dataToSend } = formData
 
+      let result
       if (activeTab === 'user') {
-        await userRegister(dataToSend)
+        result = await userRegister(dataToSend)
       } else {
-        await farmerRegister(dataToSend)
+        result = await farmerRegister(dataToSend)
+      }
+
+      if (result?.error) {
+        setLoading(false)
+        return Swal.fire({ icon: 'error', title: 'Registration Failed', text: result.error, confirmButtonColor: '#166534' })
       }
 
       await Swal.fire({
