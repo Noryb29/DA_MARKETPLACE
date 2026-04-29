@@ -16,9 +16,9 @@ dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT
-
+const FRONTEND_LINK = process.env.CORS_ORIGIN
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://q48xp72q-5173.asse.devtunnels.ms'],
+  origin: ['http://localhost:5173', FRONTEND_LINK],
   credentials: true
 }))
 app.use(express.json())
