@@ -31,6 +31,8 @@ const useOrderStore = create((set, get) => ({
   },
 
   getMyOrders: async () => {
+    const { initialized, myOrders, loading } = get()
+    if (initialized && myOrders.length > 0) return
     set({ loading: true })
     const token = localStorage.getItem('token')         // buyer token
     try {
@@ -45,6 +47,7 @@ const useOrderStore = create((set, get) => ({
   },
 
   getFarmerOrders: async () => {
+    if (useOrderStore.getState().farmerInitialized && useOrderStore.getState().farmerOrders.length > 0) return
     set({ loading: true })
     const token = localStorage.getItem('farmer_token')  // farmer token
     try {

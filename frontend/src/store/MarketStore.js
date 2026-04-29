@@ -3,7 +3,7 @@ import axios from 'axios'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
-const useMarketStore = create((set) => ({
+const useMarketStore = create((set, get) => ({
   farms: [],
   crops: [],
   selectedFarm: null,
@@ -15,6 +15,8 @@ const useMarketStore = create((set) => ({
 
   // ✅ Get all crops (for marketplace)
   getAllCrops: async () => {
+    const { initialized, crops, loading } = get()
+    if (initialized && crops.length > 0) return
     set({ loading: true })
     try {
       const response = await axios.get(`${BASE_URL}/api/market/getAllCrops`)
@@ -27,6 +29,8 @@ const useMarketStore = create((set) => ({
 
   // ✅ Get all farms
   getAllFarms: async () => {
+    const { initialized, farms, loading } = get()
+    if (initialized && farms.length > 0) return
     set({ loading: true })
     try {
       const response = await axios.get(`${BASE_URL}/api/market/getAllFarms`)

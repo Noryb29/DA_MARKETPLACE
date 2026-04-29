@@ -29,33 +29,6 @@ const UserIndex = () => {
       change: '+12%',
       trend: true,
     },
-    {
-      label: 'Total Spent',
-      value: myOrders?.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' }) || '₱0',
-      icon: '💳',
-      color: 'from-amber-50 to-orange-50',
-      textColor: 'text-amber-900',
-      change: '+8%',
-      trend: true,
-    },
-    {
-      label: 'In Transit',
-      value: myOrders?.filter(o => o.status === 'Processing').length || 0,
-      icon: '🚚',
-      color: 'from-blue-50 to-cyan-50',
-      textColor: 'text-blue-900',
-      change: '+2',
-      trend: true,
-    },
-    {
-      label: 'Delivered',
-      value: myOrders?.filter(o => o.status === 'Delivered').length || 0,
-      icon: '✓',
-      color: 'from-lime-50 to-green-50',
-      textColor: 'text-lime-900',
-      change: '+5',
-      trend: true,
-    },
   ]
 
   const getStatusStyle = (status) => {
