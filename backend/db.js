@@ -27,7 +27,7 @@ export const createDB = async() => {
                 firstname VARCHAR(150) NOT NULL,
                 lastname VARCHAR(150) NOT NULL,
                 address VARCHAR(150),
-                contact_number INTEGER,
+                contact_number VARCHAR(11),
                 rsbsa_number VARCHAR(20) NOT NULL UNIQUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -42,7 +42,7 @@ export const createDB = async() => {
                 firstname VARCHAR(100) NOT NULL,
                 lastname VARCHAR(100) NOT NULL,
                 address VARCHAR(100),
-                contact_number INTEGER,
+                contact_number VARCHAR(11),
                 rsbsa_number VARCHAR(20),
                 role VARCHAR(6) NOT NULL DEFAULT 'user',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -141,6 +141,40 @@ export const createDB = async() => {
             )
         `)
         console.log('✓ Table "price_records" created')
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS user_details (
+                detail_id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL UNIQUE,
+                profile_picture VARCHAR(255),
+                bio TEXT,
+                gender VARCHAR(10),
+                date_of_birth DATE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_user_details FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+            )
+        `)
+        console.log('✓ Table "user_details" created')
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS farmer_details (
+                detail_id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL UNIQUE,
+                profile_picture VARCHAR(255),
+                bio TEXT,
+                gender VARCHAR(10),
+                date_of_birth DATE,
+                farm_name VARCHAR(150),
+                farm_location VARCHAR(255),
+                total_area_hectares FLOAT,
+                farming_type VARCHAR(50),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_farmer_details FOREIGN KEY (user_id) REFERENCES farmer(user_id) ON DELETE CASCADE
+            )
+        `)
+        console.log('✓ Table "farmer_details" created')
 
         console.log('\n✅ Database setup completed successfully!')
 

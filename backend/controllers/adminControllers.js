@@ -61,7 +61,7 @@ export const getAllFarms = async (req, res) => {
       FROM farm f
       JOIN farmer fm ON f.user_id = fm.user_id
       LEFT JOIN crop_in_farm cif ON f.farm_id = cif.farm_id
-      GROUP BY f.farm_id
+      GROUP BY f.farm_id, fm.firstname, fm.lastname, fm.email, fm.contact_number
       ORDER BY f.created_at DESC
     `);
 
@@ -92,15 +92,8 @@ export const getAllUsers = async (req, res) => {
         u.contact_number,
         u.role,
         u.created_at,
-        ud.business_name,
-        ud.preference1,
-        ud.preference2,
-        ud.preference3,
-        ud.preference4,
-        ud.preference5,
         COUNT(co.crop_order_id) as total_orders
       FROM users u
-      LEFT JOIN user_detail ud ON u.user_id = ud.user_id
       LEFT JOIN crop_orders co ON u.user_id = co.user_id
       GROUP BY u.user_id
       ORDER BY u.created_at DESC
@@ -259,16 +252,15 @@ export const getAllFarmers = async (req, res) => {
         f.rsbsa_number,
         f.role,
         f.created_at,
-        fd.age,
         fd.gender,
-        fd.ethnicity,
+        fd.date_of_birth,
         COUNT(fm.farm_id) as total_farms,
         COUNT(DISTINCT cif.crop_id) as total_crops
       FROM farmer f
       LEFT JOIN farmer_details fd ON f.user_id = fd.user_id
       LEFT JOIN farm fm ON f.user_id = fm.user_id
       LEFT JOIN crop_in_farm cif ON fm.farm_id = cif.farm_id
-      GROUP BY f.user_id
+      GROUP BY f.user_id, fd.gender, fd.date_of_birth
       ORDER BY f.created_at DESC
     `);
 

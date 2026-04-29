@@ -260,4 +260,26 @@ export const useAdminStore = create((set, get) => ({
       averageOrderSize: state.orders.length > 0 ? Math.round(state.orders.reduce((sum, o) => sum + (o.quantity || 0), 0) / state.orders.length) : 0,
     };
   },
+
+  // Admin Analytics
+  adminStats: null,
+  adminLoading: false,
+  adminError: null,
+
+  getAdminStats: async () => {
+    set({ adminLoading: true, adminError: null });
+    try {
+      const response = await axios.get(`${API_URL}/api/analytics/admin-stats`);
+      if (response.data.success) {
+        set({ adminStats: response.data.data, adminLoading: false });
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Failed to fetch admin stats';
+      set({ adminLoading: false, adminError: message });
+      return { error: message };
+    }
+  },
 }));

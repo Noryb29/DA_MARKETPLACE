@@ -7,6 +7,7 @@ import {
   getMarketCoverage,
   getDashboardStats,
   getPriceMatrix,
+  getAdminDashboardStats,
 } from "../controllers/analyticsControllers.js"
 
 export const analyticsRoutes = express.Router()
@@ -18,4 +19,5 @@ analyticsRoutes.get("/volatility",   getPriceVolatility)      // ?market_id=&cat
 analyticsRoutes.get("/market-coverage", getMarketCoverage)    //
 analyticsRoutes.get("/stats",        getDashboardStats)       //
 analyticsRoutes.get("/matrix",       getPriceMatrix)          // ?category_id=
+analyticsRoutes.get("/admin-stats", getAdminDashboardStats)
 

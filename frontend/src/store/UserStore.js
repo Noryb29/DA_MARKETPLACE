@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 import api from '../lib/api'
 
-const useUserStore = create((set) => ({
+const useUserStore = create((set, get) => ({
   user: null,
+  userDetails: null,
   isAuthenticated: false,
   loading: false,
   isCheckingAuth: true,
@@ -10,7 +11,7 @@ const useUserStore = create((set) => ({
   register: async (userData) => {
     set({ loading: true })
     try {
-      const { data } = await api.post('/api/auth/user/register', userData)
+      const { data } = await api.post('/api/auth/register', userData)
       const { user, token } = data
       localStorage.setItem('token', token)
       set({ user, isAuthenticated: true, loading: false, isCheckingAuth: false })
@@ -25,7 +26,7 @@ const useUserStore = create((set) => ({
   login: async (email, password) => {
     set({ loading: true })
     try {
-      const { data } = await api.post('/api/auth/user/login', { email, password })
+      const { data } = await api.post('/api/auth/login', { email, password })
       const { user, token } = data
       localStorage.setItem('token', token)
       set({ user, isAuthenticated: true, loading: false, isCheckingAuth: false })
@@ -39,7 +40,7 @@ const useUserStore = create((set) => ({
 
   logout: async () => {
     localStorage.removeItem('token')
-    set({ user: null, isAuthenticated: false })
+    set({ user: null, userDetails: null, isAuthenticated: false })
   },
 
   checkAuth: async () => {
@@ -52,6 +53,41 @@ const useUserStore = create((set) => ({
     } catch {
       localStorage.removeItem('token')
       set({ user: null, isAuthenticated: false, isCheckingAuth: false })
+    }
+  },
+
+  fetchUserDetails: async () => {
+    try {
+      const { data } = await api.get('/api/auth/me/details')
+      set({ userDetails: data.details })
+      return data.details
+    } catch (error) {
+      if (error.response?.status === 404) {
+        set({ userDetails: null })
+        return null
+      }
+      throw error
+    }
+  },
+
+  saveUserDetails: async (details) => {
+    set({ loading: true })
+    try {
+      const existing = get().userDetails
+      let result
+      if (existing) {
+        const { data } = await api.put('/api/auth/me/details', details)
+        result = data.details
+      } else {
+        const { data } = await api.post('/api/auth/me/details', details)
+        result = data.details
+      }
+      set({ userDetails: result, loading: false })
+      return result
+    } catch (error) {
+      set({ loading: false })
+      const message = error.response?.data?.message || error.message || 'Save failed'
+      return { error: message }
     }
   },
 }))

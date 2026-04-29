@@ -274,3 +274,93 @@ export const getPriceMatrix = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to fetch price matrix" })
   }
 }
+
+export const getAdminDashboardStats = async (req, res) => {
+  try {
+    const totals = await db.query(`
+      SELECT
+        (SELECT COUNT(*) FROM users WHERE role = 'user') AS total_users,
+        (SELECT COUNT(*) FROM farmer) AS total_farmers,
+        (SELECT COUNT(*) FROM farm) AS total_farms,
+        (SELECT COUNT(*) FROM crop_in_farm) AS total_products,
+        (SELECT COUNT(*) FROM crop_orders) AS total_orders
+    `)
+
+    const recentOrders = await db.query(`
+      SELECT 
+        co.crop_order_id,
+        co.order_date,
+        co.quantity,
+        co.expected_arrival,
+        u.firstname AS customer_firstname,
+        u.lastname AS customer_lastname,
+        fm.farm_name,
+        cf.crop_name
+      FROM crop_orders co
+      JOIN users u ON co.user_id = u.user_id
+      JOIN farmer f ON co.farmer_id = f.user_id
+      JOIN farm fm ON co.farm_id = fm.farm_id
+      JOIN crop_in_farm cf ON co.crop_id = cf.crop_id
+      ORDER BY co.order_date DESC
+      LIMIT 10
+    `)
+
+    const farmersByArea = await db.query(`
+      SELECT 
+        fm.farm_name,
+        fm.farm_area,
+        fm.gps_coordinates,
+        f.firstname,
+        f.lastname
+      FROM farm fm
+      JOIN farmer f ON fm.user_id = f.user_id
+      ORDER BY fm.farm_area DESC
+      LIMIT 10
+    `)
+
+    const topProducts = await db.query(`
+      SELECT 
+        cf.crop_name,
+        cf.variety,
+        cf.stock,
+        cf.expected_harvest,
+        fm.farm_name,
+        fm.gps_coordinates
+      FROM crop_in_farm cf
+      JOIN farm fm ON cf.farm_id = fm.farm_id
+      ORDER BY cf.stock DESC
+      LIMIT 10
+    `)
+
+    const usersByDate = await db.query(`
+      SELECT DATE(created_at) AS date, COUNT(*) AS count
+      FROM users
+      WHERE created_at >= NOW() - INTERVAL '30 days'
+      GROUP BY DATE(created_at)
+      ORDER BY date
+    `)
+
+    const ordersByDate = await db.query(`
+      SELECT DATE(order_date) AS date, COUNT(*) AS count
+      FROM crop_orders
+      WHERE order_date >= NOW() - INTERVAL '30 days'
+      GROUP BY DATE(order_date)
+      ORDER BY date
+    `)
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totals: totals.rows[0],
+        recentOrders: recentOrders.rows,
+        farmersByArea: farmersByArea.rows,
+        topProducts: topProducts.rows,
+        usersByDate: usersByDate.rows,
+        ordersByDate: ordersByDate.rows,
+      }
+    })
+  } catch (error) {
+    console.error("Admin Dashboard Stats Error:", error)
+    return res.status(500).json({ success: false, message: error.message })
+  }
+}

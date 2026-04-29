@@ -10,6 +10,7 @@ import { vegetableRouter } from './routes/vegetableRoutes.js'
 import {analyticsRoutes} from './routes/analyticsRoutes.js'
 import authRouter from './routes/authRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
+import userDetailsRouter from './routes/userDetailsRoutes.js'
 
 dotenv.config()
 
@@ -35,6 +36,7 @@ app.use('/api/auth', authRouter)
 app.use('/api/crops',vegetableRouter)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/auth', userDetailsRouter)
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)

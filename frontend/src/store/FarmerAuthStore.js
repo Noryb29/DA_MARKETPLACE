@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 import { farmerApi } from '../lib/api'
 
-const useFarmerAuthStore = create((set) => ({
+const useFarmerAuthStore = create((set, get) => ({
   farmer: null,
+  farmerDetails: null,
   isAuthenticated: false,
   loading: false,
   isCheckingAuth: true,
@@ -42,7 +43,7 @@ const useFarmerAuthStore = create((set) => ({
   logout: async () => {
     localStorage.removeItem('farmer_token')
     localStorage.removeItem('token')
-    set({ farmer: null, isAuthenticated: false })
+    set({ farmer: null, farmerDetails: null, isAuthenticated: false })
   },
 
   checkAuth: async () => {
@@ -55,6 +56,41 @@ const useFarmerAuthStore = create((set) => ({
     } catch {
       localStorage.removeItem('farmer_token')
       set({ farmer: null, isAuthenticated: false, isCheckingAuth: false })
+    }
+  },
+
+  fetchFarmerDetails: async () => {
+    try {
+      const { data } = await farmerApi.get('/api/auth/farmer/me/details')
+      set({ farmerDetails: data.details })
+      return data.details
+    } catch (error) {
+      if (error.response?.status === 404) {
+        set({ farmerDetails: null })
+        return null
+      }
+      throw error
+    }
+  },
+
+  saveFarmerDetails: async (details) => {
+    set({ loading: true })
+    try {
+      const existing = get().farmerDetails
+      let result
+      if (existing) {
+        const { data } = await farmerApi.put('/api/auth/farmer/me/details', details)
+        result = data.details
+      } else {
+        const { data } = await farmerApi.post('/api/auth/farmer/me/details', details)
+        result = data.details
+      }
+      set({ farmerDetails: result, loading: false })
+      return result
+    } catch (error) {
+      set({ loading: false })
+      const message = error.response?.data?.message || error.message || 'Save failed'
+      return { error: message }
     }
   },
 }))

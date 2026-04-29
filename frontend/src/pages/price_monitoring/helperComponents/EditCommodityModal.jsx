@@ -1,6 +1,6 @@
 import React from "react"
-import { useState,useEffect } from "react"
-import { useAdminPriceStore } from "../../../store/AdminPriceStore"
+import { useState, useEffect } from "react"
+import Swal from "sweetalert2"
 
 // ─── Edit Commodity Modal ─────────────────────────────────────────────────────
 
