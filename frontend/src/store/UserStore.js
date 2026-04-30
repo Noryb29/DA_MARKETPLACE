@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import api from '../lib/api'
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+
 const useUserStore = create((set, get) => ({
   user: null,
   userDetails: null,
@@ -59,8 +61,14 @@ const useUserStore = create((set, get) => ({
   fetchUserDetails: async () => {
     try {
       const { data } = await api.get('/api/auth/me/details')
-      set({ userDetails: data.details })
-      return data.details
+      const detailsWithFullUrl = data.details ? {
+        ...data.details,
+        profile_picture: data.details.profile_picture 
+          ? (data.details.profile_picture.startsWith('http') ? data.details.profile_picture : `${BASE_URL}${data.details.profile_picture}`)
+          : null
+      } : null
+      set({ userDetails: detailsWithFullUrl })
+      return detailsWithFullUrl
     } catch (error) {
       if (error.response?.status === 404) {
         set({ userDetails: null })
@@ -74,16 +82,37 @@ const useUserStore = create((set, get) => ({
     set({ loading: true })
     try {
       const existing = get().userDetails
+      const formData = new FormData()
+      Object.keys(details).forEach((key) => {
+        if (key === 'profile_picture' && details[key] instanceof File) {
+          formData.append(key, details[key])
+        } else if (key === 'profile_picture' && typeof details[key] === 'string') {
+          formData.append(key, details[key])
+        } else if (details[key] !== undefined && details[key] !== null) {
+          formData.append(key, details[key])
+        }
+      })
+      
       let result
       if (existing) {
-        const { data } = await api.put('/api/auth/me/details', details)
+        const { data } = await api.put('/api/auth/me/details', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         result = data.details
       } else {
-        const { data } = await api.post('/api/auth/me/details', details)
+        const { data } = await api.post('/api/auth/me/details', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         result = data.details
       }
-      set({ userDetails: result, loading: false })
-      return result
+      const resultWithFullUrl = result ? {
+        ...result,
+        profile_picture: result.profile_picture 
+          ? (result.profile_picture.startsWith('http') ? result.profile_picture : `${BASE_URL}${result.profile_picture}`)
+          : null
+      } : null
+      set({ userDetails: resultWithFullUrl, loading: false })
+      return resultWithFullUrl
     } catch (error) {
       set({ loading: false })
       const message = error.response?.data?.message || error.message || 'Save failed'

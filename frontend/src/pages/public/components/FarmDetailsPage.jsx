@@ -3,13 +3,17 @@ import { useParams, useNavigate } from 'react-router-dom'
 import Header from './Header'
 import Sidebar from './SideBar'
 import useMarketStore from '../../../store/MarketStore'
-import CropRow from '../shopComponents/CropRow'
-import { ArrowLeft, Loader2, MapPin, Ruler, User, AlertCircle, Leaf, Droplets } from 'lucide-react'
+import { ArrowLeft, Loader2, MapPin, Ruler, User, AlertCircle, Leaf, Droplets, Sprout, Calendar, Package, Archive } from 'lucide-react'
+import Swal from 'sweetalert2'
+import useCartStore from '../../../store/CartStore'
+import useUserStore from '../../../store/UserStore'
+import { getDaysUntilHarvest } from '../shopComponents/HarvestBadge'
 
 const FarmDetailsPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [error, setError] = useState(null)
+  const [selectedCrop, setSelectedCrop] = useState(null)
 
   const {
     selectedFarm: farm,
@@ -18,6 +22,9 @@ const FarmDetailsPage = () => {
     getFarmDetails,
     clearFarmDetails
   } = useMarketStore()
+
+  const { addToCart } = useCartStore()
+  const { user } = useUserStore()
 
   useEffect(() => {
     if (!id) {
@@ -35,6 +42,30 @@ const FarmDetailsPage = () => {
     }
   }, [id])
 
+  const handleAddToCart = (crop) => {
+    if (!user) {
+      Swal.fire({
+        title: 'Login Required',
+        text: 'Please log in to add items to your cart.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#16a34a',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Log In',
+        cancelButtonText: 'Maybe Later',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = '/login'
+        }
+      })
+      return
+    }
+    addToCart(crop)
+    setSelectedCrop(null)
+  }
+
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -42,10 +73,7 @@ const FarmDetailsPage = () => {
         <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
           <Sidebar />
           <main className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-green-600" />
-              <p className="text-gray-600">Loading farm details...</p>
-            </div>
+            <Loader2 className="w-7 h-7 animate-spin text-green-600" />
           </main>
         </div>
       </div>
@@ -59,22 +87,16 @@ const FarmDetailsPage = () => {
         <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
           <Sidebar />
           <main className="flex-1 flex items-center justify-center px-6">
-            <div className="max-w-md w-full">
-              <div className="bg-white rounded-xl border border-red-200 p-8 text-center">
-                <div className="flex justify-center mb-4">
-                  <AlertCircle className="w-12 h-12 text-red-500" />
-                </div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">Farm Not Found</h2>
-                <p className="text-gray-600 mb-6">
-                  {error || 'The farm you\'re looking for doesn\'t exist or has been removed.'}
-                </p>
-                <button
-                  onClick={() => navigate('/shop/farms')}
-                  className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
-                >
-                  Back to Farms
-                </button>
-              </div>
+            <div className="bg-white rounded-xl border border-red-200 p-8 text-center max-w-md">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Farm Not Found</h2>
+              <p className="text-gray-600 mb-6">{error || 'This farm does not exist or has been removed.'}</p>
+              <button
+                onClick={() => navigate('/shop/farms')}
+                className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                Back to Farms
+              </button>
             </div>
           </main>
         </div>
@@ -94,128 +116,177 @@ const FarmDetailsPage = () => {
             {/* Back Button */}
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold text-sm mb-8 transition-colors"
+              className="flex items-center gap-2 text-green-600 hover:text-green-700 text-sm font-medium mb-6 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Farms
+              Back
             </button>
 
             {/* Farm Hero Section */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200 p-8 mb-8">
-              {/* Farmer Info */}
-              <div className="flex items-start gap-4 mb-8 pb-8 border-b border-green-200">
-                <div className="p-3 bg-white rounded-lg border border-green-200">
-                  <User className="w-6 h-6 text-green-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs text-green-700 font-semibold uppercase tracking-wide mb-1">Farmer</p>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                    {farm.firstname} {farm.lastname}
-                  </h3>
-                  <p className="text-sm text-gray-600">{farm.email}</p>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 overflow-hidden">
+              {/* Header Image */}
+              <div className="h-40 bg-gradient-to-r from-green-500 to-emerald-600 relative">
+                {farm.farm_image ? (
+                  <img src={farm.farm_image} alt={farm.farm_name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Sprout className="w-16 h-16 text-white/50" />
+                  </div>
+                )}
+                <div className="absolute top-4 right-4">
+                  <span className="px-3 py-1.5 bg-white/90 backdrop-blur-sm text-green-700 text-xs font-semibold rounded-full">
+                    Active
+                  </span>
                 </div>
               </div>
 
-              {/* Farm Name and Status */}
-              <div className="flex items-start justify-between gap-4 mb-8">
-                <div className="flex-1">
-                  <h1 className="text-5xl font-bold text-gray-900 mb-2">{farm.farm_name}</h1>
-                  <p className="text-gray-600">A local agricultural operation</p>
+              <div className="p-6">
+                {/* Farm Name & Farmer */}
+                <div className="flex items-start justify-between gap-4 mb-6">
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-1">{farm.farm_name}</h1>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <User className="w-4 h-4" />
+                      <span>{farm.firstname} {farm.lastname}</span>
+                    </div>
+                  </div>
                 </div>
-                <span className="px-4 py-2 bg-white border-2 border-green-600 text-green-700 text-xs font-bold rounded-full whitespace-nowrap">
-                  🌱 ACTIVE FARM
-                </span>
-              </div>
 
-              {/* Farm Info Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {farm.farm_area && (
-                  <div className="bg-white rounded-lg p-5 border border-green-200">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <Ruler className="w-5 h-5 text-green-600" />
+                {/* Farm Info Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {farm.farm_area && (
+                    <div className="bg-green-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Ruler className="w-3.5 h-3.5 text-green-600" />
+                        <span className="text-[10px] text-green-700 font-semibold uppercase">Area</span>
                       </div>
-                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Farm Area</p>
+                      <p className="text-lg font-bold text-gray-900">{parseFloat(farm.farm_area).toFixed(1)} ha</p>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900">{parseFloat(farm.farm_area).toFixed(2)}</p>
-                    <p className="text-sm text-gray-600">hectares</p>
-                  </div>
-                )}
-
-                {farm.gps_coordinates && (
-                  <div className="bg-white rounded-lg p-5 border border-green-200">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <MapPin className="w-5 h-5 text-green-600" />
+                  )}
+                  {farm.farm_location && (
+                    <div className="bg-blue-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                        <span className="text-[10px] text-blue-700 font-semibold uppercase">Location</span>
                       </div>
-                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Location</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{farm.farm_location}</p>
                     </div>
-                    <p className="text-lg font-bold text-gray-900 break-all">{farm.gps_coordinates}</p>
-                  </div>
-                )}
-
-                {farm.farm_elevation && (
-                  <div className="bg-white rounded-lg p-5 border border-green-200">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <Leaf className="w-5 h-5 text-green-600" />
+                  )}
+                  {farm.farm_elevation && (
+                    <div className="bg-amber-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Leaf className="w-3.5 h-3.5 text-amber-600" />
+                        <span className="text-[10px] text-amber-700 font-semibold uppercase">Elevation</span>
                       </div>
-                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Elevation</p>
+                      <p className="text-lg font-bold text-gray-900">{parseFloat(farm.farm_elevation).toFixed(0)}m</p>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900">{parseFloat(farm.farm_elevation).toFixed(0)}</p>
-                    <p className="text-sm text-gray-600">meters above sea level</p>
-                  </div>
-                )}
+                  )}
+                  {farm.created_at && (
+                    <div className="bg-purple-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Calendar className="w-3.5 h-3.5 text-purple-600" />
+                        <span className="text-[10px] text-purple-700 font-semibold uppercase">Since</span>
+                      </div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {new Date(farm.created_at).toLocaleDateString('en-PH', { month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Crops Section */}
             <div>
-              <div className="mb-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-                      <Droplets className="w-8 h-8 text-green-600" />
-                      Available Crops
-                    </h2>
-                    <p className="text-gray-600 mt-2">
-                      {crops.length} crop{crops.length !== 1 ? 's' : ''} growing on this farm
-                    </p>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2 mb-4">
+                <Droplets className="w-5 h-5 text-green-600" />
+                <h2 className="text-xl font-bold text-gray-900">Available Crops</h2>
+                <span className="text-xs text-gray-400 font-medium">({crops.length})</span>
               </div>
 
               {crops.length === 0 ? (
-                <div className="bg-white rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
-                  <Leaf className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-gray-600 mb-2">No Crops Listed Yet</h3>
-                  <p className="text-gray-500">
-                    This farm hasn't listed any crops for sale at the moment. Check back later!
-                  </p>
+                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                  <Leaf className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">No crops listed yet</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {crops.map((crop, idx) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {crops.map((crop) => (
                     <div
                       key={crop.crop_id}
-                      className="bg-white rounded-xl border border-gray-200 hover:border-green-400 hover:shadow-lg transition-all p-6"
-                      style={{
-                        animation: `fadeInUp 0.5s ease-out ${idx * 0.1}s both`
-                      }}
+                      onClick={() => setSelectedCrop(crop)}
+                      className="bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-md transition-all cursor-pointer overflow-hidden"
                     >
-                      <style>{`
-                        @keyframes fadeInUp {
-                          from {
-                            opacity: 0;
-                            transform: translateY(20px);
-                          }
-                          to {
-                            opacity: 1;
-                            transform: translateY(0);
-                          }
-                        }
-                      `}</style>
-                      <CropRow crop={crop} />
+                      <div className="h-36 bg-gray-100 relative">
+                        {crop.harvest_photo ? (
+                          <img src={crop.harvest_photo} alt={crop.crop_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Sprout className="w-12 h-12 text-gray-300" />
+                          </div>
+                        )}
+                        {crop.expected_harvest && (
+                          <div className="absolute top-2 left-2 bg-amber-500/90 text-white text-[10px] px-2 py-1 rounded-full flex items-center gap-1">
+                            <Calendar className="w-2.5 h-2.5" />
+                            {getDaysUntilHarvest(crop.expected_harvest) <= 0 ? 'Harvested' : 
+                             `${getDaysUntilHarvest(crop.expected_harvest)} days`}
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3 space-y-2">
+                        <div>
+                          <p className="font-bold text-gray-900 text-sm truncate">{crop.crop_name}</p>
+                          {crop.variety && <p className="text-xs text-gray-500 truncate">{crop.variety}</p>}
+                        </div>
+
+                        {crop.farm_name && (
+                          <div className="flex items-center gap-1">
+                            <Leaf className="w-3 h-3 text-green-500" />
+                            <span className="text-[10px] text-gray-500 truncate">{crop.farm_name}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {crop.volume && (
+                            <span className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded flex items-center gap-1">
+                              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                              {crop.volume}kg
+                            </span>
+                          )}
+                          {crop.stock && (
+                            <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded flex items-center gap-1">
+                              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                              {crop.stock} pcs
+                            </span>
+                          )}
+                        </div>
+
+                        {crop.expected_harvest && (
+                          <div className="flex items-center gap-1 text-[10px] text-amber-600">
+                            <Calendar className="w-2.5 h-2.5" />
+                            <span>Harvest: {new Date(crop.expected_harvest).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</span>
+                          </div>
+                        )}
+
+                        {crop.location && (
+                          <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                            <MapPin className="w-2.5 h-2.5" />
+                            <span className="truncate">{crop.location}</span>
+                          </div>
+                        )}
+
+                        {[1, 2, 3].some(n => crop[`specification_${n}`]) && (
+                          <div className="flex flex-wrap gap-1 pt-1 border-t border-gray-100">
+                            {[1, 2, 3].map((n) =>
+                              crop[`specification_${n}`] ? (
+                                <span key={n} className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                                  {crop[`specification_${n}`]}
+                                </span>
+                              ) : null
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -225,6 +296,109 @@ const FarmDetailsPage = () => {
           </div>
         </main>
       </div>
+
+      {/* Crop Detail Modal */}
+      {selectedCrop && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedCrop(null)} />
+          
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
+            
+            <div className="p-5 overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900">{selectedCrop.crop_name}</h2>
+                <button 
+                  onClick={() => setSelectedCrop(null)}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Photo */}
+              <div className="rounded-xl overflow-hidden mb-4">
+                {selectedCrop.harvest_photo ? (
+                  <img src={selectedCrop.harvest_photo} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
+                ) : (
+                  <div className="w-full h-44 bg-gray-100 flex items-center justify-center">
+                    <Sprout className="w-12 h-12 text-gray-300" />
+                  </div>
+                )}
+              </div>
+
+              {/* Details */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                {selectedCrop.variety && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Variety</span>
+                    <span className="text-sm text-gray-800">{selectedCrop.variety}</span>
+                  </div>
+                )}
+                {selectedCrop.volume && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Volume</span>
+                    <span className="text-sm font-semibold text-green-700">{Number(selectedCrop.volume).toLocaleString()} kg</span>
+                  </div>
+                )}
+                {selectedCrop.stock && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Stock</span>
+                    <span className="text-sm font-semibold text-blue-700">{Number(selectedCrop.stock).toLocaleString()} pcs</span>
+                  </div>
+                )}
+                {selectedCrop.planting_date && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Planted</span>
+                    <span className="text-sm text-gray-700">{formatDate(selectedCrop.planting_date)}</span>
+                  </div>
+                )}
+                {selectedCrop.expected_harvest && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Expected Harvest</span>
+                    <span className="text-sm font-semibold text-amber-700">{formatDate(selectedCrop.expected_harvest)}</span>
+                  </div>
+                )}
+                {selectedCrop.location && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Location</span>
+                    <span className="text-sm text-gray-700">{selectedCrop.location}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Specs */}
+              {[1, 2, 3, 4, 5].some(n => selectedCrop[`specification_${n}`]) && (
+                <div className="mt-4">
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest mb-2">Specifications</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[1, 2, 3, 4, 5].map((n) =>
+                      selectedCrop[`specification_${n}`] ? (
+                        <span key={n} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">
+                          {selectedCrop[`specification_${n}`]}
+                        </span>
+                      ) : null
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Add to Cart Button */}
+              <button
+                onClick={() => handleAddToCart(selectedCrop)}
+                className="w-full mt-5 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold active:scale-[0.98] transition-all shadow-md shadow-green-200"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

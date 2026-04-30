@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Header from '../public/components/Header'
 import useOrderStore from '../../store/OrderStore'
 import BuyerOrderCard from './components/BuyerOrderCard'
 import BuyerOrderModal from './components/BuyerOrderModal'
-import { Loader2, ClipboardList } from 'lucide-react'
+import { Loader2, ClipboardList, Plus, ShoppingBag } from 'lucide-react'
 import Sidebar from '../public/components/SideBar'
 
 const UserOrdersPage = () => {
@@ -22,13 +23,24 @@ const UserOrdersPage = () => {
           <div className="mx-10">
 
             {/* Page Header */}
-            <div className="mb-7">
-              <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
-                <ClipboardList className="w-3.5 h-3.5" />
-                My Orders
+            <div className="mb-7 flex items-start justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+                  <ClipboardList className="w-3.5 h-3.5" />
+                  My Orders
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">My Orders</h1>
+                <p className="text-gray-500 mt-1 text-sm">Track all your crop purchases.</p>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">My Orders</h1>
-              <p className="text-gray-500 mt-1 text-sm">Track all your crop purchases.</p>
+              <Link
+                to="/user/shop"
+                className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-green-500 to-emerald-600
+                  hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl
+                  shadow-md shadow-green-200 active:scale-[0.98] transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Add Order
+              </Link>
             </div>
 
             {/* Loading */}
@@ -58,7 +70,7 @@ const UserOrdersPage = () => {
 
             {/* Order Cards */}
             {initialized && myOrders.length > 0 && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {myOrders.map((order) => (
                   <BuyerOrderCard
                     key={order.crop_order_id}

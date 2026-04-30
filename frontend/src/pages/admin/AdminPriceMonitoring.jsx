@@ -32,6 +32,7 @@ const AdminPriceMonitoring = () => {
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedMarket, setSelectedMarket] = useState("")
   const [showFilters, setShowFilters] = useState(false)
+  const [analyticsCategory, setAnalyticsCategory] = useState("all")
 
   // Initialize on mount
   const initialized = React.useRef(false)
@@ -63,16 +64,27 @@ const AdminPriceMonitoring = () => {
 
   // Analytics
   const analytics = useMemo(() => {
-    if (filteredCrops.length === 0) {
-      return { totalCommodities: 0, avgPrice: 0, priceRange: "—" }
+    const cropsToAnalyze = analyticsCategory === "all" 
+      ? filteredCrops 
+      : filteredCrops.filter(c => c.categories === analyticsCategory)
+
+    if (cropsToAnalyze.length === 0) {
+      return { totalCommodities: 0, avgPrice: "—", priceRange: "—" }
     }
 
-    const prices = filteredCrops
-      .filter((crop) => crop.price)
-      .map((crop) => parseFloat(crop.price))
+    const prices = []
+    cropsToAnalyze.forEach((crop) => {
+      if (crop.markets) {
+        Object.values(crop.markets).forEach((marketData) => {
+          if (marketData.prevailing) {
+            prices.push(parseFloat(marketData.prevailing))
+          }
+        })
+      }
+    })
 
     if (prices.length === 0) {
-      return { totalCommodities: filteredCrops.length, avgPrice: 0, priceRange: "—" }
+      return { totalCommodities: cropsToAnalyze.length, avgPrice: "—", priceRange: "—" }
     }
 
     const avgPrice = (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2)
@@ -80,11 +92,11 @@ const AdminPriceMonitoring = () => {
     const lowestPrice = Math.min(...prices)
 
     return {
-      totalCommodities: filteredCrops.length,
+      totalCommodities: cropsToAnalyze.length,
       avgPrice: `₱${avgPrice}`,
       priceRange: `₱${lowestPrice.toFixed(2)} - ₱${highestPrice.toFixed(2)}`
     }
-  }, [filteredCrops])
+  }, [filteredCrops, analyticsCategory])
 
   const clearAllFilters = () => {
     setSearchTerm("")
@@ -260,22 +272,40 @@ const AdminPriceMonitoring = () => {
               )}
             </div>
 
-            {/* Analytics Cards */}
+            {/* Analytics Cards with Category Selector */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
               <div className="stat-card rounded-xl p-5 glow-accent">
                 <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Total Commodities</p>
                 <p className="text-3xl font-bold text-gray-900">{analytics.totalCommodities}</p>
-                <p className="text-xs text-gray-400 mt-2">In current filters</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {analyticsCategory === "all" ? "Across all categories" : `In ${analyticsCategory}`}
+                </p>
               </div>
-              <div className="stat-card rounded-xl p-5 glow-accent">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Average Price</p>
+              <div className="stat-card rounded-xl p-5 glow-accent relative">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Average Price</p>
+                  <select
+                    value={analyticsCategory}
+                    onChange={(e) => setAnalyticsCategory(e.target.value)}
+                    className="text-xs px-2 py-1 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 font-medium cursor-pointer hover:bg-emerald-100 focus:outline-none"
+                  >
+                    <option value="all">All Categories</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
                 <p className="text-3xl font-bold text-emerald-600">{analytics.avgPrice}</p>
-                <p className="text-xs text-gray-400 mt-2">Across selected items</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {analyticsCategory === "all" ? "Overall average" : `In ${analyticsCategory}`}
+                </p>
               </div>
               <div className="stat-card rounded-xl p-5 glow-accent">
                 <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Price Range</p>
                 <p className="text-lg font-bold text-gray-900">{analytics.priceRange}</p>
-                <p className="text-xs text-gray-400 mt-2">Min - Max in filters</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {analyticsCategory === "all" ? "Across all categories" : `In ${analyticsCategory}`}
+                </p>
               </div>
             </div>
 

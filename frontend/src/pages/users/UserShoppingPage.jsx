@@ -1,24 +1,26 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import Header from '../public/components/Header'
 import useMarketStore from '../../store/MarketStore'
-import CropRow from '../public/shopComponents/CropRow'
 import MarketFilterPanel from '../public/shopComponents/MarketFilterPanel'
 import CartDrawer from '../public/shopComponents/CartDrawer'
 import useCartStore from '../../store/CartStore'
 import useUserStore from '../../store/UserStore'
 import { getDaysUntilHarvest } from '../public/shopComponents/HarvestBadge'
-import { Wheat, Search, SlidersHorizontal, X, Loader2, Sprout,ShoppingCart } from 'lucide-react'
+import { Wheat, Search, SlidersHorizontal, X, Loader2, Sprout, ShoppingCart, MapPin, Package, Archive, Calendar } from 'lucide-react'
 import Sidebar from '../public/components/SideBar'
+import Swal from 'sweetalert2'
 
 const UserShoppingPage = () => {
-  const { items, openCart } = useCartStore()
+  const { items, openCart, addToCart } = useCartStore()
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0)
   const { crops, initialized, getAllCrops } = useMarketStore()
+  const { user } = useUserStore()
 
   const [search, setSearch] = useState('')
   const [filterVariety, setFilterVariety] = useState('')
   const [filterHarvest, setFilterHarvest] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const [selectedCrop, setSelectedCrop] = useState(null)
 
   useEffect(() => { getAllCrops() }, [])
 
@@ -58,6 +60,30 @@ const UserShoppingPage = () => {
     setFilterHarvest('')
     setSearch('')
   }
+
+  const handleAddToCart = (crop) => {
+    if (!user) {
+      Swal.fire({
+        title: 'Login Required',
+        text: 'Please log in or create an account to add items to your cart.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#16a34a',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Log In',
+        cancelButtonText: 'Maybe Later',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = '/login'
+        }
+      })
+      return
+    }
+    addToCart(crop)
+    setSelectedCrop(null)
+  }
+
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -181,11 +207,74 @@ const UserShoppingPage = () => {
             
             <CartDrawer/>
 
-            {/* Crop Rows */}
+            {/* Crop Grid */}
             {initialized && filtered.length > 0 && (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filtered.map((crop) => (
-                  <CropRow key={crop.crop_id} crop={crop} />
+                  <div
+                    key={crop.crop_id}
+                    onClick={() => setSelectedCrop(crop)}
+                    className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-green-300 hover:shadow-md transition-all duration-200 cursor-pointer"
+                  >
+                    <div className="h-36 bg-gray-100 relative">
+                      {crop.harvest_photo ? (
+                        <img src={crop.harvest_photo} alt={crop.crop_name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Wheat className="w-12 h-12 text-gray-300" />
+                        </div>
+                      )}
+                      {crop.location && (
+                        <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full flex items-center gap-1">
+                          <MapPin className="w-2.5 h-2.5" />
+                          {crop.location}
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <div>
+                        <p className="font-bold text-gray-900 text-sm truncate">{crop.crop_name}</p>
+                        {crop.variety && <p className="text-xs text-gray-400 truncate">{crop.variety}</p>}
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
+                        <span className="text-[10px] text-gray-500 truncate">{crop.farm_name}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {crop.volume && (
+                          <span className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded flex items-center gap-1">
+                            <Package className="w-2.5 h-2.5" />{crop.volume}kg
+                          </span>
+                        )}
+                        {crop.stock && (
+                          <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded flex items-center gap-1">
+                            <Archive className="w-2.5 h-2.5" />{crop.stock} pcs
+                          </span>
+                        )}
+                      </div>
+
+                      {crop.expected_harvest && (
+                        <div className="flex items-center gap-1 text-[10px] text-amber-600">
+                          <Calendar className="w-2.5 h-2.5" />
+                          <span>Harvest: {new Date(crop.expected_harvest).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</span>
+                        </div>
+                      )}
+
+                      {[1, 2, 3].some(n => crop[`specification_${n}`]) && (
+                        <div className="flex flex-wrap gap-1 pt-1 border-t border-gray-100">
+                          {[1, 2, 3].map((n) =>
+                            crop[`specification_${n}`] ? (
+                              <span key={n} className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                                {crop[`specification_${n}`]}
+                              </span>
+                            ) : null
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -193,6 +282,111 @@ const UserShoppingPage = () => {
           </div>
         </main>
       </div>
+
+      {/* Crop Detail Modal */}
+      {selectedCrop && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedCrop(null)} />
+          
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
+            
+            <div className="p-5 overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900">{selectedCrop.crop_name}</h2>
+                <button 
+                  onClick={() => setSelectedCrop(null)}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Photo */}
+              <div className="rounded-xl overflow-hidden mb-4">
+                {selectedCrop.harvest_photo ? (
+                  <img src={selectedCrop.harvest_photo} alt={selectedCrop.crop_name} className="w-full h-48 object-cover" />
+                ) : (
+                  <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                    <Wheat className="w-12 h-12 text-gray-300" />
+                  </div>
+                )}
+              </div>
+
+              {/* Details */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                {selectedCrop.variety && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Variety</span>
+                    <span className="text-sm text-gray-800">{selectedCrop.variety}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500 font-medium">Farm</span>
+                  <span className="text-sm text-gray-800">{selectedCrop.farm_name}</span>
+                </div>
+                {selectedCrop.location && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Location</span>
+                    <span className="text-sm text-gray-800">{selectedCrop.location}</span>
+                  </div>
+                )}
+                {selectedCrop.volume && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Volume</span>
+                    <span className="text-sm font-semibold text-green-700">{Number(selectedCrop.volume).toLocaleString()} kg</span>
+                  </div>
+                )}
+                {selectedCrop.stock && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Stock</span>
+                    <span className="text-sm font-semibold text-blue-700">{Number(selectedCrop.stock).toLocaleString()} pcs</span>
+                  </div>
+                )}
+                {selectedCrop.planting_date && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Planted</span>
+                    <span className="text-sm text-gray-700">{formatDate(selectedCrop.planting_date)}</span>
+                  </div>
+                )}
+                {selectedCrop.expected_harvest && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Expected Harvest</span>
+                    <span className="text-sm font-semibold text-amber-700">{formatDate(selectedCrop.expected_harvest)}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Specs */}
+              {[1, 2, 3, 4, 5].some(n => selectedCrop[`specification_${n}`]) && (
+                <div className="mt-4">
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest mb-2">Specifications</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[1, 2, 3, 4, 5].map((n) =>
+                      selectedCrop[`specification_${n}`] ? (
+                        <span key={n} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">
+                          {selectedCrop[`specification_${n}`]}
+                        </span>
+                      ) : null
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Add to Cart Button */}
+              <button
+                onClick={() => handleAddToCart(selectedCrop)}
+                className="w-full mt-5 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600
+                  hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold
+                  active:scale-[0.98] transition-all shadow-md shadow-green-200"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

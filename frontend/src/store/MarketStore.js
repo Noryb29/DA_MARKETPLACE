@@ -72,23 +72,28 @@ const useMarketStore = create((set, get) => ({
 
   // ✅ BEST: Fetch both at once
   getFarmDetails: async (farmId) => {
-  set({ farmLoading: true })
-  try {
-    const [farmRes, cropsRes] = await Promise.all([
-      axios.get(`${BASE_URL}/api/market/farm/${farmId}`),
-      axios.get(`${BASE_URL}/api/market/farm/${farmId}/crops`)
-    ])
+    set({ farmLoading: true })
+    try {
+      const [farmRes, cropsRes] = await Promise.all([
+        axios.get(`${BASE_URL}/api/market/farm/${farmId}`),
+        axios.get(`${BASE_URL}/api/market/farm/${farmId}/crops`)
+      ])
 
-    set({
-      selectedFarm: farmRes.data.farm,
-      farmCrops: cropsRes.data.crops,
-      farmLoading: false
-    })
-  } catch (error) {
-    console.error('Failed to fetch farm details:', error)
-    set({ farmLoading: false })
-  }
-},
+      const cropsWithFullUrl = cropsRes.data.crops.map(crop => ({
+        ...crop,
+        harvest_photo: crop.harvest_photo ? `${BASE_URL}${crop.harvest_photo}` : null
+      }))
+
+      set({
+        selectedFarm: farmRes.data.farm,
+        farmCrops: cropsWithFullUrl,
+        farmLoading: false
+      })
+    } catch (error) {
+      console.error('Failed to fetch farm details:', error)
+      set({ farmLoading: false })
+    }
+  },
 
   // ✅ Optional cleanup (very useful)
   clearFarmDetails: () => {

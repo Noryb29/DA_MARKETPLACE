@@ -8,20 +8,24 @@ import { Search, X } from 'lucide-react'
 const PriceMonitoring = () => {
   // Store selectors
   const crops = useCropstore((state) => state.crops)
+  const categories = useCropstore((state) => state.categories)
   const fetchCrops = useCropstore((state) => state.fetchCrops)
+  const fetchCategories = useCropstore((state) => state.fetchCategories)
 
   // Filter states
   const [categoryFilter, setCategoryFilter] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
+  const [analyticsCategory, setAnalyticsCategory] = useState("all")
 
   // Initialize data on mount
   const initialized = React.useRef(false)
   useEffect(() => {
     if (!initialized.current) {
       fetchCrops()
+      fetchCategories()
       initialized.current = true
     }
-  }, [fetchCrops])
+  }, [fetchCrops, fetchCategories])
 
   // Calculate filtered crops
   const filteredCrops = useMemo(() => {
@@ -44,16 +48,27 @@ const PriceMonitoring = () => {
 
   // Analytics for filtered data
   const stats = useMemo(() => {
-    if (filteredCrops.length === 0) {
+    const cropsToAnalyze = analyticsCategory === "all"
+      ? filteredCrops
+      : filteredCrops.filter(c => c.categories === analyticsCategory)
+
+    if (cropsToAnalyze.length === 0) {
       return { count: 0, avgPrice: "—", range: "—" }
     }
 
-    const prices = filteredCrops
-      .filter((crop) => crop.price)
-      .map((crop) => parseFloat(crop.price))
+    const prices = []
+    cropsToAnalyze.forEach((crop) => {
+      if (crop.markets) {
+        Object.values(crop.markets).forEach((marketData) => {
+          if (marketData.prevailing) {
+            prices.push(parseFloat(marketData.prevailing))
+          }
+        })
+      }
+    })
 
     if (prices.length === 0) {
-      return { count: filteredCrops.length, avgPrice: "—", range: "—" }
+      return { count: cropsToAnalyze.length, avgPrice: "—", range: "—" }
     }
 
     const avg = (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2)
@@ -61,11 +76,11 @@ const PriceMonitoring = () => {
     const low = Math.min(...prices).toFixed(2)
 
     return {
-      count: filteredCrops.length,
+      count: cropsToAnalyze.length,
       avgPrice: `₱${avg}`,
       range: `₱${low} - ₱${high}`
     }
-  }, [filteredCrops])
+  }, [filteredCrops, analyticsCategory])
 
   const hasFilters = searchTerm || categoryFilter
 
@@ -261,17 +276,35 @@ const PriceMonitoring = () => {
               <div className="stat-card rounded-xl p-5">
                 <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Commodities Found</p>
                 <p className="text-3xl font-bold text-gray-900">{stats.count}</p>
-                <p className="text-xs text-gray-400 mt-2">Matching filters</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {analyticsCategory === "all" ? "Across all categories" : `In ${analyticsCategory}`}
+                </p>
               </div>
               <div className="stat-card rounded-xl p-5">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Average Price</p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Average Price</p>
+                  <select
+                    value={analyticsCategory}
+                    onChange={(e) => setAnalyticsCategory(e.target.value)}
+                    className="text-xs px-2 py-1 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 font-medium cursor-pointer hover:bg-emerald-100 focus:outline-none"
+                  >
+                    <option value="all">All Categories</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
                 <p className="text-3xl font-bold text-emerald-600">{stats.avgPrice}</p>
-                <p className="text-xs text-gray-400 mt-2">Current selection</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {analyticsCategory === "all" ? "Overall average" : `In ${analyticsCategory}`}
+                </p>
               </div>
               <div className="stat-card rounded-xl p-5">
                 <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2">Price Range</p>
                 <p className="text-lg font-bold text-gray-900">{stats.range}</p>
-                <p className="text-xs text-gray-400 mt-2">Min - Max</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {analyticsCategory === "all" ? "Across all categories" : `In ${analyticsCategory}`}
+                </p>
               </div>
             </div>
 

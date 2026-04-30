@@ -27,8 +27,9 @@ const Header = () => {
     if (isFarmer) {
       return [
         { label: 'Dashboard', to: '/farmer/dashboard/index' },
-        { label: 'Products', to: '/farmer/dashboard/products' },
+        { label: 'Analytics', to: '/farmer/dashboard/analytics' },
         { label: 'Farm', to: '/farmer/dashboard/farm' },
+        { label: 'Products', to: '/farmer/dashboard/products' },
         { label: 'Orders', to: '/farmer/dashboard/orders' },
       ]
     }
