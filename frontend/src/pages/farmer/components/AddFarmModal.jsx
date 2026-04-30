@@ -1,5 +1,5 @@
 import { useState,useEffect,useRef } from "react";
-import { MapPin, X } from 'lucide-react';
+import { MapPin, X, Image, FileText, Upload } from 'lucide-react';
 
 
 const MapSelector = ({ onLocationSelect, selectedCoords }) => {
@@ -68,13 +68,27 @@ const MapSelector = ({ onLocationSelect, selectedCoords }) => {
   );
 };
 
-const EMPTY_FARM_FORM = { farm_name: '', gps_coordinates: '', farm_area: '', farm_elevation: '' };
+const EMPTY_FARM_FORM = { 
+  farm_name: '', 
+  gps_coordinates: '', 
+  farm_area: '', 
+  farm_elevation: '',
+  total_acres: '',
+  plot_boundaries: '',
+  land_use_type: '',
+  farm_image: null,
+  farm_docs: []
+};
 
 const AddFarmModal = ({ isOpen, onClose, onSubmit, loading }) => {
   const [form, setForm] = useState(EMPTY_FARM_FORM);
   const [focused, setFocused] = useState('');
+  const [imagePreview, setImagePreview] = useState(null);
 
-  useEffect(() => { if (isOpen) setForm(EMPTY_FARM_FORM); }, [isOpen]);
+  useEffect(() => { 
+    if (isOpen) setForm(EMPTY_FARM_FORM); 
+    setImagePreview(null);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -128,7 +142,7 @@ const AddFarmModal = ({ isOpen, onClose, onSubmit, loading }) => {
             {/* Area + Elevation */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Area</label>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Area (sqm)</label>
                 <div className="relative">
                   <input
                     type="number" placeholder="0"
@@ -141,6 +155,22 @@ const AddFarmModal = ({ isOpen, onClose, onSubmit, loading }) => {
                 </div>
               </div>
               <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Total Acres</label>
+                <div className="relative">
+                  <input
+                    type="number" placeholder="0"
+                    className={inputClass('total_acres') + ' pr-14'} value={form.total_acres}
+                    onFocus={() => setFocused('total_acres')} onBlur={() => setFocused('')}
+                    onChange={(e) => setForm({ ...form, total_acres: e.target.value })}
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">acres</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Elevation + Land Use Type */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Elevation</label>
                 <div className="relative">
                   <input
@@ -151,6 +181,132 @@ const AddFarmModal = ({ isOpen, onClose, onSubmit, loading }) => {
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">m</span>
                 </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Land Use Type</label>
+                <select
+                  className={inputClass('land_use_type')}
+                  value={form.land_use_type}
+                  onFocus={() => setFocused('land_use_type')}
+                  onBlur={() => setFocused('')}
+                  onChange={(e) => setForm({ ...form, land_use_type: e.target.value })}
+                >
+                  <option value="">Select type</option>
+                  <option value="pasture">Pasture</option>
+                  <option value="cultivated">Cultivated</option>
+                  <option value="fallow">Fallow</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Plot Boundaries */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Plot Boundaries</label>
+              <textarea
+                placeholder="Describe the boundaries of your farm (e.g., North: River, East: Road, etc.)"
+                className={inputClass('plot_boundaries') + ' min-h-[80px] resize-none'}
+                value={form.plot_boundaries}
+                onFocus={() => setFocused('plot_boundaries')}
+                onBlur={() => setFocused('')}
+                onChange={(e) => setForm({ ...form, plot_boundaries: e.target.value })}
+              />
+            </div>
+
+            {/* Farm Image */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Farm Image</label>
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-green-400 transition-colors">
+                {imagePreview ? (
+                  <div className="relative inline-block">
+                    <img src={imagePreview} alt="Preview" className="max-h-40 rounded-lg mx-auto" />
+                    <button
+                      type="button"
+                      onClick={() => { setForm({ ...form, farm_image: null }); setImagePreview(null); }}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer block">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setForm({ ...form, farm_image: file });
+                          setImagePreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
+                    <Image className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-xs text-gray-500">Click to upload farm image</p>
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Farm Documents */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Farm Documents (Max 3 PDFs)</label>
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 hover:border-green-400 transition-colors">
+                {form.farm_docs && form.farm_docs.length > 0 ? (
+                  <div className="space-y-2">
+                    {form.farm_docs.map((file, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-red-500" />
+                          <span className="text-xs text-gray-600 truncate max-w-[200px]">{file.name}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newDocs = form.farm_docs.filter((_, i) => i !== idx);
+                            setForm({ ...form, farm_docs: newDocs });
+                          }}
+                          className="text-gray-400 hover:text-red-500"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    {form.farm_docs.length < 3 && (
+                      <label className="cursor-pointer flex items-center justify-center gap-2 py-2 text-green-600 hover:text-green-700">
+                        <Upload className="w-4 h-4" />
+                        <span className="text-xs font-medium">Add more documents</span>
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          multiple
+                          className="hidden"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files);
+                            const remaining = 3 - form.farm_docs.length;
+                            const newDocs = [...form.farm_docs, ...files.slice(0, remaining)];
+                            setForm({ ...form, farm_docs: newDocs });
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                ) : (
+                  <label className="cursor-pointer block">
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files).slice(0, 3);
+                        setForm({ ...form, farm_docs: files });
+                      }}
+                    />
+                    <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-xs text-gray-500">Click to upload up to 3 PDF documents</p>
+                  </label>
+                )}
               </div>
             </div>
           </div>

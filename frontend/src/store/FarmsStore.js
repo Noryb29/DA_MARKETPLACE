@@ -16,11 +16,30 @@ const useFarmerStore = create((set, get) => ({
   addFarm: async (farmData) => {
   set({ loading: true })
   const token = localStorage.getItem('farmer_token')
+  
+  const formData = new FormData()
+  Object.keys(farmData).forEach(key => {
+    if (key === 'farm_docs') {
+      if (farmData[key] && farmData[key].length > 0) {
+        farmData[key].forEach(file => formData.append('farm_docs', file))
+      }
+    } else if (key === 'farm_image') {
+      if (farmData[key]) formData.append('farm_image', farmData[key])
+    } else if (farmData[key] !== undefined && farmData[key] !== null) {
+      formData.append(key, farmData[key])
+    }
+  })
+
   try {
     const response = await axios.post(
       `${BASE_URL}/api/farmers/addFarm`,
-      farmData,
-      { headers: { Authorization: `Bearer ${token}` } }
+      formData,
+      { 
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        } 
+      }
     )
     Swal.fire({ title: 'Success!', text: 'Farm registered successfully.', icon: 'success', timer: 2000, showConfirmButton: false })
 

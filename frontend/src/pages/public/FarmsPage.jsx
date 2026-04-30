@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import Header from './components/Header'
 import Sidebar from './components/SideBar'
 import useMarketStore from '../../store/MarketStore'
-import { Search, Loader2, Sprout, Leaf, MapPin, Ruler, X, ChevronRight, Calendar, SlidersHorizontal, User } from 'lucide-react'
+import { Search, Loader2, Sprout, Leaf, MapPin, Ruler, X, ChevronRight, Calendar, SlidersHorizontal, User, FileText, MapPinned } from 'lucide-react'
+
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 const FarmsPage = () => {
   const { farms, initialized, getAllFarms } = useMarketStore()
@@ -231,6 +233,27 @@ const FarmsPage = () => {
 }
 
 const FarmCard = ({ farm, onViewClick, index }) => {
+  const landUseColors = {
+    pasture: 'bg-amber-100 text-amber-700',
+    cultivated: 'bg-green-100 text-green-700',
+    fallow: 'bg-gray-100 text-gray-700'
+  }
+
+  const getDocsCount = () => {
+    if (!farm.farm_docs) return 0
+    if (Array.isArray(farm.farm_docs)) return farm.farm_docs.length
+    if (typeof farm.farm_docs === 'string' && farm.farm_docs.startsWith('[')) {
+      try {
+        return JSON.parse(farm.farm_docs).length
+      } catch (e) {
+        return 0
+      }
+    }
+    return 0
+  }
+
+  const docsCount = getDocsCount()
+
   return (
     <div
       className="bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
@@ -239,13 +262,18 @@ const FarmCard = ({ farm, onViewClick, index }) => {
       {/* Farm Image */}
       <div className="h-32 bg-gradient-to-br from-green-400 to-emerald-600 relative">
         {farm.farm_image ? (
-          <img src={farm.farm_image} alt={farm.farm_name} className="w-full h-full object-cover" />
+          <img src={farm.farm_image.startsWith('http') ? farm.farm_image : `${BASE_URL}${farm.farm_image}`} alt={farm.farm_name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Sprout className="w-12 h-12 text-white/50" />
           </div>
         )}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex gap-1.5">
+          {farm.land_use_type && (
+            <span className={`px-2 py-1 text-[10px] font-semibold rounded-full capitalize ${landUseColors[farm.land_use_type] || 'bg-gray-100 text-gray-600'}`}>
+              {farm.land_use_type}
+            </span>
+          )}
           <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-green-700 text-[10px] font-semibold rounded-full">
             Active
           </span>
@@ -271,17 +299,29 @@ const FarmCard = ({ farm, onViewClick, index }) => {
             </div>
           )}
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {farm.farm_area && (
               <div className="flex items-center gap-1">
                 <Ruler className="w-3.5 h-3.5 text-green-500" />
                 <span className="text-xs font-medium text-green-700">{parseFloat(farm.farm_area).toFixed(1)} ha</span>
               </div>
             )}
+            {farm.total_acres && (
+              <div className="flex items-center gap-1">
+                <MapPinned className="w-3.5 h-3.5 text-blue-500" />
+                <span className="text-xs font-medium text-blue-700">{farm.total_acres} acres</span>
+              </div>
+            )}
             {farm.farm_elevation && (
               <div className="flex items-center gap-1">
                 <Leaf className="w-3.5 h-3.5 text-amber-500" />
                 <span className="text-xs font-medium text-amber-700">{parseFloat(farm.farm_elevation).toFixed(0)}m</span>
+              </div>
+            )}
+            {docsCount > 0 && (
+              <div className="flex items-center gap-1">
+                <FileText className="w-3.5 h-3.5 text-purple-500" />
+                <span className="text-xs font-medium text-purple-700">{docsCount} docs</span>
               </div>
             )}
           </div>

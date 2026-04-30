@@ -57,11 +57,28 @@ export const createDB = async() => {
                 farm_name VARCHAR(150) NOT NULL,
                 gps_coordinates VARCHAR(100),
                 farm_area INTEGER NOT NULL,
+                total_acres DECIMAL(10,2),
+                plot_boundaries TEXT,
+                land_use_type VARCHAR(20) CHECK (land_use_type IN ('pasture', 'cultivated', 'fallow')),
+                farm_image VARCHAR(500),
+                farm_docs VARCHAR(1000)[],
                 farm_elevation INTEGER,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `)
         console.log('✓ Table "farm" created')
+
+        // Add new columns to existing farm table
+        try {
+            await pool.query(`ALTER TABLE farm ADD COLUMN IF NOT EXISTS total_acres DECIMAL(10,2)`)
+            await pool.query(`ALTER TABLE farm ADD COLUMN IF NOT EXISTS plot_boundaries TEXT`)
+            await pool.query(`ALTER TABLE farm ADD COLUMN IF NOT EXISTS land_use_type VARCHAR(20)`)
+            await pool.query(`ALTER TABLE farm ADD COLUMN IF NOT EXISTS farm_image VARCHAR(500)`)
+            await pool.query(`ALTER TABLE farm ADD COLUMN IF NOT EXISTS farm_docs TEXT[]`)
+            console.log('✓ Added new columns to farm table')
+        } catch (e) {
+            console.log('  (columns may already exist)')
+        }
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS crop_in_farm (

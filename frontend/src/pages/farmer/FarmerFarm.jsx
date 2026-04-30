@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import useFarmerStore from '../../store/FarmsStore.js';
-import { MapPin, Wheat, ChevronRight, Plus, X, List, LayoutGrid,ClipboardList } from 'lucide-react';
+import { MapPin, Wheat, ChevronRight, Plus, X, List, LayoutGrid,ClipboardList, Sprout, FileText, Image } from 'lucide-react';
 import Sidebar from '../public/components/SideBar';
 import AddFarmModal from './components/AddFarmModal.jsx';
 import FarmDetailModal from './components/FarmDetailModal.jsx';
+
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 
 const FarmerFarm = () => {
@@ -108,45 +110,99 @@ const FarmerFarm = () => {
                       className="w-full text-left bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden
                         hover:border-green-300 hover:shadow-md transition-all duration-200 group"
                     >
-                      <div className="flex items-center gap-4 p-5">
-                        {/* Index badge */}
-                        <div className="w-10 h-10 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center shrink-0 group-hover:bg-green-100 transition-colors">
-                          <span className="text-sm font-bold text-green-600">{index + 1}</span>
-                        </div>
+                      <div className="flex">
+                        {/* Farm Image */}
+                        {f.farm_image ? (
+                          <div className="w-24 h-full min-h-[100px] shrink-0">
+                            <img 
+                              src={`${BASE_URL}${f.farm_image}`} 
+                              alt={f.farm_name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-24 h-full min-h-[100px] bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center shrink-0">
+                            <Image className="w-8 h-8 text-green-300" />
+                          </div>
+                        )}
 
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-gray-800 text-sm">{f.farm_name}</p>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
-                            <span className="text-xs text-gray-400 font-mono truncate">
-                              {f.gps_coordinates || 'No coordinates'}
-                            </span>
+                        {/* Content */}
+                        <div className="flex-1 p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="font-bold text-gray-800 text-sm truncate">{f.farm_name}</p>
+                                {f.land_use_type && (
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full capitalize ${
+                                    f.land_use_type === 'pasture' ? 'bg-amber-100 text-amber-700' :
+                                    f.land_use_type === 'cultivated' ? 'bg-green-100 text-green-700' :
+                                    'bg-gray-100 text-gray-600'
+                                  }`}>
+                                    {f.land_use_type}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
+                                <span className="text-xs text-gray-400 font-mono truncate">
+                                  {f.gps_coordinates || 'No coordinates'}
+                                </span>
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-green-500 transition-colors shrink-0" />
                           </div>
-                        </div>
 
-                        {/* Stats */}
-                        <div className="flex items-center gap-3 shrink-0">
-                          <div className="text-right">
-                            <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Area</p>
-                            <p className="text-sm font-bold text-gray-700">{f.farm_area?.toLocaleString()} <span className="text-xs font-normal text-gray-400">sqm</span></p>
+                          {/* Stats */}
+                          <div className="flex items-center gap-4 mt-3">
+                            <div className="text-right">
+                              <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Area</p>
+                              <p className="text-sm font-bold text-gray-700">{f.farm_area?.toLocaleString()} <span className="text-xs font-normal text-gray-400">sqm</span></p>
+                            </div>
+                            {f.total_acres && (
+                              <>
+                                <div className="w-px h-6 bg-gray-200" />
+                                <div className="text-right">
+                                  <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Acres</p>
+                                  <p className="text-sm font-bold text-gray-700">{f.total_acres}</p>
+                                </div>
+                              </>
+                            )}
+                            {f.farm_elevation && (
+                              <>
+                                <div className="w-px h-6 bg-gray-200" />
+                                <div className="text-right">
+                                  <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Elev.</p>
+                                  <p className="text-sm font-bold text-gray-700">{f.farm_elevation} <span className="text-xs font-normal text-gray-400">m</span></p>
+                                </div>
+                              </>
+                            )}
+                            {f.farm_docs && (
+                              (() => {
+                                let docsArray = []
+                                if (Array.isArray(f.farm_docs)) {
+                                  docsArray = f.farm_docs
+                                } else if (typeof f.farm_docs === 'string' && f.farm_docs.startsWith('[')) {
+                                  try {
+                                    docsArray = JSON.parse(f.farm_docs)
+                                  } catch (e) {
+                                    docsArray = []
+                                  }
+                                }
+                                if (docsArray.length === 0) return null
+                                return (
+                                  <>
+                                    <div className="w-px h-6 bg-gray-200" />
+                                    <div className="flex items-center gap-1">
+                                      <FileText className="w-3 h-3 text-blue-400" />
+                                      <span className="text-xs text-blue-600 font-medium">{docsArray.length} docs</span>
+                                    </div>
+                                  </>
+                                )
+                              })()
+                            )}
                           </div>
-                          <div className="w-px h-8 bg-gray-100" />
-                          <div className="text-right">
-                            <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Elev.</p>
-                            <p className="text-sm font-bold text-gray-700">{f.farm_elevation ?? '—'} <span className="text-xs font-normal text-gray-400">m</span></p>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-green-500 transition-colors ml-1" />
                         </div>
                       </div>
-
-                      {f.created_at && (
-                        <div className="px-5 pb-3">
-                          <span className="text-[10px] text-gray-400">
-                            Registered {new Date(f.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
-                          </span>
-                        </div>
-                      )}
                     </button>
                   ))
                 )}

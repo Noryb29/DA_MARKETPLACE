@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom'
 import Header from './Header'
 import Sidebar from './SideBar'
 import useMarketStore from '../../../store/MarketStore'
-import { ArrowLeft, Loader2, MapPin, Ruler, User, AlertCircle, Leaf, Droplets, Sprout, Calendar, Package, Archive } from 'lucide-react'
+import { ArrowLeft, Loader2, MapPin, Ruler, User, AlertCircle, Leaf, Droplets, Sprout, Calendar, Package, Archive, FileText, MapPinned } from 'lucide-react'
 import Swal from 'sweetalert2'
 import useCartStore from '../../../store/CartStore'
 import useUserStore from '../../../store/UserStore'
 import { getDaysUntilHarvest } from '../shopComponents/HarvestBadge'
+
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 const FarmDetailsPage = () => {
   const { id } = useParams()
@@ -127,13 +129,22 @@ const FarmDetailsPage = () => {
               {/* Header Image */}
               <div className="h-40 bg-gradient-to-r from-green-500 to-emerald-600 relative">
                 {farm.farm_image ? (
-                  <img src={farm.farm_image} alt={farm.farm_name} className="w-full h-full object-cover" />
+                  <img src={farm.farm_image.startsWith('http') ? farm.farm_image : `${BASE_URL}${farm.farm_image}`} alt={farm.farm_name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Sprout className="w-16 h-16 text-white/50" />
                   </div>
                 )}
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 right-4 flex gap-2">
+                  {farm.land_use_type && (
+                    <span className={`px-3 py-1.5 text-xs font-semibold rounded-full capitalize ${
+                      farm.land_use_type === 'pasture' ? 'bg-amber-100 text-amber-700' :
+                      farm.land_use_type === 'cultivated' ? 'bg-green-100 text-green-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {farm.land_use_type}
+                    </span>
+                  )}
                   <span className="px-3 py-1.5 bg-white/90 backdrop-blur-sm text-green-700 text-xs font-semibold rounded-full">
                     Active
                   </span>
@@ -158,18 +169,18 @@ const FarmDetailsPage = () => {
                     <div className="bg-green-50 rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-1">
                         <Ruler className="w-3.5 h-3.5 text-green-600" />
-                        <span className="text-[10px] text-green-700 font-semibold uppercase">Area</span>
+                        <span className="text-[10px] text-green-700 font-semibold uppercase">Area (sqm)</span>
                       </div>
-                      <p className="text-lg font-bold text-gray-900">{parseFloat(farm.farm_area).toFixed(1)} ha</p>
+                      <p className="text-lg font-bold text-gray-900">{parseFloat(farm.farm_area).toLocaleString()}</p>
                     </div>
                   )}
-                  {farm.farm_location && (
+                  {farm.total_acres && (
                     <div className="bg-blue-50 rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-1">
-                        <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                        <span className="text-[10px] text-blue-700 font-semibold uppercase">Location</span>
+                        <MapPinned className="w-3.5 h-3.5 text-blue-600" />
+                        <span className="text-[10px] text-blue-700 font-semibold uppercase">Total Acres</span>
                       </div>
-                      <p className="text-sm font-medium text-gray-900 truncate">{farm.farm_location}</p>
+                      <p className="text-lg font-bold text-gray-900">{farm.total_acres}</p>
                     </div>
                   )}
                   {farm.farm_elevation && (
@@ -193,6 +204,56 @@ const FarmDetailsPage = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Plot Boundaries */}
+                {farm.plot_boundaries && (
+                  <div className="mt-4 bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="w-4 h-4 text-gray-500" />
+                      <span className="text-xs font-semibold text-gray-500 uppercase">Plot Boundaries</span>
+                    </div>
+                    <p className="text-sm text-gray-700">{farm.plot_boundaries}</p>
+                  </div>
+                )}
+
+                {/* Documents */}
+                {(() => {
+                  let docsArray = []
+                  if (Array.isArray(farm.farm_docs)) {
+                    docsArray = farm.farm_docs
+                  } else if (typeof farm.farm_docs === 'string' && farm.farm_docs.startsWith('[')) {
+                    try {
+                      docsArray = JSON.parse(farm.farm_docs)
+                    } catch (e) {
+                      docsArray = []
+                    }
+                  }
+                  
+                  if (docsArray.length === 0) return null
+                  
+                  return (
+                    <div className="mt-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="w-4 h-4 text-gray-500" />
+                        <span className="text-xs font-semibold text-gray-500 uppercase">Farm Documents</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {docsArray.map((doc, idx) => (
+                          <a
+                            key={idx}
+                            href={`${BASE_URL}${doc}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                          >
+                            <FileText className="w-4 h-4 text-red-500" />
+                            <span className="text-xs text-gray-600">Document {idx + 1}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             </div>
 

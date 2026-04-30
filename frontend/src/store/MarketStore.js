@@ -37,7 +37,13 @@ const useMarketStore = create((set, get) => ({
     set({ loading: true })
     try {
       const response = await axios.get(`${BASE_URL}/api/market/getAllFarms`)
-      set({ farms: response.data.farms, loading: false, initialized: true })
+      const farmsWithImages = response.data.farms.map(farm => ({
+        ...farm,
+        farm_image: farm.farm_image ? 
+          (farm.farm_image.startsWith('http') ? farm.farm_image : `${BASE_URL}${farm.farm_image}`) 
+          : null
+      }))
+      set({ farms: farmsWithImages, loading: false, initialized: true })
     } catch (error) {
       console.error('Failed to fetch Farms', error)
       set({ loading: false, initialized: true })
@@ -79,13 +85,20 @@ const useMarketStore = create((set, get) => ({
         axios.get(`${BASE_URL}/api/market/farm/${farmId}/crops`)
       ])
 
+      const farmWithFullUrl = {
+        ...farmRes.data.farm,
+        farm_image: farmRes.data.farm?.farm_image ? 
+          (farmRes.data.farm.farm_image.startsWith('http') ? farmRes.data.farm.farm_image : `${BASE_URL}${farmRes.data.farm.farm_image}`) 
+          : null
+      }
+
       const cropsWithFullUrl = cropsRes.data.crops.map(crop => ({
         ...crop,
         harvest_photo: crop.harvest_photo ? `${BASE_URL}${crop.harvest_photo}` : null
       }))
 
       set({
-        selectedFarm: farmRes.data.farm,
+        selectedFarm: farmWithFullUrl,
         farmCrops: cropsWithFullUrl,
         farmLoading: false
       })
