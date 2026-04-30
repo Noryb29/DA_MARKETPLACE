@@ -12,6 +12,7 @@ const useFarmerStore = create((set, get) => ({
   hasFarm: false,
   farmLoading: false,
   farmInitialized: false,
+  farmDocuments: [],
   
   addFarm: async (farmData) => {
   set({ loading: true })
@@ -43,7 +44,6 @@ const useFarmerStore = create((set, get) => ({
     )
     Swal.fire({ title: 'Success!', text: 'Farm registered successfully.', icon: 'success', timer: 2000, showConfirmButton: false })
 
-    // Refresh both single farm reference and full list
     await get().getFarm()
     await get().getFarms()
 
@@ -91,18 +91,71 @@ const useFarmerStore = create((set, get) => ({
     }
   },
 
-getFarms: async () => {
-  const token = localStorage.getItem('farmer_token')
-  try {
-    const response = await axios.get(
-      `${BASE_URL}/api/farmers/getFarms`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-    set({ farms: response.data.farms })
-  } catch (error) {
-    console.error('Failed to fetch farms:', error)
-  }
-},
+  getFarms: async () => {
+    const token = localStorage.getItem('farmer_token')
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/farmers/getFarms`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      set({ farms: response.data.farms })
+    } catch (error) {
+      console.error('Failed to fetch farms:', error)
+    }
+  },
+
+  addFarmDocument: async (farm_id, files) => {
+    console.log('=== Store: addFarmDocument ===')
+    console.log('farm_id:', farm_id)
+    console.log('files:', files)
+    const token = localStorage.getItem('farmer_token')
+    const formData = new FormData()
+    files.forEach(file => formData.append('farm_docs', file))
+    
+    try {
+      console.log('Sending request to:', `${BASE_URL}/api/farmers/farm/${farm_id}/documents`)
+      const response = await axios.post(
+        `${BASE_URL}/api/farmers/farm/${farm_id}/documents`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
+      )
+      console.log('Response:', response.data)
+      await get().getFarmDocuments(farm_id)
+      Swal.fire({ title: 'Success!', text: 'Document uploaded successfully.', icon: 'success', timer: 2000, showConfirmButton: false })
+      return response.data
+    } catch (error) {
+      console.error('Upload error:', error.response?.data || error.message)
+      Swal.fire({ title: 'Error', text: error.response?.data?.message || 'Failed to upload document', icon: 'error' })
+      throw error
+    }
+  },
+
+  getFarmDocuments: async (farm_id) => {
+    const token = localStorage.getItem('farmer_token')
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/farmers/farm/${farm_id}/documents`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      set({ farmDocuments: response.data.documents })
+    } catch (error) {
+      console.error('Failed to fetch documents:', error)
+    }
+  },
+
+  deleteFarmDocument: async (doc_id, farm_id) => {
+    const token = localStorage.getItem('farmer_token')
+    try {
+      await axios.delete(
+        `${BASE_URL}/api/farmers/documents/${doc_id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      await get().getFarmDocuments(farm_id)
+      Swal.fire({ title: 'Deleted', text: 'Document removed.', icon: 'success', timer: 1500, showConfirmButton: false })
+    } catch (error) {
+      Swal.fire({ title: 'Error', text: 'Failed to delete document', icon: 'error' })
+    }
+  },
 
 }))
 

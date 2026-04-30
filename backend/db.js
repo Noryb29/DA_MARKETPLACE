@@ -195,6 +195,19 @@ export const createDB = async() => {
         `)
         console.log('✓ Table "farmer_details" created')
 
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS farm_documents (
+                doc_id SERIAL PRIMARY KEY,
+                farm_id INTEGER NOT NULL,
+                file_name VARCHAR(255) NOT NULL,
+                file_data BYTEA,
+                file_type VARCHAR(50),
+                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_farm_documents FOREIGN KEY (farm_id) REFERENCES farm(farm_id) ON DELETE CASCADE
+            )
+        `)
+        console.log('✓ Table "farm_documents" created')
+
         console.log('\n✅ Database setup completed successfully!')
 
     } catch (error) {

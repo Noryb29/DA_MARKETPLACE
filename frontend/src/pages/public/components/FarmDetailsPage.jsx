@@ -16,6 +16,8 @@ const FarmDetailsPage = () => {
   const navigate = useNavigate()
   const [error, setError] = useState(null)
   const [selectedCrop, setSelectedCrop] = useState(null)
+  const [documents, setDocuments] = useState([])
+  const [loadingDocs, setLoadingDocs] = useState(false)
 
   const {
     selectedFarm: farm,
@@ -41,6 +43,22 @@ const FarmDetailsPage = () => {
 
     return () => {
       clearFarmDetails()
+    }
+  }, [id])
+
+  useEffect(() => {
+    if (id) {
+      setLoadingDocs(true)
+      const token = localStorage.getItem('token')
+      fetch(`${BASE_URL}/api/farmers/farm/${id}/documents`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
+        .then(res => res.json())
+        .then(data => {
+          setDocuments(data.documents || [])
+          setLoadingDocs(false)
+        })
+        .catch(() => setLoadingDocs(false))
     }
   }, [id])
 
@@ -217,43 +235,50 @@ const FarmDetailsPage = () => {
                 )}
 
                 {/* Documents */}
-                {(() => {
-                  let docsArray = []
-                  if (Array.isArray(farm.farm_docs)) {
-                    docsArray = farm.farm_docs
-                  } else if (typeof farm.farm_docs === 'string' && farm.farm_docs.startsWith('[')) {
-                    try {
-                      docsArray = JSON.parse(farm.farm_docs)
-                    } catch (e) {
-                      docsArray = []
-                    }
-                  }
-                  
-                  if (docsArray.length === 0) return null
-                  
-                  return (
-                    <div className="mt-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <FileText className="w-4 h-4 text-gray-500" />
-                        <span className="text-xs font-semibold text-gray-500 uppercase">Farm Documents</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {docsArray.map((doc, idx) => (
-                          <a
-                            key={idx}
-                            href={`${BASE_URL}${doc}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
-                          >
-                            <FileText className="w-4 h-4 text-red-500" />
-                            <span className="text-xs text-gray-600">Document {idx + 1}</span>
-                          </a>
-                        ))}
-                      </div>
+                {loadingDocs ? (
+                  <div className="mt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="w-4 h-4 text-gray-500" />
+                      <span className="text-xs font-semibold text-gray-500 uppercase">Farm Documents</span>
                     </div>
-                  )
-                })()}
+                    <p className="text-xs text-gray-400">Loading...</p>
+                  </div>
+                ) : documents.length > 0 ? (
+                  <div className="mt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="w-4 h-4 text-gray-500" />
+                      <span className="text-xs font-semibold text-gray-500 uppercase">Farm Documents ({documents.length})</span>
+                    </div>
+                    <div className="space-y-3">
+                      {documents.map((doc) => {
+                        const docUrl = `${BASE_URL}/api/farmers/documents/${doc.doc_id}`
+                        return (
+                          <div key={doc.doc_id} className="border border-gray-200 rounded-lg overflow-hidden">
+                            <div className="flex items-center justify-between bg-gray-50 px-3 py-2 border-b border-gray-200">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText className="w-4 h-4 text-red-500 shrink-0" />
+                                <span className="text-xs font-medium text-gray-600 truncate">{doc.file_name}</span>
+                              </div>
+                              <a
+                                href={docUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:text-blue-700 shrink-0"
+                              >
+                                View
+                              </a>
+                            </div>
+                            <iframe
+                              src={docUrl}
+                              className="w-full h-48"
+                              title={doc.file_name}
+                            />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
 

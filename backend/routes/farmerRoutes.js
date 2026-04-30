@@ -1,6 +1,6 @@
 import express from 'express'
 import multer from 'multer'
-import { addFarm, getCrops, getFarm, getFarms } from '../controllers/farmerControllers.js'
+import { addFarm, getCrops, getFarm, getFarms, addFarmDocument, getFarmDocuments, deleteFarmDocument, serveFarmDocument } from '../controllers/farmerControllers.js'
 import { farmerAuthMiddleware } from '../middleware/authMiddleware.js'
 
 export const farmerRoutes = express.Router()
@@ -23,3 +23,15 @@ farmerRoutes.post("/addFarm",
 farmerRoutes.get("/getFarm", farmerAuthMiddleware, getFarm)
 farmerRoutes.get("/getCrops", farmerAuthMiddleware, getCrops)
 farmerRoutes.get("/getFarms", farmerAuthMiddleware, getFarms)
+
+farmerRoutes.post("/farm/:farm_id/documents", 
+    farmerAuthMiddleware, 
+    upload.array('farm_docs', 3),
+    addFarmDocument
+)
+
+farmerRoutes.get("/farm/:farm_id/documents", farmerAuthMiddleware, getFarmDocuments)
+
+farmerRoutes.get("/documents/:doc_id", farmerAuthMiddleware, serveFarmDocument)
+
+farmerRoutes.delete("/documents/:doc_id", farmerAuthMiddleware, deleteFarmDocument)
