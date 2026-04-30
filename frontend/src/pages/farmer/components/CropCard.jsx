@@ -1,4 +1,4 @@
-import { Wheat,Pencil, Trash2, Calendar, Package } from 'lucide-react'
+import { Wheat,Pencil, Trash2, Calendar, Package, MapPin, ImageIcon } from 'lucide-react'
 
 const CropCard = ({ crop, onEdit, onDelete }) => {
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : null
@@ -6,12 +6,26 @@ const CropCard = ({ crop, onEdit, onDelete }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-green-200 transition-all duration-200 flex flex-col gap-3">
 
+      {/* Harvest Photo */}
+      {crop.harvest_photo && (
+        <div className="relative rounded-lg overflow-hidden">
+          <img src={crop.harvest_photo} alt="Harvest" className="w-full h-32 object-cover" />
+        </div>
+      )}
+
       {/* Top row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="bg-green-100 p-2.5 rounded-xl shrink-0">
-            <Wheat className="w-5 h-5 text-green-600" />
-          </div>
+          {!crop.harvest_photo && (
+            <div className="bg-green-100 p-2.5 rounded-xl shrink-0">
+              <Wheat className="w-5 h-5 text-green-600" />
+            </div>
+          )}
+          {crop.harvest_photo && (
+            <div className="bg-green-100 p-2 rounded-xl shrink-0">
+              <ImageIcon className="w-4 h-4 text-green-600" />
+            </div>
+          )}
           <div>
             <p className="font-bold text-gray-800 text-sm leading-tight">{crop.crop_name}</p>
             <p className="text-xs text-gray-400 mt-0.5">{crop.variety || 'No variety'}</p>
@@ -69,6 +83,14 @@ const CropCard = ({ crop, onEdit, onDelete }) => {
               </span>
             ) : null
           )}
+        </div>
+      )}
+
+      {/* Location */}
+      {crop.location && (
+        <div className="flex items-center gap-1.5 text-xs text-gray-500 pt-2 border-t border-gray-100">
+          <MapPin className="w-3 h-3 shrink-0" />
+          <span className="line-clamp-1">{crop.location}</span>
         </div>
       )}
     </div>

@@ -13,14 +13,17 @@ const useMarketStore = create((set, get) => ({
   farmLoading: false,
   initialized: false,
 
-  // ✅ Get all crops (for marketplace)
   getAllCrops: async () => {
     const { initialized, crops, loading } = get()
     if (initialized && crops.length > 0) return
     set({ loading: true })
     try {
       const response = await axios.get(`${BASE_URL}/api/market/getAllCrops`)
-      set({ crops: response.data.crops, loading: false, initialized: true })
+      const cropsWithFullUrl = response.data.crops.map(crop => ({
+        ...crop,
+        harvest_photo: crop.harvest_photo ? `${BASE_URL}${crop.harvest_photo}` : null
+      }))
+      set({ crops: cropsWithFullUrl, loading: false, initialized: true })
     } catch (error) {
       console.error('Failed to fetch market crops:', error)
       set({ loading: false, initialized: true })

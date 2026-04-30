@@ -1,4 +1,4 @@
-import { Loader2 ,X } from 'lucide-react'
+import { Loader2 ,X, MapPin, Upload, Image as ImageIcon } from 'lucide-react'
 import { useEffect,useState } from 'react'
 
 const EMPTY_FORM = {
@@ -6,12 +6,29 @@ const EMPTY_FORM = {
   specification_1: '', specification_2: '', specification_3: '',
   specification_4: '', specification_5: '',
   planting_date: '', expected_harvest: '',
+  harvest_photo: '', location: '',
 }
 
 const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = [] }) => {
-    
+
   const isEdit = !!initialData
   const [form, setForm] = useState(EMPTY_FORM)
+  const [photoPreview, setPhotoPreview] = useState(null)
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const previewUrl = URL.createObjectURL(file)
+      setPhotoPreview(previewUrl)
+      setForm({ ...form, harvest_photo: file })
+    }
+  }
+
+  const handleRemovePhoto = () => {
+    setPhotoPreview(null)
+    setForm({ ...form, harvest_photo: '' })
+  }
+
   useEffect(() => {
     setForm(initialData
       ? {
@@ -21,6 +38,11 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
         }
       : EMPTY_FORM
     )
+    if (initialData?.harvest_photo) {
+      setPhotoPreview(initialData.harvest_photo)
+    } else {
+      setPhotoPreview(null)
+    }
   }, [initialData, isOpen])
 
   if (!isOpen) return null
@@ -155,6 +177,55 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                       outline-none text-sm text-gray-800 font-medium transition-all duration-200"
                   />
                 ))}
+              </div>
+            </div>
+
+            {/* Harvest Photo */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Harvest Photo</label>
+              <div className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all ${photoPreview ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                {photoPreview ? (
+                  <div className="relative">
+                    <img src={photoPreview} alt="Harvest preview" className="w-full h-40 object-cover rounded-lg mx-auto" />
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                    <p className="text-xs text-green-600 mt-2 font-medium">Click to change photo</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center py-2">
+                    <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                    <p className="text-xs text-gray-500 font-medium">Click to upload harvest photo</p>
+                    <p className="text-[10px] text-gray-400 mt-1">PNG, JPG up to 5MB</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Harvest Location</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="e.g. Purok 5, Brgy. San Jose, Quezon Province"
+                  value={form.location || ''}
+                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  className="w-full pl-10 pr-3 py-2.5 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                    focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                    outline-none text-sm text-gray-800 font-medium transition-all duration-200"
+                />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               </div>
             </div>
           </div>

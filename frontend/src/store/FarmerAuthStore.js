@@ -77,12 +77,27 @@ const useFarmerAuthStore = create((set, get) => ({
     set({ loading: true })
     try {
       const existing = get().farmerDetails
+      const formData = new FormData()
+      Object.keys(details).forEach((key) => {
+        if (key === 'profile_picture' && details[key] instanceof File) {
+          formData.append(key, details[key])
+        } else if (key === 'profile_picture' && typeof details[key] === 'string') {
+          formData.append(key, details[key])
+        } else if (details[key] !== undefined && details[key] !== null) {
+          formData.append(key, details[key])
+        }
+      })
+      
       let result
       if (existing) {
-        const { data } = await farmerApi.put('/api/auth/farmer/me/details', details)
+        const { data } = await farmerApi.put('/api/auth/farmer/me/details', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         result = data.details
       } else {
-        const { data } = await farmerApi.post('/api/auth/farmer/me/details', details)
+        const { data } = await farmerApi.post('/api/auth/farmer/me/details', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         result = data.details
       }
       set({ farmerDetails: result, loading: false })

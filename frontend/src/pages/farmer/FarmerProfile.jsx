@@ -4,10 +4,10 @@ import Swal from 'sweetalert2'
 import axios from 'axios'
 import useFarmerAuthStore from '../../store/FarmerAuthStore'
 import Sidebar from '../public/components/SideBar'
-import { CircleUser } from 'lucide-react'
+import { CircleUser, Upload, X } from 'lucide-react'
 import { FaEdit, FaCalendar, FaMars, FaVenus } from 'react-icons/fa'
 
-const BASE_URL = import.meta.env.VITE_BASE_URL
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 const FarmerProfile = () => {
   const user = useFarmerAuthStore((state) => state.farmer)
@@ -32,6 +32,7 @@ const FarmerProfile = () => {
     gender: '',
     date_of_birth: '',
   })
+  const [photoPreview, setPhotoPreview] = useState(null)
 
   useEffect(() => {
     fetchFarmerDetails()
@@ -39,12 +40,16 @@ const FarmerProfile = () => {
 
   useEffect(() => {
     if (farmerDetails) {
+      const profilePic = farmerDetails.profile_picture 
+        ? (farmerDetails.profile_picture.startsWith('http') ? farmerDetails.profile_picture : `${BASE_URL}${farmerDetails.profile_picture}`)
+        : ''
       setDetailsForm({
-        profile_picture: farmerDetails.profile_picture || '',
+        profile_picture: profilePic,
         bio: farmerDetails.bio || '',
         gender: farmerDetails.gender || '',
         date_of_birth: farmerDetails.date_of_birth || '',
       })
+      setPhotoPreview(profilePic || null)
     }
   }, [farmerDetails])
 
@@ -54,6 +59,20 @@ const FarmerProfile = () => {
 
   const handleDetailsChange = (e) => {
     setDetailsForm({ ...detailsForm, [e.target.name]: e.target.value })
+  }
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const previewUrl = URL.createObjectURL(file)
+      setPhotoPreview(previewUrl)
+      setDetailsForm({ ...detailsForm, profile_picture: file })
+    }
+  }
+
+  const handleRemovePhoto = () => {
+    setPhotoPreview(null)
+    setDetailsForm({ ...detailsForm, profile_picture: '' })
   }
 
   const handleSave = async () => {
@@ -105,6 +124,12 @@ const FarmerProfile = () => {
       return user.firstname.charAt(0).toUpperCase()
     }
     return '?'
+  }
+
+  const getProfilePicture = () => {
+    if (!farmerDetails?.profile_picture) return null
+    const pic = farmerDetails.profile_picture
+    return pic.startsWith('http') ? pic : `${BASE_URL}${pic}`
   }
 
   return (
@@ -249,8 +274,8 @@ const FarmerProfile = () => {
             {/* ── RIGHT: Profile sidebar ── */}
             <div className="flex flex-col gap-4">
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 flex flex-col items-center text-center">
-                {farmerDetails?.profile_picture ? (
-                  <img src={farmerDetails.profile_picture} alt="Profile" className="w-20 h-20 rounded-full object-cover mb-3 shadow-sm" />
+                {getProfilePicture() ? (
+                  <img src={getProfilePicture()} alt="Profile" className="w-20 h-20 rounded-full object-cover mb-3 shadow-sm" />
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-green-900 flex items-center justify-center text-white text-2xl font-bold mb-3 shadow-sm">
                     {getInitials()}
@@ -307,8 +332,34 @@ const FarmerProfile = () => {
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1">Profile Picture URL</label>
-                <input type="text" name="profile_picture" value={detailsForm.profile_picture} onChange={handleDetailsChange} placeholder="https://example.com/image.jpg" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500" />
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1">Profile Picture</label>
+                <div className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all ${photoPreview ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  {photoPreview ? (
+                    <div className="relative">
+                      <img src={photoPreview} alt="Profile preview" className="w-24 h-24 rounded-full object-cover mx-auto" />
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="absolute top-0 right-1/2 translate-x-8 -translate-y-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                      <p className="text-xs text-green-600 mt-2 font-medium">Click to change photo</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center py-2">
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <p className="text-xs text-gray-500 font-medium">Click to upload photo</p>
+                      <p className="text-[10px] text-gray-400 mt-1">PNG, JPG up to 5MB</p>
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1">Bio</label>

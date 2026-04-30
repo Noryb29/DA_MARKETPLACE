@@ -77,7 +77,9 @@ export const createDB = async() => {
                 specification_4 VARCHAR(150),
                 specification_5 VARCHAR(150),
                 planting_date DATE NOT NULL,
-                expected_harvest DATE NOT NULL
+                expected_harvest DATE NOT NULL,
+                harvest_photo VARCHAR(500),
+                location VARCHAR(255)
             )
         `)
         console.log('✓ Table "crop_in_farm" created')

@@ -61,13 +61,16 @@ export const getFarmerOrders = async (req, res) => {
                 c.crop_name, c.variety,
                 c.specification_1, c.specification_2, c.specification_3,
                 c.specification_4, c.specification_5,
+                c.harvest_photo, c.location AS crop_location,
                 f.farm_name,
                 u.firstname AS buyer_first_name,
-                u.lastname  AS buyer_last_name
+                u.lastname  AS buyer_last_name,
+                ud.profile_picture AS buyer_profile_picture
             FROM crop_orders co
             LEFT JOIN crop_in_farm  c ON co.crop_id  = c.crop_id
             LEFT JOIN farm   f ON co.farm_id  = f.farm_id
             LEFT JOIN users  u ON co.user_id  = u.user_id
+            LEFT JOIN user_details ud ON u.user_id = ud.user_id
             WHERE co.farmer_id = $1
             ORDER BY co.order_date DESC`,
             [user_id]

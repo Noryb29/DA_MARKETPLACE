@@ -54,7 +54,12 @@ const useOrderStore = create((set, get) => ({
       const res = await axios.get(`${BASE}/getFarmerOrders`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      set({ farmerOrders: res.data.orders, loading: false, farmerInitialized: true })
+      const ordersWithFullUrl = res.data.orders.map(order => ({
+        ...order,
+        harvest_photo: order.harvest_photo ? `${BASE_URL}${order.harvest_photo}` : null,
+        buyer_profile_picture: order.buyer_profile_picture ? `${BASE_URL}${order.buyer_profile_picture}` : null
+      }))
+      set({ farmerOrders: ordersWithFullUrl, loading: false, farmerInitialized: true })
     } catch (error) {
       console.error(error)
       set({ loading: false, farmerInitialized: true })

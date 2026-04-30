@@ -17,7 +17,11 @@ const useProduceStore = create((set, get) => ({
         `${BASE_URL}/api/produce/getCrops`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      set({ crops: response.data.crops, cropsLoading: false, cropsInitialized: true })
+      const cropsWithFullUrl = response.data.crops.map(crop => ({
+        ...crop,
+        harvest_photo: crop.harvest_photo ? `${BASE_URL}${crop.harvest_photo}` : null
+      }))
+      set({ crops: cropsWithFullUrl, cropsLoading: false, cropsInitialized: true })
     } catch (error) {
       set({ cropsLoading: false, cropsInitialized: true })
       console.error('Failed to fetch crops:', error)
@@ -28,10 +32,18 @@ const useProduceStore = create((set, get) => ({
     set({ cropsLoading: true })
     const token = localStorage.getItem('farmer_token')
     try {
+      const formData = new FormData()
+      Object.keys(cropData).forEach((key) => {
+        if (key === 'harvest_photo' && cropData[key] instanceof File) {
+          formData.append(key, cropData[key])
+        } else if (cropData[key] !== undefined && cropData[key] !== null) {
+          formData.append(key, cropData[key])
+        }
+      })
       await axios.post(
         `${BASE_URL}/api/produce/addCrop`,
-        cropData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        formData,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
       )
       Swal.fire({ title: 'Success!', text: 'Crop added successfully.', icon: 'success', timer: 2000, showConfirmButton: false })
       await get().getCrops()
@@ -47,10 +59,20 @@ const useProduceStore = create((set, get) => ({
     set({ cropsLoading: true })
     const token = localStorage.getItem('farmer_token')
     try {
+      const formData = new FormData()
+      Object.keys(cropData).forEach((key) => {
+        if (key === 'harvest_photo' && cropData[key] instanceof File) {
+          formData.append(key, cropData[key])
+        } else if (key === 'harvest_photo' && typeof cropData[key] === 'string') {
+          formData.append(key, cropData[key])
+        } else if (cropData[key] !== undefined && cropData[key] !== null) {
+          formData.append(key, cropData[key])
+        }
+      })
       await axios.put(
         `${BASE_URL}/api/produce/updateCrop/${crop_id}`,
-        cropData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        formData,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
       )
       Swal.fire({ title: 'Updated!', text: 'Crop updated successfully.', icon: 'success', timer: 2000, showConfirmButton: false })
       await get().getCrops()

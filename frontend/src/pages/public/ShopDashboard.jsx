@@ -68,7 +68,7 @@ const ShopDashboard = () => {
 
                 <div className='flex flex-col sm:flex-row gap-4 pt-6'>
                   <button
-                    onClick={() => navigate('/marketplace')}
+                    onClick={() => navigate('/shop/products')}
                     className='px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-colors'
                   >
                     Browse Marketplace <ArrowRight size={20} />
@@ -141,7 +141,7 @@ const ShopDashboard = () => {
                 <p className='text-gray-600 mt-2'>Explore our latest harvest</p>
               </div>
               <button
-                onClick={() => navigate('/marketplace')}
+                onClick={() => navigate('/shop/products')}
                 className='text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-2'
               >
                 View All <ChevronRight size={20} />
@@ -281,7 +281,7 @@ const ShopDashboard = () => {
               Connect directly with local farmers and get the freshest crops delivered to you.
             </p>
             <button
-              onClick={() => navigate('/marketplace')}
+              onClick={() => navigate('/shop/products')}
               className='px-8 py-3 bg-white text-emerald-600 hover:bg-gray-100 rounded-lg font-semibold transition-colors'
             >
               Start Shopping Now
@@ -323,7 +323,7 @@ const ShopDashboard = () => {
               <div>
                 <h4 className='font-bold mb-4'>Quick Links</h4>
                 <ul className='space-y-2 text-gray-400'>
-                  <li><button onClick={() => navigate('/marketplace')} className='hover:text-white'>Marketplace</button></li>
+                  <li><button onClick={() => navigate('/shop/products')} className='hover:text-white'>Marketplace</button></li>
                   <li><button onClick={() => navigate('/farms')} className='hover:text-white'>Farms</button></li>
                   <li><button className='hover:text-white'>About Us</button></li>
                 </ul>

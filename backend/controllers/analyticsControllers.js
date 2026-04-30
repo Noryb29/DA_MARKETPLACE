@@ -364,3 +364,95 @@ export const getAdminDashboardStats = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message })
   }
 }
+
+export const getFarmerDashboardStats = async (req, res) => {
+  const user_id = req.user.user_id
+  try {
+    const totals = await db.query(`
+      SELECT
+        (SELECT COUNT(*) FROM crop_in_farm cf 
+         JOIN farm f ON cf.farm_id = f.farm_id 
+         WHERE f.user_id = $1) AS total_crops,
+        (SELECT COUNT(DISTINCT co.crop_order_id) FROM crop_orders co 
+         WHERE co.farmer_id = $1) AS total_orders,
+        (SELECT COALESCE(SUM(co.quantity), 0) FROM crop_orders co 
+         WHERE co.farmer_id = $1) AS total_items_sold,
+        (SELECT COALESCE(SUM(co.volume), 0) FROM crop_orders co 
+         WHERE co.farmer_id = $1) AS total_volume_sold
+    `, [user_id])
+
+    const cropsByFarm = await db.query(`
+      SELECT 
+        f.farm_name,
+        COUNT(cf.crop_id) AS crop_count,
+        COALESCE(SUM(cf.stock), 0) AS total_stock,
+        COALESCE(SUM(cf.volume), 0) AS total_volume
+      FROM farm f
+      LEFT JOIN crop_in_farm cf ON f.farm_id = cf.farm_id
+      WHERE f.user_id = $1
+      GROUP BY f.farm_id, f.farm_name
+      ORDER BY crop_count DESC
+    `, [user_id])
+
+    const recentOrders = await db.query(`
+      SELECT 
+        co.crop_order_id,
+        co.order_date,
+        co.quantity,
+        co.volume,
+        co.expected_arrival,
+        c.crop_name,
+        c.variety,
+        u.firstname || ' ' || u.lastname AS buyer_name
+      FROM crop_orders co
+      JOIN crop_in_farm c ON co.crop_id = c.crop_id
+      JOIN users u ON co.user_id = u.user_id
+      WHERE co.farmer_id = $1
+      ORDER BY co.order_date DESC
+      LIMIT 10
+    `, [user_id])
+
+    const ordersByMonth = await db.query(`
+      SELECT 
+        TO_CHAR(co.order_date, 'YYYY-MM') AS month,
+        COUNT(*) AS order_count,
+        COALESCE(SUM(co.quantity), 0) AS total_quantity,
+        COALESCE(SUM(co.volume), 0) AS total_volume
+      FROM crop_orders co
+      WHERE co.farmer_id = $1
+        AND co.order_date >= NOW() - INTERVAL '12 months'
+      GROUP BY TO_CHAR(co.order_date, 'YYYY-MM')
+      ORDER BY month
+    `, [user_id])
+
+    const topCrops = await db.query(`
+      SELECT 
+        c.crop_name,
+        c.variety,
+        c.stock,
+        c.volume,
+        COUNT(co.crop_order_id) AS order_count,
+        COALESCE(SUM(co.quantity), 0) AS times_ordered
+      FROM crop_in_farm c
+      LEFT JOIN crop_orders co ON c.crop_id = co.crop_id
+      WHERE c.farm_id IN (SELECT farm_id FROM farm WHERE user_id = $1)
+      GROUP BY c.crop_id, c.crop_name, c.variety, c.stock, c.volume
+      ORDER BY order_count DESC
+      LIMIT 5
+    `, [user_id])
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totals: totals.rows[0],
+        cropsByFarm: cropsByFarm.rows,
+        recentOrders: recentOrders.rows,
+        ordersByMonth: ordersByMonth.rows,
+        topCrops: topCrops.rows,
+      }
+    })
+  } catch (error) {
+    console.error("Farmer Dashboard Stats Error:", error)
+    return res.status(500).json({ success: false, message: error.message })
+  }
+}

@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import multer from 'multer'
 
 import { farmerRoutes } from './routes/farmerRoutes.js'
 import { produceRoutes } from './routes/produceRoutes.js'
@@ -23,11 +24,10 @@ app.use(cors({
   credentials: true
 }))
 app.use(express.json())
+app.use('/uploads', express.static('uploads'))
 
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`)
-  next()
-})
+const upload = multer({ dest: 'uploads/' })
+export { upload }
 
 app.use('/api/market', marketRoutes)
 app.use('/api/farmers', farmerRoutes)

@@ -8,7 +8,9 @@ import {
   getDashboardStats,
   getPriceMatrix,
   getAdminDashboardStats,
+  getFarmerDashboardStats,
 } from "../controllers/analyticsControllers.js"
+import { farmerAuthMiddleware } from "../middleware/authMiddleware.js"
 
 export const analyticsRoutes = express.Router()
 
@@ -20,4 +22,5 @@ analyticsRoutes.get("/market-coverage", getMarketCoverage)    //
 analyticsRoutes.get("/stats",        getDashboardStats)       //
 analyticsRoutes.get("/matrix",       getPriceMatrix)          // ?category_id=
 analyticsRoutes.get("/admin-stats", getAdminDashboardStats)
+analyticsRoutes.get("/farmer-stats", farmerAuthMiddleware, getFarmerDashboardStats)
 
