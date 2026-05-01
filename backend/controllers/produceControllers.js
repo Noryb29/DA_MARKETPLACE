@@ -25,7 +25,9 @@ export const addCrop = async (req, res) => {
         crop_name, variety, volume, stock,
         specification_1, specification_2, specification_3,
         specification_4, specification_5,
-        planting_date, expected_harvest, location
+        maturity_days, expected_volume,
+        planting_date, expected_harvest, actual_harvest, total_harvest,
+        location
     } = req.body;
 
     if (!crop_name) return res.status(400).json({ message: "Crop name is required." });
@@ -52,13 +54,16 @@ export const addCrop = async (req, res) => {
             `INSERT INTO crop_in_farm (
                 farm_id, crop_name, variety, volume, stock,
                 specification_1, specification_2, specification_3, specification_4, specification_5,
-                planting_date, expected_harvest, harvest_photo, location
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                maturity_days, expected_volume,
+                planting_date, expected_harvest, actual_harvest, total_harvest,
+                harvest_photo, location
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
             RETURNING crop_id`,
             [farm_id, crop_name, variety || null, volume || null, stock || null,
              specification_1 || null, specification_2 || null, specification_3 || null,
              specification_4 || null, specification_5 || null,
-             planting_date || null, expected_harvest || null,
+             maturity_days || null, expected_volume || null,
+             planting_date || null, expected_harvest || null, actual_harvest || null, total_harvest || null,
              harvest_photo, location || null]
         );
 
@@ -76,7 +81,9 @@ export const updateCrop = async (req, res) => {
         crop_name, variety, volume, stock,
         specification_1, specification_2, specification_3,
         specification_4, specification_5,
-        planting_date, expected_harvest, location
+        maturity_days, expected_volume,
+        planting_date, expected_harvest, actual_harvest, total_harvest,
+        location
     } = req.body;
 
     let harvest_photo = null;
@@ -109,12 +116,15 @@ export const updateCrop = async (req, res) => {
                 crop_name=$1, variety=$2, volume=$3, stock=$4,
                 specification_1=$5, specification_2=$6, specification_3=$7,
                 specification_4=$8, specification_5=$9,
-                planting_date=$10, expected_harvest=$11, harvest_photo=$12, location=$13
-            WHERE crop_id=$14`,
+                maturity_days=$10, expected_volume=$11,
+                planting_date=$12, expected_harvest=$13, actual_harvest=$14, total_harvest=$15,
+                harvest_photo=$16, location=$17
+            WHERE crop_id=$18`,
             [crop_name, variety || null, volume || null, stock || null,
              specification_1 || null, specification_2 || null, specification_3 || null,
              specification_4 || null, specification_5 || null,
-             planting_date || null, expected_harvest || null,
+             maturity_days || null, expected_volume || null,
+             planting_date || null, expected_harvest || null, actual_harvest || null, total_harvest || null,
              finalPhoto, location || null,
              crop_id]
         );

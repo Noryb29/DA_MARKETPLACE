@@ -167,34 +167,33 @@ const handleFarmDocsUpload = (req) => {
 }
 
 export const addFarm = async (req, res) => {
-    const { farm_name, gps_coordinates, farm_area, farm_elevation, total_acres, plot_boundaries, land_use_type } = req.body;
+    const { farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries } = req.body;
     const user_id = req.user.user_id;
 
-    if (!farm_name || !farm_area) {
+if (!farm_name || !farm_area) {
         return res.status(400).json({ message: "Please fill in all required fields." });
-    }
-
-    if (land_use_type && !['pasture', 'cultivated', 'fallow'].includes(land_use_type)) {
-        return res.status(400).json({ message: "Invalid land use type. Must be pasture, cultivated, or fallow." });
     }
 
     try {
         const farmImageUrl = handleFarmImageUpload(req)
         const farmDocUrls = handleFarmDocsUpload(req)
-        
+
         const result = await db.query(
-            `INSERT INTO farm (user_id, farm_name, gps_coordinates, farm_area, farm_elevation, total_acres, plot_boundaries, land_use_type, farm_image, farm_docs) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            `INSERT INTO farm (user_id, farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries, farm_image, farm_docs)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
              RETURNING *`,
             [
-                user_id, 
-                farm_name, 
-                gps_coordinates || null, 
-                farm_area, 
+                user_id,
+                farm_name,
+                gps_coordinates || null,
+                farm_location || null,
+                farm_area,
                 farm_elevation || null,
-                total_acres || null,
+                province || null,
+                municipality || null,
+                barangay || null,
+                farm_hectares || null,
                 plot_boundaries || null,
-                land_use_type || null,
                 farmImageUrl,
                 farmDocUrls.length > 0 ? farmDocUrls : null
             ]

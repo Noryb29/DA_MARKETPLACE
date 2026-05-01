@@ -25,8 +25,12 @@ export const createDB = async() => {
                 role VARCHAR(15) NOT NULL DEFAULT 'farmer',
                 password VARCHAR(150) NOT NULL,
                 firstname VARCHAR(150) NOT NULL,
+                middlename VARCHAR(150) NOT NULL,
                 lastname VARCHAR(150) NOT NULL,
-                address VARCHAR(150),
+                province VARCHAR(100),
+                municipality VARCHAR(100),
+                address VARCHAR (100),
+                barangay VARCHAR(100),
                 contact_number VARCHAR(11),
                 rsbsa_number VARCHAR(20) NOT NULL UNIQUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -35,20 +39,21 @@ export const createDB = async() => {
         console.log('✓ Table "farmer" created')
 
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                user_id SERIAL PRIMARY KEY,
-                email VARCHAR(100) NOT NULL UNIQUE,
-                password VARCHAR(100) NOT NULL,
-                firstname VARCHAR(100) NOT NULL,
-                lastname VARCHAR(100) NOT NULL,
-                address VARCHAR(100),
-                contact_number VARCHAR(11),
-                rsbsa_number VARCHAR(20),
-                role VARCHAR(6) NOT NULL DEFAULT 'user',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            CREATE TABLE IF NOT EXISTS farmer_details (
+                detail_id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL UNIQUE,
+                profile_picture VARCHAR(255),
+                gender VARCHAR(10),
+                age VARCHAR(6),
+                farmer_organization VARCHAR(100),
+                date_of_birth DATE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_farmer_details FOREIGN KEY (user_id) REFERENCES farmer(user_id) ON DELETE CASCADE
             )
         `)
-        console.log('✓ Table "users" created')
+        console.log('✓ Table "farmer_details" created')
+        // Crop planted must be rice/corn/adlay/soybean only
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS farm (
@@ -56,10 +61,13 @@ export const createDB = async() => {
                 user_id INTEGER NOT NULL,
                 farm_name VARCHAR(150) NOT NULL,
                 gps_coordinates VARCHAR(100),
+                farm_location VARCHAR(255),
                 farm_area INTEGER NOT NULL,
-                total_acres DECIMAL(10,2),
+                farm_hectares DECIMAL(10,2),
                 plot_boundaries TEXT,
-                land_use_type VARCHAR(20) CHECK (land_use_type IN ('pasture', 'cultivated', 'fallow')),
+                province VARCHAR(100),
+                municipality VARCHAR(100),
+                barangay VARCHAR(100),
                 farm_image VARCHAR(500),
                 farm_docs VARCHAR(1000)[],
                 farm_elevation INTEGER,
@@ -67,18 +75,6 @@ export const createDB = async() => {
             )
         `)
         console.log('✓ Table "farm" created')
-
-        // Add new columns to existing farm table
-        try {
-            await pool.query(`ALTER TABLE farm ADD COLUMN IF NOT EXISTS total_acres DECIMAL(10,2)`)
-            await pool.query(`ALTER TABLE farm ADD COLUMN IF NOT EXISTS plot_boundaries TEXT`)
-            await pool.query(`ALTER TABLE farm ADD COLUMN IF NOT EXISTS land_use_type VARCHAR(20)`)
-            await pool.query(`ALTER TABLE farm ADD COLUMN IF NOT EXISTS farm_image VARCHAR(500)`)
-            await pool.query(`ALTER TABLE farm ADD COLUMN IF NOT EXISTS farm_docs TEXT[]`)
-            console.log('✓ Added new columns to farm table')
-        } catch (e) {
-            console.log('  (columns may already exist)')
-        }
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS crop_in_farm (
@@ -94,12 +90,39 @@ export const createDB = async() => {
                 specification_4 VARCHAR(150),
                 specification_5 VARCHAR(150),
                 planting_date DATE NOT NULL,
+                maturity_days INTEGER,
                 expected_harvest DATE NOT NULL,
+                expected_volume DECIMAL(10,2),
+                actual_harvest DATE NOT NULL,
+                total_harvest DECIMAL(10,2),
                 harvest_photo VARCHAR(500),
                 location VARCHAR(255)
             )
         `)
         console.log('✓ Table "crop_in_farm" created')
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                user_id SERIAL PRIMARY KEY,
+                email VARCHAR(100) NOT NULL UNIQUE,
+                password VARCHAR(100) NOT NULL,
+                firstname VARCHAR(100) NOT NULL,
+                lastname VARCHAR(100) NOT NULL,
+                address VARCHAR(100),
+                contact_number VARCHAR(11),
+                rsbsa_number VARCHAR(20),
+                province VARCHAR(100),
+                municipality VARCHAR(100),
+                barangay VARCHAR(100),
+                role VARCHAR(6) NOT NULL DEFAULT 'user',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `)
+        console.log('✓ Table "users" created')
+
+        
+
+        
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS crop_orders (
@@ -176,24 +199,6 @@ export const createDB = async() => {
         `)
         console.log('✓ Table "user_details" created')
 
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS farmer_details (
-                detail_id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL UNIQUE,
-                profile_picture VARCHAR(255),
-                bio TEXT,
-                gender VARCHAR(10),
-                date_of_birth DATE,
-                farm_name VARCHAR(150),
-                farm_location VARCHAR(255),
-                total_area_hectares FLOAT,
-                farming_type VARCHAR(50),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                CONSTRAINT fk_farmer_details FOREIGN KEY (user_id) REFERENCES farmer(user_id) ON DELETE CASCADE
-            )
-        `)
-        console.log('✓ Table "farmer_details" created')
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS farm_documents (

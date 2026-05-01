@@ -1,0 +1,35 @@
+{
+  "commodities": [
+    {
+      "name": "Rice",
+      "average_yield_tons": "4.1 - 5",
+      "average_yield_kg": "4100 - 5000",
+      "days_to_maturity": "100-120",
+      "optimal_planting_period": {
+        "wet_season": "April - August",
+        "dry_season": "September - February"
+      }
+    },
+    {
+      "name": "Corn",
+      "average_yield_tons": "3.6",
+      "average_yield_kg": "3600",
+      "days_to_maturity": "105-110",
+      "optimal_planting_period": "May - June"
+    },
+    {
+      "name": "Adlay",
+      "average_yield_tons": "2",
+      "average_yield_kg": "2000",
+      "days_to_maturity": "150-165 (bukid) & 160-181",
+      "optimal_planting_period": "January - May"
+    },
+    {
+      "name": "Soybean",
+      "average_yield_tons": "1.2",
+      "average_yield_kg": "1200",
+      "days_to_maturity": "75-120",
+      "optimal_planting_period": "November - February"
+    }
+  ]
+}

@@ -1,10 +1,13 @@
 import { Wheat,Pencil, Trash2, Calendar, Package, MapPin, ImageIcon } from 'lucide-react'
 
-const CropCard = ({ crop, onEdit, onDelete }) => {
+const CropCard = ({ crop, onEdit, onDelete, onClick }) => {
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : null
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-green-200 transition-all duration-200 flex flex-col gap-3">
+    <div 
+      onClick={() => onClick?.(crop)}
+      className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-green-200 transition-all duration-200 flex flex-col gap-3 cursor-pointer"
+    >
 
       {/* Harvest Photo */}
       {crop.harvest_photo && (
@@ -31,7 +34,7 @@ const CropCard = ({ crop, onEdit, onDelete }) => {
             <p className="text-xs text-gray-400 mt-0.5">{crop.variety || 'No variety'}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           <button onClick={() => onEdit(crop)} className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-500 transition-colors" title="Edit">
             <Pencil className="w-3.5 h-3.5" />
           </button>

@@ -154,16 +154,7 @@ const FarmDetailsPage = () => {
                   </div>
                 )}
                 <div className="absolute top-4 right-4 flex gap-2">
-                  {farm.land_use_type && (
-                    <span className={`px-3 py-1.5 text-xs font-semibold rounded-full capitalize ${
-                      farm.land_use_type === 'pasture' ? 'bg-amber-100 text-amber-700' :
-                      farm.land_use_type === 'cultivated' ? 'bg-green-100 text-green-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
-                      {farm.land_use_type}
-                    </span>
-                  )}
-                  <span className="px-3 py-1.5 bg-white/90 backdrop-blur-sm text-green-700 text-xs font-semibold rounded-full">
+                  <span className="px-3 py-1.5 bg-amber-500 text-amber text-xs font-semibold rounded-full">
                     Active
                   </span>
                 </div>

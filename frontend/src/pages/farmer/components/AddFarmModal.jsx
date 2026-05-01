@@ -1,5 +1,6 @@
 import { useState,useEffect,useRef } from "react";
 import { MapPin, X, Image, FileText, Upload } from 'lucide-react';
+import regionData from '../../../assets/REGION_X.json';
 
 
 const MapSelector = ({ onLocationSelect, selectedCoords }) => {
@@ -71,11 +72,14 @@ const MapSelector = ({ onLocationSelect, selectedCoords }) => {
 const EMPTY_FARM_FORM = { 
   farm_name: '', 
   gps_coordinates: '', 
+  farm_location: '' || 'None',
   farm_area: '', 
   farm_elevation: '',
-  total_acres: '',
-  plot_boundaries: '',
-  land_use_type: '',
+  province: '',
+  municipality: '',
+  barangay: '',
+  hectares: '',
+  plot_boundaries: '' || 'None',
   farm_image: null,
   farm_docs: []
 };
@@ -139,7 +143,7 @@ const AddFarmModal = ({ isOpen, onClose, onSubmit, loading }) => {
               />
             </div>
 
-            {/* Area + Elevation */}
+            {/* Area + Hectares */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Area (sqm)</label>
@@ -155,23 +159,22 @@ const AddFarmModal = ({ isOpen, onClose, onSubmit, loading }) => {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Total Acres</label>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Total Hectares</label>
                 <div className="relative">
                   <input
-                    type="number" placeholder="0"
-                    className={inputClass('total_acres') + ' pr-14'} value={form.total_acres}
-                    onFocus={() => setFocused('total_acres')} onBlur={() => setFocused('')}
-                    onChange={(e) => setForm({ ...form, total_acres: e.target.value })}
+                    type="number" placeholder="0" step="0.01"
+                    className={inputClass('total_hectares') + ' pr-14'} value={form.total_hectares}
+                    onFocus={() => setFocused('total_hectares')} onBlur={() => setFocused('')}
+                    onChange={(e) => setForm({ ...form, total_hectares: e.target.value })}
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">acres</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">ha</span>
                 </div>
               </div>
             </div>
 
-            {/* Elevation + Land Use Type */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Elevation */}
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Elevation</label>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Elevation (masl)</label>
                 <div className="relative">
                   <input
                     type="number" placeholder="0"
@@ -182,28 +185,89 @@ const AddFarmModal = ({ isOpen, onClose, onSubmit, loading }) => {
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">m</span>
                 </div>
               </div>
+
+            {/* Province */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Province</label>
+              <select
+                className={inputClass('province')} value={form.province}
+                onFocus={() => setFocused('province')} onBlur={() => setFocused('')}
+                onChange={(e) => {
+                  const prov = e.target.value;
+                  setForm({ 
+                    ...form, 
+                    province: prov,
+                    municipality: '',
+                    barangay: ''
+                  });
+                }}
+              >
+                <option value="">Select Province</option>
+                {Object.keys(regionData).map(prov => (
+                  <option key={prov} value={prov}>{prov}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Municipality + Barangay */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Land Use Type</label>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Municipality</label>
                 <select
-                  className={inputClass('land_use_type')}
-                  value={form.land_use_type}
-                  onFocus={() => setFocused('land_use_type')}
-                  onBlur={() => setFocused('')}
-                  onChange={(e) => setForm({ ...form, land_use_type: e.target.value })}
+                  className={inputClass('municipality')} value={form.municipality}
+                  onFocus={() => setFocused('municipality')} onBlur={() => setFocused('')}
+                  onChange={(e) => {
+                    const mun = e.target.value;
+                    setForm({ 
+                      ...form, 
+                      municipality: mun,
+                      barangay: ''
+                    });
+                  }}
+                  disabled={!form.province}
                 >
-                  <option value="">Select type</option>
-                  <option value="pasture">Pasture</option>
-                  <option value="cultivated">Cultivated</option>
-                  <option value="fallow">Fallow</option>
+                  <option value="">Select Municipality</option>
+                  {form.province && regionData[form.province] && 
+                    Object.keys(regionData[form.province]).map(mun => (
+                      <option key={mun} value={mun}>{mun}</option>
+                    ))
+                  }
                 </select>
               </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Barangay</label>
+                <select
+                  className={inputClass('barangay')} value={form.barangay}
+                  onFocus={() => setFocused('barangay')} onBlur={() => setFocused('')}
+                  onChange={(e) => setForm({ ...form, barangay: e.target.value })}
+                  disabled={!form.municipality}
+                >
+                  <option value="">Select Barangay</option>
+                  {form.province && form.municipality && 
+                    regionData[form.province]?.[form.municipality]?.map(bgy => (
+                      <option key={bgy} value={bgy}>{bgy}</option>
+                    ))
+                  }
+                </select>
+              </div>
+            </div>
+
+            {/* Farm Location */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Additional Address</label>
+              <input
+                type="text" placeholder="Street or Landmark. If none, leave blank"
+                className={inputClass('farm_location')} value={form.farm_location}
+                onFocus={() => setFocused('farm_location')} onBlur={() => setFocused('')}
+                onChange={(e) => setForm({ ...form, farm_location: e.target.value })}
+              />
             </div>
 
             {/* Plot Boundaries */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Plot Boundaries</label>
               <textarea
-                placeholder="Describe the boundaries of your farm (e.g., North: River, East: Road, etc.)"
+                placeholder="(e.g., North: River, East: Road, etc.) Leave Blank if Non-Applicable"
                 className={inputClass('plot_boundaries') + ' min-h-[80px] resize-none'}
                 value={form.plot_boundaries}
                 onFocus={() => setFocused('plot_boundaries')}

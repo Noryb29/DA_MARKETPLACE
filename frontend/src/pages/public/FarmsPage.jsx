@@ -233,12 +233,6 @@ const FarmsPage = () => {
 }
 
 const FarmCard = ({ farm, onViewClick, index }) => {
-  const landUseColors = {
-    pasture: 'bg-amber-100 text-amber-700',
-    cultivated: 'bg-green-100 text-green-700',
-    fallow: 'bg-gray-100 text-gray-700'
-  }
-
   const getDocsCount = () => {
     if (!farm.farm_docs) return 0
     if (Array.isArray(farm.farm_docs)) return farm.farm_docs.length
@@ -269,12 +263,7 @@ const FarmCard = ({ farm, onViewClick, index }) => {
           </div>
         )}
         <div className="absolute top-3 right-3 flex gap-1.5">
-          {farm.land_use_type && (
-            <span className={`px-2 py-1 text-[10px] font-semibold rounded-full capitalize ${landUseColors[farm.land_use_type] || 'bg-gray-100 text-gray-600'}`}>
-              {farm.land_use_type}
-            </span>
-          )}
-          <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-green-700 text-[10px] font-semibold rounded-full">
+          <span className="px-2 py-1 bg-amber-500 text-amber text-[10px] font-semibold rounded-full">
             Active
           </span>
         </div>

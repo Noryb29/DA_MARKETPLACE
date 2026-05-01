@@ -21,6 +21,7 @@ const FarmerProfile = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [form, setForm] = useState({
     firstname: user?.firstname || '',
+    middlename: user?.middlename || '',
     lastname: user?.lastname || '',
     email: user?.email || '',
     contact_number: user?.contact_number || '',
@@ -28,8 +29,9 @@ const FarmerProfile = () => {
   })
   const [detailsForm, setDetailsForm] = useState({
     profile_picture: '',
-    bio: '',
     gender: '',
+    age: '',
+    farmer_organization: '',
     date_of_birth: '',
   })
   const [photoPreview, setPhotoPreview] = useState(null)
@@ -45,8 +47,9 @@ const FarmerProfile = () => {
         : ''
       setDetailsForm({
         profile_picture: profilePic,
-        bio: farmerDetails.bio || '',
         gender: farmerDetails.gender || '',
+        age: farmerDetails.age || '',
+        farmer_organization: farmerDetails.farmer_organization || '',
         date_of_birth: farmerDetails.date_of_birth || '',
       })
       setPhotoPreview(profilePic || null)
@@ -111,6 +114,7 @@ const FarmerProfile = () => {
   const handleCancel = () => {
     setForm({
       firstname: user?.firstname || '',
+      middlename: user?.middlename || '',
       lastname: user?.lastname || '',
       email: user?.email || '',
       contact_number: user?.contact_number || '',
@@ -183,7 +187,7 @@ const FarmerProfile = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-3 gap-5">
                 <div>
                   
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">First Name</label>
@@ -191,6 +195,14 @@ const FarmerProfile = () => {
                     <input type="text" name="firstname" value={form.firstname} onChange={handleChange} className="w-full border border-gray-200 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-green-500" />
                   ) : (
                     <p className="text-sm text-gray-700 py-2 border-b border-gray-100">{user?.firstname || <span className="text-gray-300 italic">Not set</span>}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Middle Name</label>
+                  {editing ? (
+                    <input type="text" name="middlename" value={form.middlename} onChange={handleChange} className="w-full border border-gray-200 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-green-500" />
+                  ) : (
+                    <p className="text-sm text-gray-700 py-2 border-b border-gray-100">{user?.middlename || <span className="text-gray-300 italic">Not set</span>}</p>
                   )}
                 </div>
                 <div>
@@ -248,6 +260,14 @@ const FarmerProfile = () => {
                   )}
                 </div>
                 <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Age</label>
+                  {farmerDetails?.age ? (
+                    <p className="text-sm text-gray-700 py-2">{farmerDetails.age} years old</p>
+                  ) : (
+                    <p className="text-sm text-gray-300 italic py-2">Not set</p>
+                  )}
+                </div>
+                <div>
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Date of Birth</label>
                   {farmerDetails?.date_of_birth ? (
                     <div className="flex items-center gap-2 py-2">
@@ -258,12 +278,12 @@ const FarmerProfile = () => {
                     <p className="text-sm text-gray-300 italic py-2">Not set</p>
                   )}
                 </div>
-                <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Bio</label>
-                  {farmerDetails?.bio ? (
-                    <p className="text-sm text-gray-600 italic">{farmerDetails.bio}</p>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Organization</label>
+                  {farmerDetails?.farmer_organization ? (
+                    <p className="text-sm text-gray-700 py-2">{farmerDetails.farmer_organization}</p>
                   ) : (
-                    <p className="text-sm text-gray-300 italic">No bio added</p>
+                    <p className="text-sm text-gray-300 italic py-2">Not set</p>
                   )}
                 </div>
 
@@ -288,7 +308,7 @@ const FarmerProfile = () => {
                   </div>
                 )}
 
-                <p className="font-bold text-green-900 text-base">{user?.firstname} {user?.lastname}</p>
+                <p className="font-bold text-green-900 text-base">{user?.firstname} {user?.middlename} {user?.lastname}</p>
                 <span className="mt-1 text-xs font-semibold bg-orange-100 text-orange-600 px-3 py-1 rounded capitalize">{user?.role}</span>
                 <p className="text-gray-400 text-xs mt-2">{user?.email}</p>
               </div>
@@ -361,22 +381,28 @@ const FarmerProfile = () => {
                   )}
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1">Bio</label>
-                <textarea name="bio" value={detailsForm.bio} onChange={handleDetailsChange} placeholder="Tell us about yourself..." rows="3" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500 resize-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1">Gender</label>
-                <select name="gender" value={detailsForm.gender} onChange={handleDetailsChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500">
-                  <option value="">Select gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1">Gender</label>
+                  <select name="gender" value={detailsForm.gender} onChange={handleDetailsChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500">
+                    <option value="">Select gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1">Age</label>
+                  <input type="number" name="age" value={detailsForm.age} onChange={handleDetailsChange} placeholder="Enter age" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500" />
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1">Date of Birth</label>
                 <input type="date" name="date_of_birth" value={detailsForm.date_of_birth} onChange={handleDetailsChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1">Farmer Organization</label>
+                <input type="text" name="farmer_organization" value={detailsForm.farmer_organization} onChange={handleDetailsChange} placeholder="Organization name" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500" />
               </div>
             </div>
             <div className="px-6 pb-6 flex gap-3">

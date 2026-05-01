@@ -1,7 +1,13 @@
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 
 export default function RSBSAInput({ value, onChange }) {
-  const [rsbsa, setRsbsa] = useState(["", "", "", "", ""]);
+  const [rsbsa, setRsbsa] = useState(() => {
+    if (value) {
+      const parts = value.split('-').filter(part => part !== '');
+      if (parts.length === 5) return parts;
+    }
+    return ["", "", "", "", ""];
+  });
 
   const refs = [
     useRef(null),
@@ -13,16 +19,6 @@ export default function RSBSAInput({ value, onChange }) {
 
   const lengths = [2, 3, 2, 3, 6];
 
-  // Sync parent value to local state
-  useEffect(() => {
-    if (value) {
-      const parts = value.split('-').filter(part => part !== '');
-      if (parts.length === 5) {
-        setRsbsa(parts);
-      }
-    }
-  }, [value]);
-
   const handleChange = (index, inputValue) => {
     if (!/^\d*$/.test(inputValue)) return;
 
@@ -30,17 +26,22 @@ export default function RSBSAInput({ value, onChange }) {
     newValues[index] = inputValue;
     setRsbsa(newValues);
 
-    // Update parent component with full RSBSA number
-    onChange(newValues.join('-'));
+    const formattedValue = newValues.map((v, i) => 
+      i < 4 ? (v ? v.padStart(lengths[i], '-') : '') : v
+    ).join('-').replace(/-+/g, '-').replace(/-+$/, '');
 
-    // Auto-focus next input when current field is full
+    if (!formattedValue.endsWith('-') && newValues.every(v => v)) {
+      onChange(newValues.join('-'));
+    } else if (inputValue) {
+      onChange(newValues.join('-'));
+    }
+
     if (inputValue.length === lengths[index] && index < refs.length - 1) {
       refs[index + 1].current.focus();
     }
   };
 
   const handleKeyDown = (index, e) => {
-    // Allow backspace to move to previous field
     if (e.key === 'Backspace' && rsbsa[index] === '' && index > 0) {
       refs[index - 1].current.focus();
     }
@@ -48,26 +49,29 @@ export default function RSBSAInput({ value, onChange }) {
 
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-700 mb-1">
+      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
         RSBSA Number
       </label>
 
-      <div className="flex gap-1">
+      <div className="flex items-center gap-1.5 bg-white p-2.5 rounded-lg border border-gray-200 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-500/10 transition-all">
         {rsbsa.map((val, i) => (
-          <input
-            key={i}
-            ref={refs[i]}
-            type="text"
-            inputMode="numeric"
-            value={val}
-            maxLength={lengths[i]}
-            onChange={(e) => handleChange(i, e.target.value)}
-            onKeyDown={(e) => handleKeyDown(i, e)}
-            className="w-19.5 px-1.5 py-1 text-sm border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent font-semibold"
-            placeholder="0"
-          />
+          <React.Fragment key={i}>
+            <input
+              ref={refs[i]}
+              type="text"
+              inputMode="numeric"
+              value={val}
+              maxLength={lengths[i]}
+              onChange={(e) => handleChange(i, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(i, e)}
+              className="w-10 sm:w-11 px-2 py-1.5 text-sm border border-gray-200 rounded-md text-center font-semibold text-gray-700 bg-gray-50 focus:bg-white focus:border-green-500 focus:outline-none transition-all"
+              placeholder={'-'.repeat(lengths[i])}
+            />
+            {i < 4 && <span className="text-gray-400 font-bold text-sm">-</span>}
+          </React.Fragment>
         ))}
       </div>
+      <p className="text-xs text-gray-400 mt-1.5">Format: XX-XXX-XX-XXX-XXXXXX</p>
     </div>
   );
 }

@@ -104,16 +104,7 @@ const FarmDetailModal = ({ farm, onClose }) => {
                   {farm.gps_coordinates || 'Not set'}
                 </p>
               </div>
-            </div>
-            {farm.land_use_type && (
-              <div className={`flex items-center gap-2 border rounded-xl px-4 py-3 ${landUseColors[farm.land_use_type] || 'bg-gray-50 border-gray-100'}`}>
-                <Sprout className="w-4 h-4 shrink-0" />
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest">Land Use</p>
-                  <p className="text-sm font-semibold capitalize">{farm.land_use_type}</p>
-                </div>
-              </div>
-            )}
+</div>
           </div>
 
           {/* Stats grid */}

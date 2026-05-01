@@ -132,15 +132,6 @@ const FarmerFarm = () => {
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
                                 <p className="font-bold text-gray-800 text-sm truncate">{f.farm_name}</p>
-                                {f.land_use_type && (
-                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full capitalize ${
-                                    f.land_use_type === 'pasture' ? 'bg-amber-100 text-amber-700' :
-                                    f.land_use_type === 'cultivated' ? 'bg-green-100 text-green-700' :
-                                    'bg-gray-100 text-gray-600'
-                                  }`}>
-                                    {f.land_use_type}
-                                  </span>
-                                )}
                               </div>
                               <div className="flex items-center gap-1.5 mt-1">
                                 <MapPin className="w-3 h-3 text-gray-400 shrink-0" />

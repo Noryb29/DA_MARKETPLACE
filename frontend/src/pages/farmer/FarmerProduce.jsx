@@ -5,6 +5,7 @@ import { Wheat, Loader2, AlertCircle, Plus,ClipboardList } from 'lucide-react'
 import Sidebar from '../public/components/SideBar'
 import CropModal from './components/CropModal'
 import CropCard from './components/CropCard'
+import CropDetailModal from './components/CropDetailModal'
 
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -14,14 +15,17 @@ const FarmerProduce = () => {
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
+  const [viewTarget, setViewTarget] = useState(null)
 
   useEffect(() => { getFarm(); getFarms() }, [])
   useEffect(() => { if (hasFarm) getCrops() }, [hasFarm])
 
   const handleAdd = async (form) => { await addCrop(form); setModalOpen(false) }
   const handleEdit = (crop) => { setEditTarget(crop); setModalOpen(true) }
+  const handleView = (crop) => { setViewTarget(crop) }
   const handleUpdate = async (form) => { await updateCrop(editTarget.crop_id, form); setModalOpen(false); setEditTarget(null) }
   const handleModalClose = () => { setModalOpen(false); setEditTarget(null) }
+  const handleViewClose = () => { setViewTarget(null) }
 
   return (
     <div className="min-h-screen">
@@ -99,6 +103,7 @@ const FarmerProduce = () => {
                       crop={crop}
                       onEdit={handleEdit}
                       onDelete={deleteCrop}
+                      onClick={handleView}
                     />
                   ))}
                 </div>
@@ -116,6 +121,8 @@ const FarmerProduce = () => {
         initialData={editTarget}
         farms={farms}
       />
+
+      <CropDetailModal crop={viewTarget} onClose={handleViewClose} />
     </div>
   )
 }

@@ -1,11 +1,14 @@
-import { Loader2 ,X, MapPin, Upload, Image as ImageIcon } from 'lucide-react'
+import { Loader2 ,X, MapPin, Upload, Image as ImageIcon, AlertTriangle, Info } from 'lucide-react'
 import { useEffect,useState } from 'react'
+import cropData from '../../../assets/CROP_NAMES.json'
 
 const EMPTY_FORM = {
   crop_name: '', variety: '', volume: '', stock: '', farm_id: '',
   specification_1: '', specification_2: '', specification_3: '',
   specification_4: '', specification_5: '',
+  maturity_days: '', expected_volume: '',
   planting_date: '', expected_harvest: '',
+  actual_harvest: '', total_harvest: '',
   harvest_photo: '', location: '',
 }
 
@@ -14,6 +17,54 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
   const isEdit = !!initialData
   const [form, setForm] = useState(EMPTY_FORM)
   const [photoPreview, setPhotoPreview] = useState(null)
+  const [warnings, setWarnings] = useState({})
+
+  const commodities = cropData.commodities || []
+  
+  const getCropRanges = (cropName) => {
+    const crop = commodities.find(c => c.name.toLowerCase() === cropName?.toLowerCase())
+    if (!crop) return null
+    return {
+      avgYieldKg: crop.average_yield_kg,
+      avgYieldTons: crop.average_yield_tons,
+      maturityDays: crop.days_to_maturity
+    }
+  }
+
+  const getRange = (rangeStr) => {
+    if (!rangeStr) return { min: 0, max: Infinity }
+    const parts = rangeStr.split('-').map(s => parseFloat(s.trim()))
+    return { min: parts[0] || 0, max: parts[1] || Infinity }
+  }
+
+  const validateField = (field, value) => {
+    if (!value) return null
+    const numValue = parseFloat(value)
+    if (isNaN(numValue)) return null
+    
+    const crop = getCropRanges(form.crop_name)
+    if (!crop) return null
+    
+    let range, fieldName
+    if (field === 'volume' || field === 'expected_volume' || field === 'total_harvest') {
+      range = getRange(crop.avgYieldKg)
+      fieldName = 'yield (kg)'
+    } else if (field === 'maturity_days') {
+      range = getRange(crop.maturityDays)
+      fieldName = 'maturity days'
+    }
+    
+    if (range && (numValue < range.min * 0.5 || numValue > range.max * 1.5)) {
+      return `Value outside typical range (${range.min}-${range.max})`
+    }
+    return null
+  }
+
+  const handleChange = (key, value) => {
+    setForm({ ...form, [key]: value })
+    const warning = validateField(key, value)
+    setWarnings(prev => ({ ...prev, [key]: warning }))
+  }
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0]
@@ -87,7 +138,29 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
 
             {/* Crop Name + Variety */}
             <div className="grid grid-cols-2 gap-3">
-              {field('crop_name', 'Crop Name', 'e.g. Rice, Corn', 'text', true)}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                  Crop Name <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={form.crop_name}
+                  onChange={(e) => handleChange('crop_name', e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                    focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                    outline-none text-sm text-gray-800 font-medium transition-all duration-200 bg-white"
+                >
+                  <option value="">Select crop...</option>
+                  {commodities.map((c) => (
+                    <option key={c.name} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+                {form.crop_name && getCropRanges(form.crop_name) && (
+                  <div className="text-[10px] text-blue-600 bg-blue-50 rounded-lg p-2 mt-1 flex items-center gap-1">
+                    <Info className="w-3 h-3" />
+                    Avg: {getCropRanges(form.crop_name).avgYieldTons} tons/ha • {getCropRanges(form.crop_name).maturityDays} days
+                  </div>
+                )}
+              </div>
               {field('variety', 'Variety', 'e.g. IR64, Sweet Corn')}
             </div>
 
@@ -119,13 +192,19 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                 <div className="relative">
                   <input
                     type="number" placeholder="0" value={form.volume}
-                    onChange={(e) => setForm({ ...form, volume: e.target.value })}
-                    className="w-full px-3 py-2.5 pr-10 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                    onChange={(e) => handleChange('volume', e.target.value)}
+                    className={`w-full px-3 py-2.5 pr-10 rounded-xl border-2 hover:border-gray-300
                       focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
-                      outline-none text-sm text-gray-800 font-medium transition-all duration-200"
+                      outline-none text-sm text-gray-800 font-medium transition-all duration-200
+                      ${warnings.volume ? 'border-orange-400' : 'border-gray-200'}`}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">kg</span>
                 </div>
+                {warnings.volume && (
+                  <p className="text-[10px] text-orange-600 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {warnings.volume}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -162,6 +241,43 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
               </div>
             </div>
 
+            {/* Actual Harvest + Total Harvest */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                  Actual Harvest
+                </label>
+                <input
+                  type="date"
+                  value={form.actual_harvest || ''}
+                  onChange={(e) => setForm({ ...form, actual_harvest: e.target.value })}
+                  className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                    focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                    outline-none text-sm text-gray-800 font-medium transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Total Harvest</label>
+                <div className="relative">
+                  <input
+                    type="number" placeholder="0" step="0.01"
+                    value={form.total_harvest}
+                    onChange={(e) => handleChange('total_harvest', e.target.value)}
+                    className={`w-full px-3 py-2.5 pr-10 rounded-xl border-2 hover:border-gray-300
+                      focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                      outline-none text-sm text-gray-800 font-medium transition-all duration-200
+                      ${warnings.total_harvest ? 'border-orange-400' : 'border-gray-200'}`}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">kg</span>
+                </div>
+                {warnings.total_harvest && (
+                  <p className="text-[10px] text-orange-600 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {warnings.total_harvest}
+                  </p>
+                )}
+              </div>
+            </div>
+
             {/* Specifications */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Specifications</label>
@@ -177,6 +293,50 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                       outline-none text-sm text-gray-800 font-medium transition-all duration-200"
                   />
                 ))}
+              </div>
+            </div>
+
+            {/* Maturity Days + Expected Volume */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Maturity Days</label>
+                <div className="relative">
+                  <input
+                    type="number" placeholder="0"
+                    value={form.maturity_days}
+                    onChange={(e) => handleChange('maturity_days', e.target.value)}
+                    className={`w-full px-3 py-2.5 pr-12 rounded-xl border-2 hover:border-gray-300
+                      focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                      outline-none text-sm text-gray-800 font-medium transition-all duration-200
+                      ${warnings.maturity_days ? 'border-orange-400' : 'border-gray-200'}`}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">days</span>
+                </div>
+                {warnings.maturity_days && (
+                  <p className="text-[10px] text-orange-600 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {warnings.maturity_days}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Expected Volume</label>
+                <div className="relative">
+                  <input
+                    type="number" placeholder="0" step="0.01"
+                    value={form.expected_volume}
+                    onChange={(e) => handleChange('expected_volume', e.target.value)}
+                    className={`w-full px-3 py-2.5 pr-10 rounded-xl border-2 hover:border-gray-300
+                      focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                      outline-none text-sm text-gray-800 font-medium transition-all duration-200
+                      ${warnings.expected_volume ? 'border-orange-400' : 'border-gray-200'}`}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">kg</span>
+                </div>
+                {warnings.expected_volume && (
+                  <p className="text-[10px] text-orange-600 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {warnings.expected_volume}
+                  </p>
+                )}
               </div>
             </div>
 

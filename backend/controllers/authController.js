@@ -13,10 +13,10 @@ const removePassword = (user) => {
 
 export const registerUser = async (req, res) => {
   try {
-    const { email, password, firstname, lastname, contact_number, address } = req.body
+    const { email, password, firstname, lastname, contact_number, address, rsbsa_num, province, municipality, barangay } = req.body
 
-    if (!email || !password || !firstname || !lastname)
-      return res.status(400).json({ success: false, message: 'All required fields must be filled' })
+    if (!email || !password || !firstname || !lastname || !province || !municipality || !barangay)
+      return res.status(400).json({ success: false, message: 'All required fields including location must be filled' })
 
     if (!isValidEmail(email.trim()))
       return res.status(400).json({ success: false, message: 'Invalid email address' })
@@ -24,16 +24,22 @@ export const registerUser = async (req, res) => {
     if (password.trim().length < 6)
       return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' })
 
+    if (rsbsa_num) {
+      const rsbsaRegex = /^\d{2}-\d{3}-\d{2}-\d{3}-\d{6}$/
+      if (!rsbsaRegex.test(rsbsa_num.trim()))
+        return res.status(400).json({ success: false, message: 'Invalid RSBSA format (XX-XXX-XX-XXX-XXXXXX)' })
+    }
+
     const existing = await db.query('SELECT user_id FROM users WHERE email = $1', [email.trim()])
     if (existing.rows.length > 0)
       return res.status(400).json({ success: false, message: 'Email already registered' })
 
     const hashedPassword = await bcrypt.hash(password.trim(), 10)
     const result = await db.query(
-      `INSERT INTO users (email, password, firstname, lastname, address, contact_number, role)
-       VALUES ($1, $2, $3, $4, $5, $6, 'user')
-       RETURNING user_id, email, firstname, lastname, address, contact_number, role, created_at`,
-      [email.trim(), hashedPassword, firstname.trim(), lastname.trim(), address || null, contact_number || null]
+      `INSERT INTO users (email, password, firstname, lastname, address, contact_number, rsbsa_number, province, municipality, barangay, role)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'user')
+       RETURNING user_id, email, firstname, lastname, address, contact_number, rsbsa_number, province, municipality, barangay, role, created_at`,
+      [email.trim(), hashedPassword, firstname.trim(), lastname.trim(), address || null, contact_number || null, rsbsa_num || null, province, municipality, barangay]
     )
 
     const user = result.rows[0]
@@ -48,10 +54,10 @@ export const registerUser = async (req, res) => {
 
 export const registerFarmer = async (req, res) => {
   try {
-    const { email, password, firstname, lastname, contact_number, address, rsbsa_num } = req.body
+    const { email, password, firstname, middlename, lastname, contact_number, address, rsbsa_num, province, municipality, barangay } = req.body
 
-    if (!email || !password || !firstname || !lastname || !rsbsa_num)
-      return res.status(400).json({ success: false, message: 'All required fields including RSBSA must be filled' })
+    if (!email || !password || !firstname || !middlename || !lastname || !rsbsa_num || !province || !municipality || !barangay)
+      return res.status(400).json({ success: false, message: 'All required fields including RSBSA and location must be filled' })
 
     if (!isValidEmail(email.trim()))
       return res.status(400).json({ success: false, message: 'Invalid email address' })
@@ -69,10 +75,10 @@ export const registerFarmer = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password.trim(), 10)
     const result = await db.query(
-      `INSERT INTO farmer (rsbsa_number, email, password, firstname, lastname, address, contact_number, role)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'farmer')
-       RETURNING user_id, rsbsa_number, email, firstname, lastname, address, contact_number, role, created_at`,
-      [rsbsa_num.trim(), email.trim(), hashedPassword, firstname.trim(), lastname.trim(), address || null, contact_number || null]
+      `INSERT INTO farmer (rsbsa_number, email, password, firstname, middlename, lastname, address, contact_number, province, municipality, barangay, role)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'farmer')
+       RETURNING user_id, rsbsa_number, email, firstname, middlename, lastname, address, contact_number, province, municipality, barangay, role, created_at`,
+      [rsbsa_num.trim(), email.trim(), hashedPassword, firstname.trim(), middlename.trim(), lastname.trim(), address || null, contact_number || null, province, municipality, barangay]
     )
 
     const user = result.rows[0]
@@ -99,7 +105,7 @@ export const login = async (req, res) => {
 
     const [userRows, farmerRows] = await Promise.all([
       db.query(`SELECT user_id, email, password, firstname, lastname, address, contact_number, role, created_at FROM users WHERE email = $1`, [emailTrimmed]),
-      db.query(`SELECT user_id, rsbsa_number, email, password, firstname, lastname, address, contact_number, role, created_at FROM farmer WHERE email = $1`, [emailTrimmed])
+      db.query(`SELECT user_id, rsbsa_number, email, password, firstname, middlename, lastname, address, contact_number, role, created_at FROM farmer WHERE email = $1`, [emailTrimmed])
     ])
 
     let user = null
@@ -144,7 +150,7 @@ export const loginUser = async (req, res) => {
     const emailTrimmed = email.trim()
     const [userRows, farmerRows] = await Promise.all([
       db.query(`SELECT user_id, email, password, firstname, lastname, address, contact_number, role, created_at FROM users WHERE email = $1 AND role = 'user'`, [emailTrimmed]),
-      db.query(`SELECT user_id, rsbsa_number, email, password, firstname, lastname, address, contact_number, role, created_at FROM farmer WHERE email = $1 AND role = 'farmer'`, [emailTrimmed])
+      db.query(`SELECT user_id, rsbsa_number, email, password, firstname, middlename, lastname, address, contact_number, role, created_at FROM farmer WHERE email = $1 AND role = 'farmer'`, [emailTrimmed])
     ])
 
     if (userRows.rows.length === 0 && farmerRows.rows.length === 0)
@@ -180,7 +186,7 @@ export const loginFarmer = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid email address' })
 
     const rows = await db.query(
-      `SELECT user_id, rsbsa_number, email, password, firstname, lastname, address, contact_number, role, created_at
+      `SELECT user_id, rsbsa_number, email, password, firstname, middlename, lastname, address, contact_number, role, created_at
        FROM farmer WHERE email = $1 AND role = 'farmer'`,
       [email.trim()]
     )
@@ -222,7 +228,7 @@ export const getCurrentUser = async (req, res) => {
 export const getCurrentFarmer = async (req, res) => {
   try {
     const rows = await db.query(
-      `SELECT user_id, rsbsa_number, email, firstname, lastname, address, contact_number, role, created_at
+      `SELECT user_id, rsbsa_number, email, firstname, middlename, lastname, address, contact_number, role, created_at
        FROM farmer WHERE user_id = $1 AND role = 'farmer'`,
       [req.user.user_id]
     )
