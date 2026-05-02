@@ -175,7 +175,7 @@ const FarmerProfile = () => {
 
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-linear-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center">
                   <CircleUser className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -220,7 +220,7 @@ const FarmerProfile = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main Profile Card */}
               <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
+                <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
                 <div className="p-6">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-bold text-gray-900">Personal Information</h3>
@@ -371,12 +371,12 @@ const FarmerProfile = () => {
               {/* Sidebar */}
               <div className="space-y-4">
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
+                  <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
                   <div className="p-6 text-center">
                     {getProfilePicture() ? (
                       <img src={getProfilePicture()} alt="Profile" className="w-24 h-24 rounded-full object-cover mx-auto shadow-sm" />
                     ) : (
-                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white text-3xl font-bold mx-auto">
+                      <div className="w-24 h-24 rounded-full bg-linear-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white text-3xl font-bold mx-auto">
                         {getInitials()}
                       </div>
                     )}
@@ -411,7 +411,7 @@ const FarmerProfile = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowDetailsModal(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
+            <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
             <div className="p-5 overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-900">Edit Additional Details</h2>

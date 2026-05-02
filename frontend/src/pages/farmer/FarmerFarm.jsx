@@ -142,7 +142,7 @@ const FarmerFarm = () => {
 
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-linear-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center">
                   <Sprout className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -257,7 +257,7 @@ const FarmerFarm = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {filtered.map((f) => (
                   <div key={f.farm_id} onClick={() => navigate(`/farmer/dashboard/farm/${f.farm_id}`)} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
-                    <div className="h-40 bg-gradient-to-br from-green-400 to-emerald-600 relative">
+                    <div className="h-40 bg-linear-to-br from-green-400 to-emerald-600 relative">
                       {f.farm_image ? (
                         <img src={`${BASE_URL}${f.farm_image}`} alt={f.farm_name} className="w-full h-full object-cover" />
                       ) : (
@@ -371,7 +371,7 @@ const FarmerFarm = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedCrop(null)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
+            <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
             <div className="p-5 overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-900">{selectedCrop.crop_name}</h2>
@@ -384,7 +384,7 @@ const FarmerFarm = () => {
                 {selectedCrop.harvest_photo ? (
                   <img src={selectedCrop.harvest_photo} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
                 ) : (
-                  <div className="w-full h-44 bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                  <div className="w-full h-44 bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                     <Sprout className="w-12 h-12 text-green-300" />
                   </div>
                 )}

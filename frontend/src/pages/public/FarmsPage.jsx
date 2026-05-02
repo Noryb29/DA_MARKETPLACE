@@ -70,7 +70,7 @@ const FarmsPage = () => {
 
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-linear-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center">
                   <Sprout className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -204,7 +204,7 @@ const FarmCard = ({ farm, onViewClick, index }) => {
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden group" onClick={onViewClick}>
-      <div className="h-36 bg-gradient-to-br from-green-400 to-emerald-600 relative">
+      <div className="h-36 bg-linear-to-br from-green-400 to-emerald-600 relative">
         {farm.farm_image ? (
           <img src={farm.farm_image.startsWith('http') ? farm.farm_image : `${BASE_URL}${farm.farm_image}`} alt={farm.farm_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (

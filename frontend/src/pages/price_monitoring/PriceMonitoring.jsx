@@ -90,19 +90,10 @@ const PriceMonitoring = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap');
 
-        .price-monitoring {
-          font-family: 'Outfit', sans-serif;
-        }
-
-        .price-monitoring h1 {
-          font-family: 'Syne', sans-serif;
-          font-weight: 700;
-          letter-spacing: -0.5px;
-        }
 
         .input-elegant {
           background: rgba(255, 255, 255, 0.9);

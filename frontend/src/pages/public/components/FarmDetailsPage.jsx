@@ -126,7 +126,7 @@ const FarmDetailsPage = () => {
               {/* Left Column - Farm Details */}
               <div className="lg:col-span-1 space-y-4">
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="h-40 bg-gradient-to-br from-green-400 to-emerald-600 relative">
+                  <div className="h-40 bg-linear-to-br from-green-400 to-emerald-600 relative">
                     {farm.farm_image ? (
                       <img src={farm.farm_image.startsWith('http') ? farm.farm_image : `${BASE_URL}${farm.farm_image}`} alt={farm.farm_name} className="w-full h-full object-cover" />
                     ) : (
@@ -247,7 +247,7 @@ const FarmDetailsPage = () => {
                           {crop.harvest_photo ? (
                             <img src={crop.harvest_photo} alt={crop.crop_name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                            <div className="w-full h-full bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                               <Sprout className="w-10 h-10 text-green-300" />
                             </div>
                           )}
@@ -320,7 +320,7 @@ const FarmDetailsPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedCrop(null)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
+            <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
             <div className="p-5 overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-900">{selectedCrop.crop_name}</h2>
@@ -333,7 +333,7 @@ const FarmDetailsPage = () => {
                 {selectedCrop.harvest_photo ? (
                   <img src={selectedCrop.harvest_photo} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
                 ) : (
-                  <div className="w-full h-44 bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                  <div className="w-full h-44 bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                     <Sprout className="w-12 h-12 text-green-300" />
                   </div>
                 )}
@@ -432,7 +432,7 @@ const FarmDetailsPage = () => {
                 </div>
               )}
 
-              <button onClick={() => handleAddToCart(selectedCrop)} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold shadow-md shadow-green-200">
+              <button onClick={() => handleAddToCart(selectedCrop)} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold shadow-md shadow-green-200">
                 <Package className="w-4 h-4" />
                 Add to Cart
               </button>

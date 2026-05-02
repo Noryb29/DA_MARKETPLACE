@@ -5,7 +5,7 @@ import useFarmerStore from '../../store/FarmsStore'
 import useProduceStore from '../../store/ProduceStore'
 import EditFarmModal from './components/EditFarmModal.jsx'
 import CropModal from './components/CropModal.jsx'
-import { ArrowLeft, Loader2, MapPin, Ruler, AlertCircle, Leaf, Droplets, Sprout, Calendar, Package, FileText, MapPinned } from 'lucide-react'
+import { ArrowLeft, Loader2, MapPin, Ruler, AlertCircle, Leaf, Droplets, Sprout, Calendar, Package, FileText, MapPinned, Navigation } from 'lucide-react'
 import { getDaysUntilHarvest } from '../public/shopComponents/HarvestBadge'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
@@ -67,7 +67,7 @@ const FarmerFarmDetails = () => {
               {/* Left Column - Farm Details */}
               <div className="lg:col-span-1 space-y-4">
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="h-40 bg-gradient-to-br from-green-400 to-emerald-600 relative">
+                  <div className="h-40 bg-linear-to-br from-green-400 to-emerald-600 relative">
                     {currentFarm.farm_image ? (
                       <img src={currentFarm.farm_image.startsWith('http') ? currentFarm.farm_image : `${BASE_URL}${currentFarm.farm_image}`} alt={currentFarm.farm_name} className="w-full h-full object-cover" />
                     ) : (
@@ -87,6 +87,13 @@ const FarmerFarmDetails = () => {
                       <div className="flex items-start gap-2 bg-green-50 px-3 py-2 rounded-lg mb-4">
                         <MapPin className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
                         <span className="text-sm text-green-800">{location}</span>
+                      </div>
+                    )}
+
+                    {currentFarm.gps_coordinates && (
+                      <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg mb-4">
+                        <Navigation className="w-4 h-4 text-gray-600 shrink-0" /><p className='text-[10px] text-center justify-center items-center'>GPS Coords:</p>
+                        <span className="text-sm text-gray-700 font-mono">{currentFarm.gps_coordinates}</span>
                       </div>
                     )}
 
@@ -188,7 +195,7 @@ const FarmerFarmDetails = () => {
                           {crop.harvest_photo ? (
                             <img src={crop.harvest_photo} alt={crop.crop_name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                            <div className="w-full h-full bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                               <Sprout className="w-10 h-10 text-green-300" />
                             </div>
                           )}
@@ -261,7 +268,7 @@ const FarmerFarmDetails = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedCrop(null)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
+            <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
             <div className="p-5 overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-900">{selectedCrop.crop_name}</h2>
@@ -274,7 +281,7 @@ const FarmerFarmDetails = () => {
                 {selectedCrop.harvest_photo ? (
                   <img src={selectedCrop.harvest_photo} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
                 ) : (
-                  <div className="w-full h-44 bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                  <div className="w-full h-44 bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                     <Sprout className="w-12 h-12 text-green-300" />
                   </div>
                 )}

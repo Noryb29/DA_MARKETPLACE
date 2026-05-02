@@ -1,84 +1,190 @@
 import { useState, useEffect, useRef } from "react";
-import { MapPin, X, Image, FileText, Loader2 } from 'lucide-react';
+import { MapPin, X, Image, FileText, Loader2, Search, Navigation } from 'lucide-react';
 import regionData from '../../../assets/REGION_X.json';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
+
+const DEFAULT_CENTER = [12.8797, 121.774];
+const DEFAULT_ZOOM = 5;
+
+function MapClickHandler({ onLocationSelect }) {
+  useMapEvents({
+    click: (e) => {
+      const { lat, lng } = e.latlng;
+      onLocationSelect({ lat: lat.toFixed(6), lng: lng.toFixed(6) });
+    },
+  });
+  return null;
+}
+
+function MapUpdater({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center && map) {
+      map.setView([center.lat, center.lng], 15);
+    }
+  }, [center, map]);
+  return null;
+}
 
 const MapSelector = ({ onLocationSelect, selectedCoords }) => {
+  const [marker, setMarker] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const mapRef = useRef(null);
-  const [pin, setPin] = useState(null);
 
-  const handleClick = (e) => {
-    const rect = mapRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    const lat = (14.5995 + (50 - y) * 0.01).toFixed(6);
-    const lng = (120.9842 + (x - 50) * 0.01).toFixed(6);
-    setPin({ x, y, lat, lng });
-    onLocationSelect(`${lat}, ${lng}`);
-  };
-
-  const useExistingCoords = () => {
-    if (selectedCoords) {
+  useEffect(() => {
+    if (selectedCoords && typeof selectedCoords === 'string' && selectedCoords.includes(', ')) {
       const parts = selectedCoords.split(', ');
       if (parts.length === 2) {
-        const lat = parseFloat(parts[0]);
-        const lng = parseFloat(parts[1]);
+        const lat = Number(parts[0]);
+        const lng = Number(parts[1]);
         if (!isNaN(lat) && !isNaN(lng)) {
-          const x = ((lng - 120.9842) / 0.01 + 50);
-          const y = ((14.5995 - lat) / 0.01 + 50);
-          setPin({ x, y, lat: parts[0], lng: parts[1] });
+          setMarker({ lat, lng });
         }
       }
+    } else {
+      setMarker(null);
+    }
+  }, [selectedCoords]);
+
+  const searchLocation = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setIsSearching(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ph&limit=5`
+      );
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
     }
   };
 
-  useEffect(() => {
-    if (selectedCoords) useExistingCoords();
-  }, [selectedCoords]);
+  const handleSearch = (e) => {
+    e.preventDefault();
+    searchLocation(searchQuery);
+  };
+
+  const selectSearchResult = (result) => {
+    const lat = parseFloat(result.lat);
+    const lng = parseFloat(result.lon);
+    setMarker({ lat, lng });
+    setSearchResults([]);
+    setSearchQuery('');
+    onLocationSelect(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+    mapRef.current?.setView([lat, lng], 15);
+  };
+
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          setMarker({ lat, lng });
+          onLocationSelect(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          alert('Unable to get your location. Please enable location access.');
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      alert('Geolocation is not supported by your browser.');
+    }
+  };
+
+  const handleLocationSelect = ({ lat, lng }) => {
+    const coordsStr = `${lat}, ${lng}`;
+    setMarker({ lat, lng });
+    onLocationSelect(coordsStr);
+  };
 
   return (
     <div className="space-y-2">
-      <div
-        ref={mapRef} onClick={handleClick}
-        className="relative w-full h-48 rounded-xl overflow-hidden cursor-crosshair border-2 border-gray-200 hover:border-green-400 transition-colors"
-        style={{
-          background: `
-            linear-gradient(rgba(34,197,94,0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(34,197,94,0.04) 1px, transparent 1px),
-            linear-gradient(135deg, #e8f5e9 0%, #f0fdf4 40%, #dcfce7 70%, #d1fae5 100%)
-          `,
-          backgroundSize: '30px 30px, 30px 30px, 100% 100%',
-        }}
+      <div className="relative">
+        <form onSubmit={handleSearch} className="relative">
+          <input
+            type="text"
+            placeholder="Search location in Philippines..."
+            className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-gray-800 text-sm font-medium outline-none focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button
+            type="submit"
+            disabled={isSearching}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+        </form>
+        {searchResults.length > 0 && (
+          <div className="absolute z-[1000] w-full mt-1 bg-white rounded-xl border border-gray-200 shadow-lg max-h-48 overflow-y-auto">
+            {searchResults.map((result, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => selectSearchResult(result)}
+                className="w-full px-4 py-2.5 text-left text-sm hover:bg-green-50 flex items-start gap-2 border-b border-gray-100 last:border-0"
+              >
+                <MapPin className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-gray-800 font-medium">{result.display_name.split(',')[0]}</p>
+                  <p className="text-xs text-gray-500 truncate">{result.display_name.replace(result.display_name.split(',')[0] + ', ', '')}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={getCurrentLocation}
+        className="w-full py-2.5 rounded-xl border-2 border-green-500 bg-green-50 text-green-700 text-sm font-semibold hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
       >
-        <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none">
-          <line x1="0" y1="60%" x2="100%" y2="55%" stroke="#4ade80" strokeWidth="2" />
-          <line x1="0" y1="35%" x2="100%" y2="40%" stroke="#4ade80" strokeWidth="1.5" />
-          <line x1="30%" y1="0" x2="35%" y2="100%" stroke="#4ade80" strokeWidth="2" />
-          <line x1="65%" y1="0" x2="60%" y2="100%" stroke="#4ade80" strokeWidth="1.5" />
-          <rect x="28%" y="25%" width="25%" height="20%" fill="rgba(74,222,128,0.1)" rx="2" />
-          <rect x="55%" y="55%" width="20%" height="15%" fill="rgba(74,222,128,0.1)" rx="2" />
-        </svg>
-        {!pin && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <MapPin className="w-7 h-7 text-green-400 mb-2 opacity-60" />
-            <p className="text-xs text-green-700 font-medium opacity-70">Click to drop a pin</p>
-            <p className="text-xs text-gray-400 mt-0.5 opacity-60">Google Maps will be enabled soon</p>
-          </div>
-        )}
-        {pin && (
-          <div className="absolute -translate-x-1/2 -translate-y-full pointer-events-none" style={{ left: `${pin.x}%`, top: `${pin.y}%` }}>
-            <div className="flex flex-col items-center">
-              <div className="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap">{pin.lat}, {pin.lng}</div>
-              <div className="w-0.5 h-3 bg-green-600" />
-              <div className="w-3 h-3 rounded-full bg-green-600 border-2 border-white shadow-md" />
-            </div>
-          </div>
-        )}
+        <Navigation className="w-4 h-4" />
+        Use My Current GPS Location
+      </button>
+      <div className="rounded-xl overflow-hidden border-2 border-gray-200">
+        <MapContainer
+          center={marker ? [marker.lat, marker.lng] : DEFAULT_CENTER}
+          zoom={marker ? 15 : DEFAULT_ZOOM}
+          style={{ height: '250px', width: '100%' }}
+          scrollWheelZoom={true}
+          whenCreated={(map) => (mapRef.current = map)}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <MapClickHandler onLocationSelect={handleLocationSelect} />
+          {marker && <Marker position={[marker.lat, marker.lng]} />}
+          {marker && <MapUpdater center={marker} />}
+        </MapContainer>
       </div>
       {selectedCoords && (
         <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
           <MapPin className="w-3.5 h-3.5 text-green-600 shrink-0" />
           <span className="text-xs text-green-700 font-medium font-mono">{selectedCoords}</span>
-          <button type="button" onClick={() => { setPin(null); onLocationSelect(''); }} className="ml-auto text-green-400 hover:text-green-600">
+          <button type="button" onClick={() => { setMarker(null); onLocationSelect(''); }} className="ml-auto text-green-400 hover:text-green-600">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
