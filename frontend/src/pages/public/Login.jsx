@@ -67,6 +67,14 @@ const Login = () => {
 
     const user = result
     if (activeTab === 'user') {
+      Swal.fire({
+        icon: 'success',
+        title: 'Welcome!',
+        text: 'Login successful',
+        timer: 1500,
+        showConfirmButton: false,
+        confirmButtonColor: '#166534'
+      })
       navigate(
         user?.role === 'admin'
           ? '/admin/dashboard'
@@ -74,6 +82,14 @@ const Login = () => {
         { replace: true }
       )
     } else {
+      Swal.fire({
+        icon: 'success',
+        title: 'Welcome Farmer!',
+        text: 'Login successful',
+        timer: 1500,
+        showConfirmButton: false,
+        confirmButtonColor: '#166534'
+      })
       navigate('/farmer/dashboard/index', { replace: true })
     }
   } finally {

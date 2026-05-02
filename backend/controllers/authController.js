@@ -228,7 +228,7 @@ export const getCurrentUser = async (req, res) => {
 export const getCurrentFarmer = async (req, res) => {
   try {
     const rows = await db.query(
-      `SELECT user_id, rsbsa_number, email, firstname, middlename, lastname, address, contact_number, role, created_at
+      `SELECT user_id, rsbsa_number, email, firstname, middlename, lastname, address, contact_number, role, created_at, province, municipality, barangay
        FROM farmer WHERE user_id = $1 AND role = 'farmer'`,
       [req.user.user_id]
     )
