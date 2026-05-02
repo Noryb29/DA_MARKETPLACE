@@ -107,6 +107,7 @@ export const createDB = async() => {
                 email VARCHAR(100) NOT NULL UNIQUE,
                 password VARCHAR(100) NOT NULL,
                 firstname VARCHAR(100) NOT NULL,
+                middlename VARCHAR (100) NOT NULL,
                 lastname VARCHAR(100) NOT NULL,
                 address VARCHAR(100),
                 contact_number VARCHAR(11),

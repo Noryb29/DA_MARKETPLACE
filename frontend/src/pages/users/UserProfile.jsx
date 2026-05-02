@@ -21,6 +21,7 @@ const UserProfile = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [form, setForm] = useState({
     firstname: user?.firstname || '',
+    middlename: user?.middlename || '',
     lastname: user?.lastname || '',
     email: user?.email || '',
     contact_number: user?.contact_number || '',
@@ -108,6 +109,7 @@ const UserProfile = () => {
   const handleCancel = () => {
     setForm({
       firstname: user?.firstname || '',
+      middlename: user?.middlename || '',
       lastname: user?.lastname || '',
       email: user?.email || '',
       contact_number: user?.contact_number || '',
@@ -171,13 +173,21 @@ const UserProfile = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-3 gap-5">
                 <div>
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">First Name</label>
                   {editing ? (
                     <input type="text" name="firstname" value={form.firstname} onChange={handleChange} className="w-full border border-gray-200 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-green-500" />
                   ) : (
                     <p className="text-sm text-gray-700 py-2 border-b border-gray-100">{user?.firstname || <span className="text-gray-300 italic">Not set</span>}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Middle Name</label>
+                  {editing ? (
+                    <input type="text" name="middlename" value={form.middlename} onChange={handleChange} className="w-full border border-gray-200 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-green-500" />
+                  ) : (
+                    <p className="text-sm text-gray-700 py-2 border-b border-gray-100">{user?.middlename || <span className="text-gray-300 italic">Not set</span>}</p>
                   )}
                 </div>
                 <div>
