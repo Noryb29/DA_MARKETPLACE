@@ -17,12 +17,19 @@ const ShoppingPage = () => {
   const [search, setSearch] = useState('')
   const [filterVariety, setFilterVariety] = useState('')
   const [filterHarvest, setFilterHarvest] = useState('')
+  const [filterLocation, setFilterLocation] = useState('')
+  const [filterStock, setFilterStock] = useState('')
+  const [filterMinVolume, setFilterMinVolume] = useState('')
   const [showFilters, setShowFilters] = useState(false)
 
   useEffect(() => { getAllCrops() }, [])
 
   const varieties = useMemo(() =>
     [...new Set(crops.map((c) => c.variety).filter(Boolean))].sort()
+  , [crops])
+
+  const locations = useMemo(() =>
+    [...new Set(crops.map((c) => c.location).filter(Boolean))].sort()
   , [crops])
 
   const filtered = useMemo(() => {
@@ -46,15 +53,29 @@ const ShoppingPage = () => {
         return true
       })()
 
-      return matchSearch && matchVariety && matchHarvest
-    })
-  }, [crops, search, filterVariety, filterHarvest])
+      const matchLocation = !filterLocation || c.location === filterLocation
 
-  const activeFilterCount = [filterVariety, filterHarvest].filter(Boolean).length
+      const matchStock = (() => {
+        if (!filterStock) return true
+        if (filterStock === 'in_stock') return c.stock > 0
+        if (filterStock === 'out_of_stock') return !c.stock || c.stock <= 0
+        return true
+      })()
+
+      const matchMinVolume = !filterMinVolume || (c.volume && c.volume >= parseFloat(filterMinVolume))
+
+      return matchSearch && matchVariety && matchHarvest && matchLocation && matchStock && matchMinVolume
+    })
+  }, [crops, search, filterVariety, filterHarvest, filterLocation, filterStock, filterMinVolume])
+
+  const activeFilterCount = [filterVariety, filterHarvest, filterLocation, filterStock, filterMinVolume].filter(Boolean).length
 
   const clearFilters = () => {
     setFilterVariety('')
     setFilterHarvest('')
+    setFilterLocation('')
+    setFilterStock('')
+    setFilterMinVolume('')
     setSearch('')
   }
 
@@ -141,6 +162,13 @@ const ShoppingPage = () => {
                 setFilterVariety={setFilterVariety}
                 filterHarvest={filterHarvest}
                 setFilterHarvest={setFilterHarvest}
+                locations={locations}
+                filterLocation={filterLocation}
+                setFilterLocation={setFilterLocation}
+                filterStock={filterStock}
+                setFilterStock={setFilterStock}
+                filterMinVolume={filterMinVolume}
+                setFilterMinVolume={setFilterMinVolume}
                 activeFilterCount={activeFilterCount}
                 clearFilters={clearFilters}
               />

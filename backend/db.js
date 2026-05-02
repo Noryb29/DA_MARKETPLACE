@@ -119,11 +119,7 @@ export const createDB = async() => {
             )
         `)
         console.log('✓ Table "users" created')
-
         
-
-        
-
         await pool.query(`
             CREATE TABLE IF NOT EXISTS crop_orders (
                 crop_order_id SERIAL PRIMARY KEY,

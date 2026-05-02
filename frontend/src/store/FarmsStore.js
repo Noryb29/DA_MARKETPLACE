@@ -104,6 +104,73 @@ const useFarmerStore = create((set, get) => ({
     }
   },
 
+  updateFarm: async (farm_id, farmData) => {
+    set({ loading: true })
+    const token = localStorage.getItem('farmer_token')
+    
+    const formData = new FormData()
+    Object.keys(farmData).forEach(key => {
+      if (key === 'farm_image') {
+        if (farmData[key]) formData.append('farm_image', farmData[key])
+      } else if (farmData[key] !== undefined && farmData[key] !== null) {
+        formData.append(key, farmData[key])
+      }
+    })
+
+    try {
+      const response = await axios.put(
+        `${BASE_URL}/api/farmers/updateFarm/${farm_id}`,
+        formData,
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          } 
+        }
+      )
+      Swal.fire({ title: 'Success!', text: 'Farm updated successfully.', icon: 'success', timer: 2000, showConfirmButton: false })
+
+      await get().getFarm()
+      await get().getFarms()
+
+      set({ loading: false })
+      return response.data
+    } catch (error) {
+      set({ loading: false })
+      Swal.fire({ title: 'Error', text: error.response?.data?.message || 'Failed to update farm', icon: 'error' })
+      throw error
+    }
+  },
+
+  deleteFarm: async (farm_id) => {
+    const token = localStorage.getItem('farmer_token')
+    try {
+      const result = await Swal.fire({
+        title: 'Delete Farm?',
+        text: 'This will also delete all crops associated with this farm. This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, delete it',
+      })
+      if (!result.isConfirmed) return
+
+      await axios.delete(
+        `${BASE_URL}/api/farmers/deleteFarm/${farm_id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      Swal.fire({ title: 'Deleted', text: 'Farm removed.', icon: 'success', timer: 2000, showConfirmButton: false })
+      
+      await get().getFarms()
+      await get().getFarm()
+      await get().getCrops()
+    } catch (error) {
+      Swal.fire({ title: 'Error', text: error.response?.data?.message || 'Failed to delete farm', icon: 'error' })
+      throw error
+    }
+  },
+
   addFarmDocument: async (farm_id, files) => {
     console.log('=== Store: addFarmDocument ===')
     console.log('farm_id:', farm_id)

@@ -14,8 +14,8 @@ const EMPTY_FORM = {
 
 const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = [] }) => {
 
-  const isEdit = !!initialData
-  const [form, setForm] = useState(EMPTY_FORM)
+  const isEdit = initialData && (initialData.crop_id || initialData.crop_name)
+  const [form, setForm] = useState(initialData && initialData.farm_id ? { ...EMPTY_FORM, farm_id: initialData.farm_id } : EMPTY_FORM)
   const [photoPreview, setPhotoPreview] = useState(null)
   const [warnings, setWarnings] = useState({})
 

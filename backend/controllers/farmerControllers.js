@@ -229,10 +229,81 @@ export const getCrops = async (req, res) => {
         const rows = await db.query(
             `SELECT c.* FROM crop_in_farm c
              INNER JOIN farm f ON c.farm_id = f.farm_id
-             WHERE f.user_id = $1`,
+             WHERE f.user_id = $1
+             ORDER BY c.crop_id DESC`,
             [user_id]
         );
+    
         res.status(200).json({ crops: rows.rows });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Database error", error: error.message });
+    }
+};
+
+export const updateFarm = async (req, res) => {
+    const { farm_id } = req.params;
+    const { farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries } = req.body;
+    const user_id = req.user.user_id;
+
+    if (!farm_name || !farm_area) {
+        return res.status(400).json({ message: "Please fill in all required fields." });
+    }
+
+    try {
+        const farmCheck = await db.query(`SELECT farm_id FROM farm WHERE farm_id = $1 AND user_id = $2`, [farm_id, user_id]);
+        if (farmCheck.rows.length === 0) {
+            return res.status(404).json({ message: "Farm not found." });
+        }
+
+        let farmImageUrl = null;
+        if (req.file) {
+            const uploadsDir = path.join(process.cwd(), 'uploads', 'farm_images')
+            if (!fs.existsSync(uploadsDir)) {
+                fs.mkdirSync(uploadsDir, { recursive: true })
+            }
+            const ext = path.extname(req.file.originalname) || '.jpg'
+            const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${ext}`
+            const filepath = path.join(uploadsDir, filename)
+            fs.renameSync(req.file.path, filepath)
+            farmImageUrl = `/uploads/farm_images/${filename}`
+        }
+
+        const updateFields = [
+            'farm_name = $1', 'gps_coordinates = $2', 'farm_location = $3', 'farm_area = $4', 
+            'farm_elevation = $5', 'province = $6', 'municipality = $7', 'barangay = $8', 
+            'farm_hectares = $9', 'plot_boundaries = $10'
+        ]
+        const updateValues = [
+            farm_name, gps_coordinates || null, farm_location || null, farm_area,
+            farm_elevation || null, province || null, municipality || null, barangay || null,
+            farm_hectares || null, plot_boundaries || null
+        ]
+
+        if (farmImageUrl) {
+            updateFields.push('farm_image = $11')
+            updateValues.push(farmImageUrl)
+        }
+
+        updateFields.push('farm_id = $' + (updateFields.length - 1))
+        updateValues.push(farm_id)
+
+        const setClause = updateFields.slice(0, farmImageUrl ? 11 : 10).join(', ')
+        
+        if (farmImageUrl) {
+            await db.query(
+                `UPDATE farm SET ${setClause} WHERE farm_id = $${updateValues.length} AND user_id = $${updateValues.length + 1}`,
+                [...updateValues.slice(0, -1), user_id]
+            )
+        } else {
+            await db.query(
+                `UPDATE farm SET ${setClause} WHERE farm_id = $${updateValues.length} AND user_id = $${updateValues.length + 1}`,
+                [...updateValues, user_id]
+            )
+        }
+
+        const updatedFarm = await db.query(`SELECT * FROM farm WHERE farm_id = $1`, [farm_id]);
+        res.status(200).json({ message: "Farm updated successfully", farm: updatedFarm.rows[0] });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Database error", error: error.message });
@@ -245,6 +316,26 @@ export const getFarms = async (req, res) => {
     try {
         const rows = await db.query(`SELECT * FROM farm WHERE user_id = $1 ORDER BY created_at DESC`, [user_id]);
         res.status(200).json({ farms: rows.rows });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Database error", error: error.message });
+    }
+};
+
+export const deleteFarm = async (req, res) => {
+    const { farm_id } = req.params;
+    const user_id = req.user.user_id;
+
+    try {
+        const farmCheck = await db.query(`SELECT farm_id FROM farm WHERE farm_id = $1 AND user_id = $2`, [farm_id, user_id]);
+        if (farmCheck.rows.length === 0) {
+            return res.status(404).json({ message: "Farm not found." });
+        }
+
+        await db.query(`DELETE FROM crop_in_farm WHERE farm_id = $1`, [farm_id]);
+        await db.query(`DELETE FROM farm WHERE farm_id = $1 AND user_id = $2`, [farm_id, user_id]);
+        
+        res.status(200).json({ message: "Farm deleted successfully" });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Database error", error: error.message });

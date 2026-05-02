@@ -1,289 +1,243 @@
 import React, { useState, useEffect } from 'react';
 import useFarmerStore from '../../store/FarmsStore.js';
-import { MapPin, Wheat, ChevronRight, Plus, X, List, LayoutGrid,ClipboardList, Sprout, FileText, Image } from 'lucide-react';
+import useProduceStore from '../../store/ProduceStore.js';
 import Sidebar from '../public/components/SideBar';
 import AddFarmModal from './components/AddFarmModal.jsx';
 import FarmDetailModal from './components/FarmDetailModal.jsx';
+import CropModal from './components/CropModal.jsx';
+import EditFarmModal from './components/EditFarmModal.jsx';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
-
 const FarmerFarm = () => {
-  const { addFarm, loading, getFarm, getFarms, getCrops, farm, farms, hasFarm, crops } = useFarmerStore();
+  const { addFarm, loading, getFarm, getFarms, getCrops, farm, farms, hasFarm, crops, deleteFarm, updateFarm } = useFarmerStore();
+  const { addCrop, cropsLoading } = useProduceStore();
 
-  const [activeTab, setActiveTab] = useState('all-farms');
   const [selectedFarm, setSelectedFarm] = useState(null);
+  const [editFarm, setEditFarm] = useState(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropModalFarmId, setCropModalFarmId] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     getFarm();
     getFarms();
-  }, [getFarm,getFarms]);
+  }, [getFarm, getFarms]);
 
   useEffect(() => {
     if (hasFarm) getCrops();
   }, [hasFarm]);
+
+  useEffect(() => {
+    if (selectedFarm) {
+      const updatedFarm = farms.find(f => f.farm_id === selectedFarm.farm_id);
+      if (updatedFarm) setSelectedFarm(updatedFarm);
+    }
+  }, [farms, refreshKey]);
 
   const handleAddFarm = async (formData) => {
     await addFarm(formData);
     setAddModalOpen(false);
   };
 
-  const tabs = [
-    { id: 'all-farms', label: 'All Farms', icon: LayoutGrid },
-    { id: 'my-farm', label: 'Farm Details', icon: MapPin, disabled: !hasFarm },
-  ];
+  const handleAddCrop = async (form) => {
+    await addCrop(form);
+    setCropModalOpen(false);
+    setCropModalFarmId(null);
+  };
+
+  const openAddCropModal = (farmId = null) => {
+    setCropModalFarmId(farmId);
+    setCropModalOpen(true);
+  };
+
+  const getCropsForFarm = (farmId) => {
+    return crops.filter(c => c.farm_id === farmId) || [];
+  };
+
+  const handleModalUpdate = () => {
+    setRefreshKey(k => k + 1);
+    getFarms();
+  };
+
+  const handleModalDelete = () => {
+    setSelectedFarm(null);
+    getFarms();
+    getFarm();
+    getCrops();
+  };
+
+  const openEditFarm = (f) => {
+    setEditFarm(f);
+  };
+
+  const handleEditFarm = async (form) => {
+    if (!editFarm) return;
+    await updateFarm(editFarm.farm_id, form);
+    setEditFarm(null);
+    getFarms();
+    getFarm();
+  };
+
+  const handleQuickDelete = async (farmId) => {
+    await deleteFarm(farmId);
+    getFarms();
+    getFarm();
+    getCrops();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex" style={{ minHeight: 'calc(100vh - 65px)' }}>
         <Sidebar/>
-        <main className="flex-1 py-10 overflow-y-auto">
-          <div className="px-10 mx-auto">
-
-            {/* Header */}
-            <div className="mb-8 flex items-start justify-between">
+        <main className="flex-1 overflow-y-auto">
+          <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+            <div className="px-8 py-6 flex items-center justify-between">
               <div>
-                <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
-                <ClipboardList className="w-3.5 h-3.5" />
-                Farm Management
+                <h1 className="text-3xl font-bold text-gray-900">Farm Management</h1>
+                <p className="text-sm text-gray-500 mt-1">Track and manage all your farm properties</p>
               </div>
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Your Farms</h1>
-                <p className="text-gray-500 mt-1 text-sm">Manage your farms and registered crops.</p>
-              </div>
-
-              {/* Add Farm Button */}
               <button
                 onClick={() => setAddModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-green-500 to-emerald-600
-                  hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl
-                  shadow-md shadow-green-200 active:scale-[0.98] transition-all mt-1"
+                className="px-8 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded transition-colors"
               >
-                <Plus className="w-4 h-4" />
-                Add Farm
+                + Add New Farm
               </button>
             </div>
+          </div>
 
-            {/* Tabs */}
-            <div className="flex gap-1 bg-gray-200/70 p-1 rounded-xl mb-6 w-fit">
-              {tabs.map(({ id, label, icon: Icon, disabled }) => (
-                <button
-                  key={id} type="button" disabled={disabled}
-                  onClick={() => !disabled && setActiveTab(id)}
-                  className={`
-                    flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-200
-                    ${activeTab === id
-                      ? 'bg-white text-green-700 shadow-sm'
-                      : disabled ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-gray-700'}
-                  `}
+          <div className="px-8 py-8">
+            <div className="space-y-4">
+              {farms.map((f) => (
+                <div
+                  key={f.farm_id}
+                  className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
                 >
-                  <Icon className="w-4 h-4" />
-                  {label}
-                  {id === 'all-farms' && farms?.length > 0 && (
-                    <span className="bg-green-100 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                      {farms.length}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-gray-900 mb-3">{f.farm_name}</h3>
 
-            {/* ── TAB: All Farms ────────────────────────────────── */}
-            {activeTab === 'all-farms' && (
-              <div className="space-y-3">
-                {!farms?.length ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-                    <div className="bg-gray-100 p-5 rounded-full">
-                      <List className="w-10 h-10 text-gray-300" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-500">No farms registered yet</p>
-                      <p className="text-xs text-gray-400 mt-1">Click "Add Farm" to register your first farm.</p>
-                    </div>
-                  </div>
-                ) : (
-                  farms.map((f, index) => (
-                    <button
-                      key={f.farm_id}
-                      type="button"
-                      onClick={() => setSelectedFarm(f)}
-                      className="w-full text-left bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden
-                        hover:border-green-300 hover:shadow-md transition-all duration-200 group"
-                    >
-                      <div className="flex">
-                        {/* Farm Image */}
-                        {f.farm_image ? (
-                          <div className="w-24 h-full min-h-[100px] shrink-0">
-                            <img 
-                              src={`${BASE_URL}${f.farm_image}`} 
-                              alt={f.farm_name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-24 h-full min-h-[100px] bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center shrink-0">
-                            <Image className="w-8 h-8 text-green-300" />
+                      <div className="mb-4">
+                        <p className="text-sm text-gray-600">
+                          {(f.province || f.municipality || f.barangay) ? (
+                            <>
+                              {f.barangay && `${f.barangay}, `}
+                              {f.municipality && `${f.municipality}, `}
+                              {f.province && f.province}
+                            </>
+                          ) : (
+                            <span className="text-gray-500">{f.gps_coordinates || 'No location'}</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        {f.farm_area && (
+                          <div>
+                            <p className="text-xs text-gray-500 font-semibold mb-1">Area</p>
+                            <p className="text-lg font-bold text-gray-900">{(f.farm_area / 1000).toFixed(1)}k m²</p>
                           </div>
                         )}
 
-                        {/* Content */}
-                        <div className="flex-1 p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <p className="font-bold text-gray-800 text-sm truncate">{f.farm_name}</p>
-                              </div>
-                              <div className="flex items-center gap-1.5 mt-1">
-                                <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
-                                <span className="text-xs text-gray-400 font-mono truncate">
-                                  {f.gps_coordinates || 'No coordinates'}
-                                </span>
-                              </div>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-green-500 transition-colors shrink-0" />
+                        {f.farm_hectares && (
+                          <div>
+                            <p className="text-xs text-gray-500 font-semibold mb-1">Hectares</p>
+                            <p className="text-lg font-bold text-gray-900">{f.farm_hectares} ha</p>
                           </div>
+                        )}
 
-                          {/* Stats */}
-                          <div className="flex items-center gap-4 mt-3">
-                            <div className="text-right">
-                              <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Area</p>
-                              <p className="text-sm font-bold text-gray-700">{f.farm_area?.toLocaleString()} <span className="text-xs font-normal text-gray-400">sqm</span></p>
-                            </div>
-                            {f.total_acres && (
-                              <>
-                                <div className="w-px h-6 bg-gray-200" />
-                                <div className="text-right">
-                                  <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Acres</p>
-                                  <p className="text-sm font-bold text-gray-700">{f.total_acres}</p>
-                                </div>
-                              </>
-                            )}
-                            {f.farm_elevation && (
-                              <>
-                                <div className="w-px h-6 bg-gray-200" />
-                                <div className="text-right">
-                                  <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-wide">Elev.</p>
-                                  <p className="text-sm font-bold text-gray-700">{f.farm_elevation} <span className="text-xs font-normal text-gray-400">m</span></p>
-                                </div>
-                              </>
-                            )}
-                            {f.farm_docs && (
-                              (() => {
-                                let docsArray = []
-                                if (Array.isArray(f.farm_docs)) {
-                                  docsArray = f.farm_docs
-                                } else if (typeof f.farm_docs === 'string' && f.farm_docs.startsWith('[')) {
-                                  try {
-                                    docsArray = JSON.parse(f.farm_docs)
-                                  } catch (e) {
-                                    docsArray = []
-                                  }
-                                }
-                                if (docsArray.length === 0) return null
-                                return (
-                                  <>
-                                    <div className="w-px h-6 bg-gray-200" />
-                                    <div className="flex items-center gap-1">
-                                      <FileText className="w-3 h-3 text-blue-400" />
-                                      <span className="text-xs text-blue-600 font-medium">{docsArray.length} docs</span>
-                                    </div>
-                                  </>
-                                )
-                              })()
-                            )}
+                        {f.farm_elevation && (
+                          <div>
+                            <p className="text-xs text-gray-500 font-semibold mb-1">Elevation</p>
+                            <p className="text-lg font-bold text-gray-900">{f.farm_elevation}m</p>
                           </div>
-                        </div>
+                        )}
                       </div>
+
+                      <div className="inline-block px-3 py-1 bg-green-50 border border-green-200 rounded text-sm text-green-700 font-semibold mb-4">
+                        {getCropsForFarm(f.farm_id).length} crops
+                      </div>
+                    </div>
+
+                    {f.farm_image && (
+                      <div className="w-48 h-32 rounded-lg overflow-hidden ml-6 flex-shrink-0">
+                        <img 
+                          src={`${BASE_URL}${f.farm_image}`} 
+                          alt={f.farm_name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                    <button
+                      onClick={() => setSelectedFarm(f)}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded text-sm transition-colors"
+                    >
+                      View Details
                     </button>
-                  ))
-                )}
-              </div>
-            )}
 
-            {/* ── TAB: Farm Details ─────────────────────────────── */}
-            {activeTab === 'my-farm' && hasFarm && (
-              <div className="space-y-5">
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
-                  <div className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900">{farm.farm_name}</h2>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <MapPin className="w-3.5 h-3.5 text-green-500" />
-                          <span className="text-xs text-gray-500 font-mono">{farm.gps_coordinates || 'No coordinates set'}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mt-5">
-                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                        <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest mb-1">Area</p>
-                        <p className="text-2xl font-bold text-gray-800">{farm.farm_area?.toLocaleString()}<span className="text-sm font-medium text-gray-400 ml-1">sqm</span></p>
-                      </div>
-                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                        <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest mb-1">Elevation</p>
-                        <p className="text-2xl font-bold text-gray-800">{farm.farm_elevation ?? '—'}<span className="text-sm font-medium text-gray-400 ml-1">m</span></p>
-                      </div>
-                    </div>
+                    <button
+                      onClick={() => openAddCropModal(f.farm_id)}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded text-sm transition-colors"
+                    >
+                      Add Crop
+                    </button>
+
+                    <button
+                      onClick={() => openEditFarm(f)}
+                      className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 font-semibold rounded text-sm transition-colors"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleQuickDelete(f.farm_id)}
+                      className="px-4 py-2 text-red-600 bg-red-50 hover:bg-red-100 font-semibold rounded text-sm transition-colors"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
-
-                {/* Crops */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Wheat className="w-4 h-4 text-green-600" />
-                      <h3 className="font-bold text-gray-800">Registered Crops</h3>
-                    </div>
-                    <span className="text-xs bg-green-100 text-green-700 font-semibold px-2.5 py-1 rounded-full">
-                      {crops.length} {crops.length === 1 ? 'crop' : 'crops'}
-                    </span>
-                  </div>
-                  {crops.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
-                      <div className="bg-gray-100 p-4 rounded-full">
-                        <Wheat className="w-8 h-8 text-gray-300" />
-                      </div>
-                      <p className="font-semibold text-gray-500">No crops added yet</p>
-                      <p className="text-xs text-gray-400">Head to My Produce to add your first crop.</p>
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-gray-100">
-                      {crops.map((crop) => (
-                        <div key={crop.crop_id} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
-                          <div className="bg-green-100 p-2.5 rounded-xl">
-                            <Wheat className="w-4 h-4 text-green-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-800 text-sm">{crop.crop_name}</p>
-                            <p className="text-xs text-gray-400 truncate">{crop.variety || 'No variety specified'}</p>
-                          </div>
-                          {crop.specification_1 && (
-                            <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full font-medium shrink-0">
-                              {crop.specification_1}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
+              ))}
+            </div>
           </div>
         </main>
       </div>
 
-      {/* Farm Detail Modal */}
-      <FarmDetailModal farm={selectedFarm} onClose={() => setSelectedFarm(null)} />
+      <FarmDetailModal
+        farm={selectedFarm}
+        onClose={() => setSelectedFarm(null)}
+        onUpdate={handleModalUpdate}
+        onDelete={handleModalDelete}
+      />
 
-      {/* Add Farm Modal */}
       <AddFarmModal
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         onSubmit={handleAddFarm}
         loading={loading}
+      />
+
+      <EditFarmModal
+        isOpen={!!editFarm}
+        onClose={() => setEditFarm(null)}
+        onSubmit={handleEditFarm}
+        farm={editFarm}
+        loading={loading}
+      />
+
+      <CropModal
+        isOpen={cropModalOpen}
+        onClose={() => {
+          setCropModalOpen(false);
+          setCropModalFarmId(null);
+        }}
+        onSubmit={handleAddCrop}
+        loading={cropsLoading}
+        farms={farms}
       />
     </div>
   );

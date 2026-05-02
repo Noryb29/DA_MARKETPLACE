@@ -22,7 +22,7 @@ export const getCrops = async (req, res) => {
 export const addCrop = async (req, res) => {
     const user_id = req.user.user_id;
     const {
-        crop_name, variety, volume, stock,
+        farm_id: providedFarmId, crop_name, variety, volume, stock,
         specification_1, specification_2, specification_3,
         specification_4, specification_5,
         maturity_days, expected_volume,
@@ -46,10 +46,16 @@ export const addCrop = async (req, res) => {
     }
 
     try {
-        const farms = await db.query(`SELECT farm_id FROM farm WHERE user_id = $1 LIMIT 1`, [user_id]);
-        if (farms.rows.length === 0) return res.status(404).json({ message: "No farm found. Please register a farm first." });
-
-        const farm_id = farms.rows[0].farm_id;
+        let farm_id = providedFarmId;
+        
+        if (!farm_id) {
+            const farms = await db.query(`SELECT farm_id FROM farm WHERE user_id = $1 LIMIT 1`, [user_id]);
+            if (farms.rows.length === 0) return res.status(404).json({ message: "No farm found. Please register a farm first." });
+            farm_id = farms.rows[0].farm_id;
+        } else {
+            const farmCheck = await db.query(`SELECT farm_id FROM farm WHERE farm_id = $1 AND user_id = $2`, [farm_id, user_id]);
+            if (farmCheck.rows.length === 0) return res.status(403).json({ message: "Invalid farm selected." });
+        }
         const result = await db.query(
             `INSERT INTO crop_in_farm (
                 farm_id, crop_name, variety, volume, stock,
