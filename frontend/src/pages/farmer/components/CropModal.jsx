@@ -87,7 +87,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
           planting_date: initialData.planting_date?.slice(0, 10) || '',
           expected_harvest: initialData.expected_harvest?.slice(0, 10) || '',
         }
-      : EMPTY_FORM
+      : { ...EMPTY_FORM, farm_id: farms.length === 1 ? farms[0].farm_id : '' }
     )
     if (initialData?.harvest_photo) {
       setPhotoPreview(initialData.harvest_photo)

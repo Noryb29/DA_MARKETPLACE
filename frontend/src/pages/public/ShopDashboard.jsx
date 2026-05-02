@@ -56,15 +56,19 @@ const CropCard = ({ crop, onClick }) => {
   const formatDate = (d) =>
     d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '—'
 
+  const imageSrc = crop.harvest_photo
+    ? (crop.harvest_photo.startsWith('http') ? crop.harvest_photo : `${BASE_URL}${crop.harvest_photo}`)
+    : null
+
   return (
     <div
       onClick={onClick}
       className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-green-300 hover:shadow-lg transition-all duration-200 cursor-pointer"
     >
       <div className="h-44 bg-gray-100 relative overflow-hidden">
-        {crop.harvest_photo ? (
+        {imageSrc ? (
           <img
-            src={`${BASE_URL}${crop.harvest_photo}`}
+            src={imageSrc}
             alt={crop.crop_name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -434,7 +438,7 @@ const ShopDashboard = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
               {featuredCrops.map(crop => (
-                <CropCard key={crop.crop_id} crop={crop} onClick={() => navigate(`/shop/crop/${crop.crop_id}`)} />
+                <CropCard key={crop.crop_id} crop={crop} onClick={() => navigate('/shop/products')} />
               ))}
             </div>
           )}

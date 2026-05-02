@@ -20,6 +20,7 @@ import FarmerOrders from "./pages/farmer/FarmerOrders.jsx";
 import FarmerInventory from "./pages/farmer/FarmerInventory.jsx";
 import FarmerProfile from "./pages/farmer/FarmerProfile.jsx";
 import FarmerFarm from "./pages/farmer/FarmerFarm.jsx";
+import FarmerFarmDetails from "./pages/farmer/FarmerFarmDetails.jsx";
 import UserProfile from "./pages/users/UserProfile.jsx";
 import UserAnalytics from "./pages/users/UserAnalytics.jsx";
 import UserOrdersPage from "./pages/users/UserOrdersPage.jsx"
@@ -100,6 +101,7 @@ export const router = createBrowserRouter([
           { path: "/farmer/dashboard/inventory", element: <FarmerInventory /> },
           { path: "/farmer/dashboard/profile",   element: <FarmerProfile /> },
           { path: "/farmer/dashboard/farm",      element: <FarmerFarm /> },
+          { path: "/farmer/dashboard/farm/:id", element: <FarmerFarmDetails /> },
         ],
       },
     ],
