@@ -15,7 +15,11 @@ const formatDateTime = (d) =>
 
 const BuyerOrderModal = ({ order, onClose }) => {
   if (!order) return null
-  const specs = [1,2,3,4,5].map(n => order[`specification_${n}`]).filter(Boolean)
+  const specs = [1,2,3,4,5,6,7,8].map(n => {
+    const name = order[`specification_${n}_name`]
+    const value = order[`specification_${n}_value`]
+    return (name || value) ? `${name}: ${value}` : null
+  }).filter(Boolean)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

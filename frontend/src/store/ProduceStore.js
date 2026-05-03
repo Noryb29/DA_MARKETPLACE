@@ -34,7 +34,9 @@ const useProduceStore = create((set, get) => ({
     try {
       const formData = new FormData()
       Object.keys(cropData).forEach((key) => {
-        if (key === 'harvest_photo' && cropData[key] instanceof File) {
+        if (key.startsWith('specification_') && cropData[key] && typeof cropData[key] === 'object') {
+          formData.append(key, JSON.stringify(cropData[key]))
+        } else if (key === 'harvest_photo' && cropData[key] instanceof File) {
           formData.append(key, cropData[key])
         } else if (cropData[key] !== undefined && cropData[key] !== null) {
           formData.append(key, cropData[key])
@@ -61,7 +63,9 @@ const useProduceStore = create((set, get) => ({
     try {
       const formData = new FormData()
       Object.keys(cropData).forEach((key) => {
-        if (key === 'harvest_photo' && cropData[key] instanceof File) {
+        if (key.startsWith('specification_') && cropData[key] && typeof cropData[key] === 'object') {
+          formData.append(key, JSON.stringify(cropData[key]))
+        } else if (key === 'harvest_photo' && cropData[key] instanceof File) {
           formData.append(key, cropData[key])
         } else if (key === 'harvest_photo' && typeof cropData[key] === 'string') {
           formData.append(key, cropData[key])

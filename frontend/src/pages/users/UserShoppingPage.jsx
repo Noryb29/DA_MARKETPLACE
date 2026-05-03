@@ -290,15 +290,17 @@ const UserShoppingPage = () => {
                         </div>
                       )}
 
-                      {[1, 2, 3].some(n => crop[`specification_${n}`]) && (
-                        <div className="flex flex-wrap gap-1 pt-1 border-t border-gray-100">
-                          {[1, 2, 3].map((n) =>
-                            crop[`specification_${n}`] ? (
-                              <span key={n} className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
-                                {crop[`specification_${n}`]}
+                      {[1, 2, 3, 4, 5, 6, 7, 8].some(n => crop[`specification_${n}_name`] || crop[`specification_${n}_value`]) && (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
+                            const name = crop[`specification_${n}_name`]
+                            const value = crop[`specification_${n}_value`]
+                            return (name || value) ? (
+                              <span key={n} className="text-[9px] bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded border border-green-200">
+                                {name}: {value}
                               </span>
                             ) : null
-                          )}
+                          })}
                         </div>
                       )}
                     </div>
@@ -386,17 +388,19 @@ const UserShoppingPage = () => {
               </div>
 
               {/* Specs */}
-              {[1, 2, 3, 4, 5].some(n => selectedCrop[`specification_${n}`]) && (
-                <div className="mt-4">
-                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest mb-2">Specifications</p>
+              {[1, 2, 3, 4, 5, 6, 7, 8].some(n => selectedCrop[`specification_${n}_name`] || selectedCrop[`specification_${n}_value`]) && (
+                <div className="mt-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                  <p className="text-xs font-bold text-green-700 uppercase tracking-widest mb-2">Specifications</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {[1, 2, 3, 4, 5].map((n) =>
-                      selectedCrop[`specification_${n}`] ? (
-                        <span key={n} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">
-                          {selectedCrop[`specification_${n}`]}
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
+                      const name = selectedCrop[`specification_${n}_name`]
+                      const value = selectedCrop[`specification_${n}_value`]
+                      return (name || value) ? (
+                        <span key={n} className="text-xs bg-white text-green-700 font-semibold px-3 py-1.5 rounded-lg border border-green-200">
+                          {name}: <span className="font-normal">{value}</span>
                         </span>
                       ) : null
-                    )}
+                    })}
                   </div>
                 </div>
               )}

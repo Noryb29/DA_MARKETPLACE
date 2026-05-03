@@ -1,11 +1,10 @@
-import { Loader2 ,X, MapPin, Upload, Image as ImageIcon, AlertTriangle, Info } from 'lucide-react'
+import { Loader2 ,X, MapPin, Upload, Image as ImageIcon, AlertTriangle, Info, Plus, Trash2 } from 'lucide-react'
 import { useEffect,useState } from 'react'
 import cropData from '../../../assets/CROP_NAMES.json'
 
 const EMPTY_FORM = {
   crop_name: '', variety: '', volume: '', stock: '', farm_id: '',
-  specification_1: '', specification_2: '', specification_3: '',
-  specification_4: '', specification_5: '',
+  specifications: [],
   maturity_days: '', expected_volume: '',
   planting_date: '', expected_harvest: '',
   actual_harvest: '', total_harvest: '',
@@ -18,6 +17,37 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
   const [form, setForm] = useState(initialData && initialData.farm_id ? { ...EMPTY_FORM, farm_id: initialData.farm_id } : EMPTY_FORM)
   const [photoPreview, setPhotoPreview] = useState(null)
   const [warnings, setWarnings] = useState({})
+
+  const addSpecification = () => {
+    if (form.specifications.length < 8) {
+      setForm({ ...form, specifications: [...form.specifications, { name: '', value: '' }] })
+    }
+  }
+
+  const removeSpecification = (index) => {
+    setForm({ ...form, specifications: form.specifications.filter((_, i) => i !== index) })
+  }
+
+  const updateSpecification = (index, field, value) => {
+    const updated = form.specifications.map((spec, i) => 
+      i === index ? { ...spec, [field]: value } : spec
+    )
+    setForm({ ...form, specifications: updated })
+  }
+
+  const getSubmitForm = () => {
+    const submitForm = { ...form }
+    for (let i = 1; i <= 8; i++) {
+      submitForm[`specification_${i}`] = null
+    }
+    form.specifications.forEach((spec, index) => {
+      if (spec.name || spec.value) {
+        submitForm[`specification_${index + 1}`] = { name: spec.name, value: spec.value }
+      }
+    })
+    delete submitForm.specifications
+    return submitForm
+  }
 
   const commodities = cropData.commodities || []
   
@@ -81,17 +111,28 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
   }
 
   useEffect(() => {
-    setForm(initialData
-      ? {
-          ...EMPTY_FORM, ...initialData,
-          planting_date: initialData.planting_date?.slice(0, 10) || '',
-          expected_harvest: initialData.expected_harvest?.slice(0, 10) || '',
+    if (initialData) {
+      const specs = []
+      for (let i = 1; i <= 8; i++) {
+        const nameKey = `specification_${i}_name`
+        const valueKey = `specification_${i}_value`
+        if (initialData[nameKey] || initialData[valueKey]) {
+          specs.push({ name: initialData[nameKey] || '', value: initialData[valueKey] || '' })
         }
-      : { ...EMPTY_FORM, farm_id: farms.length === 1 ? farms[0].farm_id : '' }
-    )
-    if (initialData?.harvest_photo) {
-      setPhotoPreview(initialData.harvest_photo)
+      }
+      setForm({
+        ...EMPTY_FORM, ...initialData,
+        specifications: specs,
+        planting_date: initialData.planting_date?.slice(0, 10) || '',
+        expected_harvest: initialData.expected_harvest?.slice(0, 10) || '',
+      })
+      if (initialData?.harvest_photo) {
+        setPhotoPreview(initialData.harvest_photo)
+      } else {
+        setPhotoPreview(null)
+      }
     } else {
+      setForm({ ...EMPTY_FORM, farm_id: farms.length === 1 ? farms[0].farm_id : '', specifications: [] })
       setPhotoPreview(null)
     }
   }, [initialData, isOpen])
@@ -280,20 +321,53 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
 
             {/* Specifications */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Specifications</label>
-              <div className="grid grid-cols-2 gap-2">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <input
-                    key={n}
-                    type="text" placeholder={`Spec ${n}`}
-                    value={form[`specification_${n}`]}
-                    onChange={(e) => setForm({ ...form, [`specification_${n}`]: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 hover:border-gray-300
-                      focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
-                      outline-none text-sm text-gray-800 font-medium transition-all duration-200"
-                  />
-                ))}
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Specifications</label>
+                {form.specifications.length < 8 && (
+                  <button
+                    type="button"
+                    onClick={addSpecification}
+                    className="text-xs font-medium text-green-600 hover:text-green-700 flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Add Specification
+                  </button>
+                )}
               </div>
+              {form.specifications.length === 0 ? (
+                <p className="text-xs text-gray-400 italic py-2">No specifications added. Click "Add Specification" to add.</p>
+              ) : (
+                <div className="space-y-2">
+                  {form.specifications.map((spec, index) => (
+                    <div key={index} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        placeholder="Name (e.g. Color)"
+                        value={spec.name}
+                        onChange={(e) => updateSpecification(index, 'name', e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                          focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                          outline-none text-sm text-gray-800 font-medium transition-all duration-200"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Value (e.g. Green)"
+                        value={spec.value}
+                        onChange={(e) => updateSpecification(index, 'value', e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                          focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                          outline-none text-sm text-gray-800 font-medium transition-all duration-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSpecification(index)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Maturity Days + Expected Volume */}
@@ -396,7 +470,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
               Cancel
             </button>
             <button
-              onClick={() => onSubmit(form)}
+              onClick={() => onSubmit(getSubmitForm())}
               disabled={loading || !form.crop_name || !form.farm_id}
               className="flex-1 py-2.5 rounded-xl bg-linear-to-r from-green-500 to-emerald-600
                 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold

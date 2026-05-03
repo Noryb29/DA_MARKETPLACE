@@ -9,8 +9,12 @@ const CropRow = ({ crop }) => {
   const { addToCart } = useCartStore()
   const { user } = useUserStore()
 
-  const specs = [1, 2, 3, 4, 5]
-    .map((n) => crop[`specification_${n}`])
+  const specs = [1, 2, 3, 4, 5, 6, 7, 8]
+    .map((n) => {
+      const name = crop[`specification_${n}_name`]
+      const value = crop[`specification_${n}_value`]
+      return (name || value) ? `${name}: ${value}` : null
+    })
     .filter(Boolean)
 
   const handleAddToCart = () => {
@@ -59,9 +63,9 @@ const CropRow = ({ crop }) => {
           </div>
 
           {specs.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
+            <div className="flex flex-wrap gap-1.5 mt-2">
               {specs.map((s, i) => (
-                <span key={i} className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
+                <span key={i} className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-semibold border border-green-200">
                   {s}
                 </span>
               ))}

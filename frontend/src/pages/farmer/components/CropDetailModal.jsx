@@ -110,20 +110,22 @@ const CropDetailModal = ({ crop, onClose }) => {
             )}
 
             {/* Specifications */}
-            {[1, 2, 3, 4, 5].some(n => crop[`specification_${n}`]) && (
-              <div className="bg-gray-50 rounded-2xl p-5">
+            {[1, 2, 3, 4, 5, 6, 7, 8].some(n => crop[`specification_${n}_name`] || crop[`specification_${n}_value`]) && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-5 border border-green-200">
                 <div className="flex items-center gap-2 mb-4">
-                  <Layers className="w-4 h-4 text-gray-400" />
-                  <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Specifications</h3>
+                  <Layers className="w-4 h-4 text-green-600" />
+                  <h3 className="text-sm font-bold text-green-800 uppercase tracking-wide">Specifications</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {[1, 2, 3, 4, 5].map((n) =>
-                    crop[`specification_${n}`] ? (
-                      <span key={n} className="text-sm bg-white text-gray-600 px-4 py-2 rounded-xl shadow-sm font-medium">
-                        {crop[`specification_${n}`]}
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
+                    const name = crop[`specification_${n}_name`]
+                    const value = crop[`specification_${n}_value`]
+                    return (name || value) ? (
+                      <span key={n} className="text-sm bg-white text-green-700 px-4 py-2 rounded-xl shadow-sm font-semibold border border-green-200">
+                        <span className="text-green-800">{name}:</span> {value}
                       </span>
                     ) : null
-                  )}
+                  })}
                 </div>
               </div>
             )}

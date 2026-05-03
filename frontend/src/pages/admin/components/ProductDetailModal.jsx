@@ -114,7 +114,7 @@ const ProductDetailModal = ({ isOpen, product, onClose }) => {
           </div>
 
            {/* Specifications */}
-          {(product.specification_1 || product.specification_2 || product.specification_3 || product.specification_4 || product.specification_5) && (
+          {[1,2,3,4,5,6,7,8].some(n => product[`specification_${n}_name`] || product[`specification_${n}_value`]) && (
             <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-purple-100 rounded-lg">
@@ -123,36 +123,16 @@ const ProductDetailModal = ({ isOpen, product, onClose }) => {
                 <h3 className="font-semibold text-gray-900 text-lg">Specifications</h3>
               </div>
               <ul className="space-y-2">
-                {product.specification_1 && (
-                  <li className="flex gap-3 text-sm text-gray-700">
-                    <span className="text-gray-400 flex-shrink-0">•</span>
-                    <span>{product.specification_1}</span>
-                  </li>
-                )}
-                {product.specification_2 && (
-                  <li className="flex gap-3 text-sm text-gray-700">
-                    <span className="text-gray-400 flex-shrink-0">•</span>
-                    <span>{product.specification_2}</span>
-                  </li>
-                )}
-                {product.specification_3 && (
-                  <li className="flex gap-3 text-sm text-gray-700">
-                    <span className="text-gray-400 flex-shrink-0">•</span>
-                    <span>{product.specification_3}</span>
-                  </li>
-                )}
-                {product.specification_4 && (
-                  <li className="flex gap-3 text-sm text-gray-700">
-                    <span className="text-gray-400 flex-shrink-0">•</span>
-                    <span>{product.specification_4}</span>
-                  </li>
-                )}
-                {product.specification_5 && (
-                  <li className="flex gap-3 text-sm text-gray-700">
-                    <span className="text-gray-400 flex-shrink-0">•</span>
-                    <span>{product.specification_5}</span>
-                  </li>
-                )}
+                {[1,2,3,4,5,6,7,8].map(n => {
+                  const name = product[`specification_${n}_name`]
+                  const value = product[`specification_${n}_value`]
+                  return (name || value) ? (
+                    <li key={n} className="flex gap-3 text-sm text-gray-700">
+                      <span className="text-gray-400 flex-shrink-0">•</span>
+                      <span>{name}: {value}</span>
+                    </li>
+                  ) : null
+                })}
               </ul>
             </div>
           )}

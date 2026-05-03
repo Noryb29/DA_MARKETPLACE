@@ -9,9 +9,18 @@ export const getAllCrops = async (req, res) => {
         f.gps_coordinates,
         f.farm_area,
         f.farm_elevation,
-        f.user_id AS farmer_id
+        f.user_id AS farmer_id,
+        s.specification_1_name, s.specification_1_value,
+        s.specification_2_name, s.specification_2_value,
+        s.specification_3_name, s.specification_3_value,
+        s.specification_4_name, s.specification_4_value,
+        s.specification_5_name, s.specification_5_value,
+        s.specification_6_name, s.specification_6_value,
+        s.specification_7_name, s.specification_7_value,
+        s.specification_8_name, s.specification_8_value
       FROM crop_in_farm c
       INNER JOIN farm f ON c.farm_id = f.farm_id
+      LEFT JOIN crop_specifications s ON c.crop_id = s.crop_id
       ORDER BY c.crop_id DESC
     `)
     res.status(200).json({ crops: rows.rows })
@@ -85,9 +94,18 @@ export const getCropsByFarmId = async (req, res) => {
         f.gps_coordinates,
         f.farm_area,
         f.farm_elevation,
-        f.user_id AS farmer_id
+        f.user_id AS farmer_id,
+        s.specification_1_name, s.specification_1_value,
+        s.specification_2_name, s.specification_2_value,
+        s.specification_3_name, s.specification_3_value,
+        s.specification_4_name, s.specification_4_value,
+        s.specification_5_name, s.specification_5_value,
+        s.specification_6_name, s.specification_6_value,
+        s.specification_7_name, s.specification_7_value,
+        s.specification_8_name, s.specification_8_value
       FROM crop_in_farm c
       INNER JOIN farm f ON c.farm_id = f.farm_id
+      LEFT JOIN crop_specifications s ON c.crop_id = s.crop_id
       WHERE c.farm_id = $1
       ORDER BY c.crop_id DESC
     `, [farmId])

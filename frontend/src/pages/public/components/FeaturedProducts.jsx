@@ -41,7 +41,11 @@ const getCropEmoji = (name = '') => {
 
 // ─── Single Card ──────────────────────────────────────────────────────────────
 const CropCard = ({ crop, index }) => {
-  const specs = [1,2,3,4,5].map(n => crop[`specification_${n}`]).filter(Boolean)
+  const specs = [1,2,3,4,5,6,7,8].map(n => {
+    const name = crop[`specification_${n}_name`]
+    const value = crop[`specification_${n}_value`]
+    return (name || value) ? `${name}: ${value}` : null
+  }).filter(Boolean)
 
   return (
     <div
@@ -109,9 +113,9 @@ const CropCard = ({ crop, index }) => {
 
         {/* Specs */}
         {specs.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1.5 pt-1">
             {specs.map((s, i) => (
-              <span key={i} className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
+              <span key={i} className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-semibold border border-green-200">
                 {s}
               </span>
             ))}

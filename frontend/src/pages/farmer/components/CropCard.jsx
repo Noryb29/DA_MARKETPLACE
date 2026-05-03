@@ -77,15 +77,20 @@ const CropCard = ({ crop, onEdit, onDelete, onClick }) => {
       )}
 
       {/* Specs */}
-      {[1, 2, 3, 4, 5].some(n => crop[`specification_${n}`]) && (
-        <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
-          {[1, 2, 3, 4, 5].map((n) =>
-            crop[`specification_${n}`] ? (
-              <span key={n} className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
-                {crop[`specification_${n}`]}
+      {[1, 2, 3, 4, 5, 6, 7, 8].some(n => crop[`specification_${n}_name`] || crop[`specification_${n}_value`]) && (
+        <div className="flex flex-wrap gap-1.5 pt-2">
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] font-semibold text-green-600 uppercase tracking-wide">Specs:</span>
+          </div>
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
+            const name = crop[`specification_${n}_name`]
+            const value = crop[`specification_${n}_value`]
+            return (name || value) ? (
+              <span key={n} className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-semibold border border-green-200">
+                {name}: <span className="font-normal">{value}</span>
               </span>
             ) : null
-          )}
+          })}
         </div>
       )}
 

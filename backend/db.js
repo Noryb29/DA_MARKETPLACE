@@ -120,6 +120,33 @@ export const createDB = async() => {
             )
         `)
         console.log('✓ Table "users" created')
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS crop_specifications (
+                spec_id SERIAL PRIMARY KEY,
+                crop_id INTEGER NOT NULL,
+                specification_1_name VARCHAR(255),
+                specification_1_value VARCHAR(255),
+                specification_2_name VARCHAR(255),
+                specification_2_value VARCHAR(255),
+                specification_3_name VARCHAR(255),
+                specification_3_value VARCHAR(255),
+                specification_4_name VARCHAR(255),
+                specification_4_value VARCHAR(255),
+                specification_5_name VARCHAR(255),
+                specification_5_value VARCHAR(255),
+                specification_6_name VARCHAR(255),
+                specification_6_value VARCHAR(255),
+                specification_7_name VARCHAR(255),
+                specification_7_value VARCHAR(255),
+                specification_8_name VARCHAR(255),
+                specification_8_value VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_crop_specifications FOREIGN KEY (crop_id) REFERENCES crop_in_farm(crop_id) ON DELETE CASCADE
+            )
+        `)
+        console.log('✓ Table "crop_specifications" created')
         
         await pool.query(`
             CREATE TABLE IF NOT EXISTS crop_orders (
@@ -209,6 +236,7 @@ export const createDB = async() => {
             )
         `)
         console.log('✓ Table "farm_documents" created')
+
 
         console.log('\n✅ Database setup completed successfully!')
 

@@ -205,9 +205,9 @@ const FarmerFarmDetails = () => {
                               {getDaysUntilHarvest(crop.expected_harvest) <= 0 ? 'Ready' : `${getDaysUntilHarvest(crop.expected_harvest)}d`}
                             </div>
                           )}
-                          {crop.specification_1 && (
-                            <div className="absolute top-2 right-2 bg-white/90 text-gray-700 text-[9px] px-1.5 py-0.5 rounded-full font-medium">
-                              {crop.specification_1}
+                          {(crop.specification_1_name || crop.specification_1_value) && (
+                            <div className="absolute top-2 right-2 bg-green-500 text-white text-[9px] px-2 py-0.5 rounded-full font-semibold">
+                              {crop.specification_1_name}: {crop.specification_1_value}
                             </div>
                           )}
                         </div>
@@ -244,13 +244,17 @@ const FarmerFarmDetails = () => {
                             </div>
                           )}
 
-                          {[crop.specification_2, crop.specification_3, crop.specification_4].filter(Boolean).length > 0 && (
+                          {[2, 3, 4, 5, 6, 7, 8].some(n => crop[`specification_${n}_name`] || crop[`specification_${n}_value`]) && (
                             <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-gray-100">
-                              {[2, 3, 4].map(n => crop[`specification_${n}`] && (
-                                <span key={n} className="text-[8px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
-                                  {crop[`specification_${n}`]}
-                                </span>
-                              ))}
+                              {[2, 3, 4, 5, 6, 7, 8].map(n => {
+                                const name = crop[`specification_${n}_name`]
+                                const value = crop[`specification_${n}_value`]
+                                return (name || value) && (
+                                  <span key={n} className="text-[8px] bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded border border-green-200">
+                                    {name}: {value}
+                                  </span>
+                                )
+                              })}
                             </div>
                           )}
                         </div>
@@ -360,15 +364,19 @@ const FarmerFarmDetails = () => {
                 )}
               </div>
 
-              {[1, 2, 3, 4, 5].some(n => selectedCrop[`specification_${n}`]) && (
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest mb-2">Specifications</p>
+              {[1, 2, 3, 4, 5, 6, 7, 8].some(n => selectedCrop[`specification_${n}_name`] || selectedCrop[`specification_${n}_value`]) && (
+                <div className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                  <p className="text-xs font-bold text-green-700 uppercase tracking-widest mb-2">Specifications</p>
                   <div className="flex flex-wrap gap-2">
-                    {[1, 2, 3, 4, 5].map(n => selectedCrop[`specification_${n}`] && (
-                      <span key={n} className="text-xs bg-gray-100 text-gray-600 px-2 py-1.5 rounded-lg">
-                        {selectedCrop[`specification_${n}`]}
-                      </span>
-                    ))}
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(n => {
+                      const name = selectedCrop[`specification_${n}_name`]
+                      const value = selectedCrop[`specification_${n}_value`]
+                      return (name || value) && (
+                        <span key={n} className="text-xs bg-white text-green-700 font-semibold px-3 py-1.5 rounded-lg border border-green-200">
+                          {name}: <span className="font-normal">{value}</span>
+                        </span>
+                      )
+                    })}
                   </div>
                 </div>
               )}

@@ -311,26 +311,14 @@ const FarmerFarm = () => {
                       </div>
 
                       <div className="mt-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => openAddCropModal(f.farm_id)}
-                          className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-1"
-                        >
-                          Add Crop
-                        </button>
+                       
 
-                        <button
+                        {/* <button
                           onClick={() => openEditFarm(f)}
                           className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-lg transition-colors"
                         >
                           Edit
-                        </button>
-
-                        <button
-                          onClick={() => handleQuickDelete(f.farm_id)}
-                          className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-lg transition-colors"
-                        >
-                          Delete
-                        </button>
+                        </button> */}
                       </div>
                     </div>
                   </div>
@@ -463,15 +451,19 @@ const FarmerFarm = () => {
                 )}
               </div>
 
-              {[1, 2, 3, 4, 5].some(n => selectedCrop[`specification_${n}`]) && (
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest mb-2">Specifications</p>
+              {[1, 2, 3, 4, 5, 6, 7, 8].some(n => selectedCrop[`specification_${n}_name`] || selectedCrop[`specification_${n}_value`]) && (
+                <div className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                  <p className="text-xs font-bold text-green-700 uppercase tracking-widest mb-2">Specifications</p>
                   <div className="flex flex-wrap gap-2">
-                    {[1, 2, 3, 4, 5].map(n => selectedCrop[`specification_${n}`] && (
-                      <span key={n} className="text-xs bg-gray-100 text-gray-600 px-2 py-1.5 rounded-lg">
-                        {selectedCrop[`specification_${n}`]}
-                      </span>
-                    ))}
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(n => {
+                      const name = selectedCrop[`specification_${n}_name`]
+                      const value = selectedCrop[`specification_${n}_value`]
+                      return (name || value) ? (
+                        <span key={n} className="text-xs bg-white text-green-700 font-semibold px-3 py-1.5 rounded-lg border border-green-200">
+                          {name}: <span className="font-normal">{value}</span>
+                        </span>
+                      ) : null
+                    })}
                   </div>
                 </div>
               )}

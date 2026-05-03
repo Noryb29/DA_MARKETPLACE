@@ -135,7 +135,7 @@ const ShoppingPage = () => {
         c.crop_name?.toLowerCase().includes(search.toLowerCase()) ||
         c.variety?.toLowerCase().includes(search.toLowerCase()) ||
         c.farm_name?.toLowerCase().includes(search.toLowerCase()) ||
-        [1, 2, 3, 4, 5].some(n => c[`specification_${n}`]?.toLowerCase().includes(search.toLowerCase()))
+        [1, 2, 3, 4, 5, 6, 7, 8].some(n => (c[`specification_${n}_name`] || c[`specification_${n}_value`] || '')?.toLowerCase().includes(search.toLowerCase()))
 
       const matchVariety = !filterVariety || c.variety === filterVariety
       const matchHarvest = (() => {
@@ -413,15 +413,19 @@ const ShoppingPage = () => {
                 )}
               </div>
 
-              {[1, 2, 3, 4, 5].some(n => selectedCrop[`specification_${n}`]) && (
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest mb-2">Specifications</p>
+              {[1, 2, 3, 4, 5, 6, 7, 8].some(n => selectedCrop[`specification_${n}_name`] || selectedCrop[`specification_${n}_value`]) && (
+                <div className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                  <p className="text-xs font-bold text-green-700 uppercase tracking-widest mb-2">Specifications</p>
                   <div className="flex flex-wrap gap-2">
-                    {[1, 2, 3, 4, 5].map(n => selectedCrop[`specification_${n}`] && (
-                      <span key={n} className="text-xs bg-gray-100 text-gray-600 px-2 py-1.5 rounded-lg">
-                        {selectedCrop[`specification_${n}`]}
-                      </span>
-                    ))}
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(n => {
+                      const name = selectedCrop[`specification_${n}_name`]
+                      const value = selectedCrop[`specification_${n}_value`]
+                      return (name || value) && (
+                        <span key={n} className="text-xs bg-white text-green-700 font-semibold px-3 py-1.5 rounded-lg border border-green-200">
+                          {name}: <span className="font-normal">{value}</span>
+                        </span>
+                      )
+                    })}
                   </div>
                 </div>
               )}
