@@ -13,9 +13,9 @@ const removePassword = (user) => {
 
 export const registerUser = async (req, res) => {
   try {
-    const { email, password, firstname, lastname, contact_number, address, rsbsa_num, province, municipality, barangay } = req.body
+    const { email, password, firstname, middlename, lastname, contact_number, address, rsbsa_num, province, municipality, barangay } = req.body
 
-    if (!email || !password || !firstname || !lastname || !province || !municipality || !barangay)
+    if (!email || !password || !firstname ||!middlename || !lastname || !province || !municipality || !barangay)
       return res.status(400).json({ success: false, message: 'All required fields including location must be filled' })
 
     if (!isValidEmail(email.trim()))
@@ -36,10 +36,10 @@ export const registerUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password.trim(), 10)
     const result = await db.query(
-      `INSERT INTO users (email, password, firstname, lastname, address, contact_number, rsbsa_number, province, municipality, barangay, role)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'user')
-       RETURNING user_id, email, firstname, lastname, address, contact_number, rsbsa_number, province, municipality, barangay, role, created_at`,
-      [email.trim(), hashedPassword, firstname.trim(), lastname.trim(), address || null, contact_number || null, rsbsa_num || null, province, municipality, barangay]
+      `INSERT INTO users (email, password, firstname,middlename, lastname, address, contact_number, rsbsa_number, province, municipality, barangay, role)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'user')
+       RETURNING user_id, email, firstname,middlename, lastname, address, contact_number, rsbsa_number, province, municipality, barangay, role, created_at`,
+      [email.trim(), hashedPassword, firstname.trim(), middlename.trim(), lastname.trim(), address || null, contact_number || null, rsbsa_num || null, province, municipality, barangay]
     )
 
     const user = result.rows[0]
@@ -104,7 +104,7 @@ export const login = async (req, res) => {
     const emailTrimmed = email.trim()
 
     const [userRows, farmerRows] = await Promise.all([
-      db.query(`SELECT user_id, email, password, firstname, lastname, address, contact_number, role, created_at FROM users WHERE email = $1`, [emailTrimmed]),
+      db.query(`SELECT user_id, email, password, firstname,middlename, lastname, address, contact_number, role, created_at FROM users WHERE email = $1`, [emailTrimmed]),
       db.query(`SELECT user_id, rsbsa_number, email, password, firstname, middlename, lastname, address, contact_number, role, created_at FROM farmer WHERE email = $1`, [emailTrimmed])
     ])
 
@@ -149,7 +149,7 @@ export const loginUser = async (req, res) => {
 
     const emailTrimmed = email.trim()
     const [userRows, farmerRows] = await Promise.all([
-      db.query(`SELECT user_id, email, password, firstname, lastname, address, contact_number, role, created_at FROM users WHERE email = $1 AND role = 'user'`, [emailTrimmed]),
+      db.query(`SELECT user_id, email, password, firstname, middlename, lastname, address, contact_number, role, created_at FROM users WHERE email = $1 AND role = 'user'`, [emailTrimmed]),
       db.query(`SELECT user_id, rsbsa_number, email, password, firstname, middlename, lastname, address, contact_number, role, created_at FROM farmer WHERE email = $1 AND role = 'farmer'`, [emailTrimmed])
     ])
 
@@ -211,7 +211,7 @@ export const loginFarmer = async (req, res) => {
 export const getCurrentUser = async (req, res) => {
   try {
     const rows = await db.query(
-      `SELECT user_id, email, firstname, lastname, address, contact_number, role, created_at
+      `SELECT user_id, email, firstname, middlename, lastname, address, contact_number, rsbsa_number, province, municipality, barangay, role, created_at
        FROM users WHERE user_id = $1 AND (role = 'user' OR role = 'admin')`,
       [req.user.user_id]
     )
@@ -244,4 +244,36 @@ export const getCurrentFarmer = async (req, res) => {
 
 export const logout = (req, res) => {
   res.status(200).json({ success: true, message: 'Logout successful' })
+}
+
+export const updateUser = async (req, res) => {
+  try {
+    const { firstname, middlename, lastname, address, contact_number, province, municipality, barangay, rsbsa_number } = req.body
+    const user_id = req.user.user_id
+
+    const result = await db.query(
+      `UPDATE users 
+       SET firstname = COALESCE($1, firstname),
+           middlename = COALESCE($2, middlename),
+           lastname = COALESCE($3, lastname),
+           address = COALESCE($4, address),
+           contact_number = COALESCE($5, contact_number),
+           province = COALESCE($6, province),
+           municipality = COALESCE($7, municipality),
+           barangay = COALESCE($8, barangay),
+           rsbsa_number = COALESCE($9, rsbsa_number)
+       WHERE user_id = $10
+       RETURNING user_id, email, firstname, middlename, lastname, address, contact_number, rsbsa_number, province, municipality, barangay, role, created_at`,
+      [firstname, middlename, lastname, address, contact_number, province, municipality, barangay, rsbsa_number, user_id]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' })
+    }
+
+    res.status(200).json({ success: true, user: result.rows[0] })
+  } catch (error) {
+    console.error('Update user error:', error)
+    res.status(500).json({ success: false, message: 'An error occurred' })
+  }
 }

@@ -1,5 +1,5 @@
 INSERT INTO users (email, password, firstname, middlename, lastname, contact_number, rsbsa_number, province, municipality, barangay, created_at) VALUES
-  ('dela cruz.juan.s@google.com', 'password123', 'Juan', 'Santiago', 'Dela Cruz', '09191232353', '10-000-001', 'MisOcc', 'Clarin', 'No Barangay', '2026-04-06'),
+  ('delacruz.juan.s@google.com', 'password123', 'Juan', 'Santiago', 'Dela Cruz', '09191232353', '10-000-001', 'MisOcc', 'Clarin', 'No Barangay', '2026-04-06'),
   ('rosal.marian.p@google.com', 'password123', 'Marian', 'Protacio', 'Rosal', '09771062452', '10-000-029', 'Bukidnon', 'Kibawe', 'No Barangay', '2026-04-06'),
   ('bonifacio.andres.r@google.com', 'password123', 'Andres', 'Reyes', 'Bonifacio', '09621983328', '10-000-022', 'Camiguin', 'Catarman', 'No Barangay', '2026-04-06'),
   ('tan.manuel.l@google.com', 'password123', 'Manuel', 'Lim', 'Tan', '09123456789', '10-000-045', 'Lanao del Norte', 'Maigo', 'No Barangay', '2026-04-06'),

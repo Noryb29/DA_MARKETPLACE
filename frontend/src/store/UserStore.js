@@ -119,6 +119,19 @@ const useUserStore = create((set, get) => ({
       return { error: message }
     }
   },
+
+  updateUserProfile: async (userData) => {
+    set({ loading: true })
+    try {
+      const { data } = await api.put('/api/auth/me', userData)
+      set({ user: data.user, loading: false })
+      return data.user
+    } catch (error) {
+      set({ loading: false })
+      const message = error.response?.data?.message || error.message || 'Update failed'
+      return { error: message }
+    }
+  },
 }))
 
 export default useUserStore

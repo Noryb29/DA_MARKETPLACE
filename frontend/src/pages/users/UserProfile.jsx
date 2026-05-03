@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import Header from '../public/components/Header'
 import useUserStore from '../../store/UserStore'
 import Swal from 'sweetalert2'
-import axios from 'axios'
 import Sidebar from '../public/components/SideBar'
 import { FaEdit, FaCalendar, FaMars, FaVenus } from 'react-icons/fa'
 import { Upload, X } from 'lucide-react'
@@ -15,6 +14,7 @@ const UserProfile = () => {
   const userDetails = useUserStore((state) => state.userDetails)
   const fetchUserDetails = useUserStore((state) => state.fetchUserDetails)
   const saveUserDetails = useUserStore((state) => state.saveUserDetails)
+  const updateUserProfile = useUserStore((state) => state.updateUserProfile)
 
   const [editing, setEditing] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -26,6 +26,10 @@ const UserProfile = () => {
     email: user?.email || '',
     contact_number: user?.contact_number || '',
     address: user?.address || '',
+    province: user?.province || '',
+    municipality: user?.municipality || '',
+    barangay: user?.barangay || '',
+    rsbsa_number: user?.rsbsa_number || '',
   })
   const [detailsForm, setDetailsForm] = useState({
     profile_picture: '',
@@ -38,6 +42,23 @@ const UserProfile = () => {
   useEffect(() => {
     fetchUserDetails()
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      setForm({
+        firstname: user.firstname || '',
+        middlename: user.middlename || '',
+        lastname: user.lastname || '',
+        email: user.email || '',
+        contact_number: user.contact_number || '',
+        address: user.address || '',
+        province: user.province || '',
+        municipality: user.municipality || '',
+        barangay: user.barangay || '',
+        rsbsa_number: user.rsbsa_number || '',
+      })
+    }
+  }, [user])
 
   useEffect(() => {
     if (userDetails) {
@@ -76,12 +97,13 @@ const UserProfile = () => {
   const handleSave = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      await axios.put(`${BASE_URL}/api/users/me`, form, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      Swal.fire({ title: 'Saved!', text: 'Profile updated successfully.', icon: 'success', timer: 1500, showConfirmButton: false })
-      setEditing(false)
+      const result = await updateUserProfile(form)
+      if (result?.error) {
+        Swal.fire({ title: 'Error', text: result.error, icon: 'error' })
+      } else {
+        Swal.fire({ title: 'Saved!', text: 'Profile updated successfully.', icon: 'success', timer: 1500, showConfirmButton: false })
+        setEditing(false)
+      }
     } catch (error) {
       Swal.fire({ title: 'Error', text: error.response?.data?.message || 'Update failed.', icon: 'error' })
     } finally {
@@ -114,6 +136,10 @@ const UserProfile = () => {
       email: user?.email || '',
       contact_number: user?.contact_number || '',
       address: user?.address || '',
+      province: user?.province || '',
+      municipality: user?.municipality || '',
+      barangay: user?.barangay || '',
+      rsbsa_number: user?.rsbsa_number || '',
     })
     setEditing(false)
   }
@@ -214,12 +240,45 @@ const UserProfile = () => {
                     <p className="text-sm text-gray-700 py-2 border-b border-gray-100">{user?.contact_number || <span className="text-gray-300 italic">Not set</span>}</p>
                   )}
                 </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">RSBSA Number</label>
+                  {editing ? (
+                    <input type="text" name="rsbsa_number" value={form.rsbsa_number} onChange={handleChange} className="w-full border border-gray-200 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-green-500" />
+                  ) : (
+                    <p className="text-sm text-gray-700 py-2 border-b border-gray-100 font-mono">{user?.rsbsa_number || <span className="text-gray-300 italic">Not set</span>}</p>
+                  )}
+                </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Address</label>
                   {editing ? (
                     <input type="text" name="address" value={form.address} onChange={handleChange} className="w-full border border-gray-200 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-green-500" />
                   ) : (
                     <p className="text-sm text-gray-700 py-2 border-b border-gray-100">{user?.address || <span className="text-gray-300 italic">Not set</span>}</p>
+                  )}
+                </div>
+                <div></div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Province</label>
+                  {editing ? (
+                    <input type="text" name="province" value={form.province} onChange={handleChange} className="w-full border border-gray-200 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-green-500" />
+                  ) : (
+                    <p className="text-sm text-gray-700 py-2 border-b border-gray-100">{user?.province || <span className="text-gray-300 italic">Not set</span>}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Municipality</label>
+                  {editing ? (
+                    <input type="text" name="municipality" value={form.municipality} onChange={handleChange} className="w-full border border-gray-200 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-green-500" />
+                  ) : (
+                    <p className="text-sm text-gray-700 py-2 border-b border-gray-100">{user?.municipality || <span className="text-gray-300 italic">Not set</span>}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Barangay</label>
+                  {editing ? (
+                    <input type="text" name="barangay" value={form.barangay} onChange={handleChange} className="w-full border border-gray-200 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-green-500" />
+                  ) : (
+                    <p className="text-sm text-gray-700 py-2 border-b border-gray-100">{user?.barangay || <span className="text-gray-300 italic">Not set</span>}</p>
                   )}
                 </div>
 
@@ -263,13 +322,6 @@ const UserProfile = () => {
                   )}
                 </div>
               </div>
-
-              {user?.rsbsa_number && (
-                <div className="mt-5">
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">RSBSA Number</label>
-                  <p className="text-sm text-gray-700 py-2 border-b border-gray-100 font-mono">{user.rsbsa_number}</p>
-                </div>
-              )}
             </div>
 
             <div className="flex flex-col gap-4">
