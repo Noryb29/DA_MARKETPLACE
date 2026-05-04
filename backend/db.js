@@ -77,6 +77,19 @@ export const createDB = async() => {
         console.log('✓ Table "farm" created')
 
         await pool.query(`
+            CREATE TABLE IF NOT EXISTS farm_documents (
+                doc_id SERIAL PRIMARY KEY,
+                farm_id INTEGER NOT NULL,
+                file_name VARCHAR(255) NOT NULL,
+                file_data BYTEA,
+                file_type VARCHAR(50),
+                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_farm_documents FOREIGN KEY (farm_id) REFERENCES farm(farm_id) ON DELETE CASCADE
+            )
+        `)
+        console.log('✓ Table "farm_documents" created')
+
+        await pool.query(`
             CREATE TABLE IF NOT EXISTS crop_in_farm (
                 crop_id SERIAL PRIMARY KEY,
                 farm_id INTEGER NOT NULL,
@@ -120,6 +133,22 @@ export const createDB = async() => {
             )
         `)
         console.log('✓ Table "users" created')
+
+         await pool.query(`
+            CREATE TABLE IF NOT EXISTS user_details (
+                detail_id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL UNIQUE,
+                profile_picture VARCHAR(255),
+                bio TEXT,
+                gender VARCHAR(10),
+                date_of_birth DATE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_user_details FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+            )
+        `)
+        console.log('✓ Table "user_details" created')
+
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS crop_specifications (
@@ -208,34 +237,6 @@ export const createDB = async() => {
         `)
         console.log('✓ Table "price_records" created')
 
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS user_details (
-                detail_id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL UNIQUE,
-                profile_picture VARCHAR(255),
-                bio TEXT,
-                gender VARCHAR(10),
-                date_of_birth DATE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                CONSTRAINT fk_user_details FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-            )
-        `)
-        console.log('✓ Table "user_details" created')
-
-
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS farm_documents (
-                doc_id SERIAL PRIMARY KEY,
-                farm_id INTEGER NOT NULL,
-                file_name VARCHAR(255) NOT NULL,
-                file_data BYTEA,
-                file_type VARCHAR(50),
-                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                CONSTRAINT fk_farm_documents FOREIGN KEY (farm_id) REFERENCES farm(farm_id) ON DELETE CASCADE
-            )
-        `)
-        console.log('✓ Table "farm_documents" created')
 
 
         console.log('\n✅ Database setup completed successfully!')
