@@ -4,8 +4,8 @@ import useProduceStore from '../../store/ProduceStore'
 import { Wheat, Loader2, AlertCircle, Plus,ClipboardList } from 'lucide-react'
 import Sidebar from '../public/components/SideBar'
 import CropModal from './components/CropModal'
-import CropCard from './components/CropCard'
 import CropDetailModal from './components/CropDetailModal'
+import CropCard from '../../components/CropCard'
 
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -64,13 +64,6 @@ const FarmerProduce = () => {
                 Produce Management
               </div>
                   <h2 className="text-3xl font-bold text-gray-800">My Produce</h2>
-                  <p className="text-gray-500 text-sm mt-0.5">Farm: {farm?.farm_name}</p>
-                  {(farm?.barangay || farm?.municipality || farm?.province) && (
-                    <p className="text-gray-400 text-xs mt-0.5 pl-4">{farm?.barangay}{farm?.municipality && `, ${farm.municipality}`}{farm?.province && `, ${farm.province}`}</p>
-                  )}
-                  {farm?.farm_location && <p className="text-gray-400 text-xs mt-0.5 pl-4">{farm.farm_location}</p>}
-                  {farm?.gps_coordinates && <p className="text-gray-400 text-xs mt-0.5 pl-4">GPS: {farm.gps_coordinates}</p>}
-
                   <button
                     onClick={() => { setEditTarget(null); setModalOpen(true) }}
                     className="mt-5 flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-green-500 to-emerald-600
@@ -106,6 +99,8 @@ const FarmerProduce = () => {
                     <CropCard
                       key={crop.crop_id}
                       crop={crop}
+                      variant="farmer"
+                      showActions={true}
                       onEdit={handleEdit}
                       onDelete={deleteCrop}
                       onClick={handleView}

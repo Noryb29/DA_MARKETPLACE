@@ -158,6 +158,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <h1>2312312hjashdkjahdkjahskdjahs</h1>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
@@ -166,6 +167,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
+            <p>dasdasd</p>
             <div>
               <h2 className="text-lg font-bold text-gray-900">{isEdit ? 'Edit Crop' : 'Add New Crop'}</h2>
               <p className="text-xs text-gray-400 mt-0.5">{isEdit ? 'Update crop details below.' : 'Fill in the details for your new crop.'}</p>
@@ -220,7 +222,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                 <option value="">Select a farm...</option>
                 {farms.map((f) => (
                   <option key={f.farm_id} value={f.farm_id}>
-                    {f.farm_name}
+                    {f.farm_name}{f.barangay || f.municipality || f.province ? ` - ${[f.barangay, f.municipality, f.province].filter(Boolean).join(', ')}` : ''}
                   </option>
                 ))}
               </select>

@@ -7,6 +7,8 @@ export const getCrops = async (req, res) => {
     try {
         const rows = await db.query(
             `SELECT c.*, 
+                    f.farm_name, f.farm_location, f.gps_coordinates,
+                    f.province, f.municipality, f.barangay,
                     s.specification_1_name, s.specification_1_value,
                     s.specification_2_name, s.specification_2_value,
                     s.specification_3_name, s.specification_3_value,

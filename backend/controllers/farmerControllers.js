@@ -227,7 +227,10 @@ export const getCrops = async (req, res) => {
 
     try {
         const rows = await db.query(
-            `SELECT c.* FROM crop_in_farm c
+            `SELECT c.*, 
+                    f.farm_name, f.farm_location, f.gps_coordinates, 
+                    f.province, f.municipality, f.barangay
+             FROM crop_in_farm c
              INNER JOIN farm f ON c.farm_id = f.farm_id
              WHERE f.user_id = $1
              ORDER BY c.crop_id DESC`,

@@ -7,6 +7,8 @@ import {
   Package, Calendar, ShieldCheck, Truck, BadgeCheck, Star,
   Wheat, TreePine, Apple, Carrot, ChevronLeft
 } from 'lucide-react'
+import CropLocation from '../../components/CropLocation'
+import CropCard from '../../components/CropCard'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
@@ -51,93 +53,6 @@ const StatCard = ({ icon, label, value, bg, color }) => (
   </div>
 )
 
-/* ─── Crop card ───────────────────────────────────────────────── */
-const CropCard = ({ crop, onClick }) => {
-  const formatDate = (d) =>
-    d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '—'
-
-  const imageSrc = crop.harvest_photo
-    ? (crop.harvest_photo.startsWith('http') ? crop.harvest_photo : `${BASE_URL}${crop.harvest_photo}`)
-    : null
-
-  return (
-    <div
-      onClick={onClick}
-      className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-green-300 hover:shadow-lg transition-all duration-200 cursor-pointer"
-    >
-      <div className="h-44 bg-gray-100 relative overflow-hidden">
-        {imageSrc ? (
-          <img
-            src={imageSrc}
-            alt={crop.crop_name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
-            <Sprout className="w-12 h-12 text-green-300" />
-          </div>
-        )}
-        {crop.stock > 50 && (
-          <span className="absolute top-2.5 left-2.5 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-            In Stock
-          </span>
-        )}
-      </div>
-
-      <div className="p-4 space-y-3">
-        <div>
-          <p className="font-bold text-gray-900 truncate">{crop.crop_name}</p>
-          {crop.variety && <p className="text-xs text-gray-400 truncate mt-0.5">{crop.variety}</p>}
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-            <MapPin className="w-3 h-3 text-green-600" />
-          </div>
-          <span className="text-xs text-gray-500 truncate">{crop.farm_name}</span>
-        </div>
-        {(crop.province || crop.municipality || crop.barangay) && (
-          <div className="flex items-center gap-1 pl-6">
-            <span className="text-[10px] text-gray-400 truncate">
-              {crop.barangay}{crop.municipality && `, ${crop.municipality}`}{crop.province && `, ${crop.province}`}
-            </span>
-          </div>
-        )}
-        {crop.farm_location && (
-          <div className="flex items-center gap-1 pl-6">
-            <span className="text-[10px] text-gray-400 truncate">{crop.farm_location}</span>
-          </div>
-        )}
-        {crop.gps_coordinates && (
-          <div className="flex items-center gap-1 pl-6">
-            <span className="text-[10px] text-gray-300 truncate">GPS: {crop.gps_coordinates}</span>
-          </div>
-        )}
-
-        <div className="flex items-center gap-2 flex-wrap">
-          {crop.volume && (
-            <span className="text-[10px] bg-green-50 text-green-700 px-2 py-1 rounded-lg flex items-center gap-1 font-medium">
-              <Package className="w-2.5 h-2.5" />{crop.volume} kg
-            </span>
-          )}
-          {crop.stock && (
-            <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-1 rounded-lg flex items-center gap-1 font-medium">
-              <Leaf className="w-2.5 h-2.5" />{crop.stock} pcs
-            </span>
-          )}
-        </div>
-
-        {crop.expected_harvest && (
-          <div className="flex items-center gap-1.5 pt-1 border-t border-gray-50">
-            <Calendar className="w-3 h-3 text-amber-500" />
-            <span className="text-[10px] text-amber-600 font-medium">Harvest: {formatDate(crop.expected_harvest)}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 /* ─── Farm card ───────────────────────────────────────────────── */
 const FarmCard = ({ farm, onClick }) => (
   <div
@@ -161,34 +76,7 @@ const FarmCard = ({ farm, onClick }) => (
 
     <div className="p-4 space-y-2">
       <p className="font-bold text-gray-900 truncate">{farm.farm_name}</p>
-      <div className="flex flex-col gap-1">
-        {(farm.province || farm.municipality || farm.barangay) && (
-          <div className="flex items-center gap-1.5">
-            <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
-            <span className="text-xs text-gray-500 truncate">
-              {farm.barangay}{farm.municipality && `, ${farm.municipality}`}{farm.province && `, ${farm.province}`}
-            </span>
-          </div>
-        )}
-        {farm.farm_location && (
-          <div className="flex items-center gap-1.5">
-            <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
-            <span className="text-xs text-gray-500 truncate">{farm.farm_location}</span>
-          </div>
-        )}
-        {farm.gps_coordinates && (
-          <div className="flex items-center gap-1.5">
-            <MapPin className="w-3 h-3 text-gray-300 flex-shrink-0" />
-            <span className="text-xs text-gray-400 truncate">GPS: {farm.gps_coordinates}</span>
-          </div>
-        )}
-        {!farm.province && !farm.municipality && !farm.barangay && !farm.farm_location && !farm.gps_coordinates && (
-          <div className="flex items-center gap-1.5">
-            <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
-            <span className="text-xs text-gray-400 truncate">Location not set</span>
-          </div>
-        )}
-      </div>
+      <CropLocation farm={farm} showGps={true} />
       {farm.farm_area && (
         <div className="flex items-center gap-1.5 pt-1">
           <div className="h-1 flex-1 bg-gray-100 rounded-full overflow-hidden">
@@ -477,7 +365,7 @@ const ShopDashboard = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
               {featuredCrops.map(crop => (
-                <CropCard key={crop.crop_id} crop={crop} onClick={() => navigate('/shop/products')} />
+                <CropCard key={crop.crop_id} crop={crop} onClick={() => navigate('/shop/products')} variant="shop" />
               ))}
             </div>
           )}

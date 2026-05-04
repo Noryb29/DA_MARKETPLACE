@@ -9,118 +9,12 @@ import useUserStore from '../../store/UserStore'
 import { getDaysUntilHarvest } from './shopComponents/HarvestBadge'
 import { Wheat, Search, SlidersHorizontal, X, Loader2, Sprout, ShoppingCart, Package, Archive, Calendar, MapPin, Leaf, ArrowUpDown, XCircle } from 'lucide-react'
 import Swal from 'sweetalert2'
+import CropLocation from '../../components/CropLocation'
+import CropCard from '../../components/CropCard'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 const ITEMS_PER_PAGE = 12
-
-const CropCard = ({ crop, onAddToCart, onClick }) => {
-  const imageSrc = crop.harvest_photo
-    ? (crop.harvest_photo.startsWith('http') ? crop.harvest_photo : `${BASE_URL}${crop.harvest_photo}`)
-    : null
-
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : null
-
-  const daysUntil = crop.expected_harvest ? getDaysUntilHarvest(crop.expected_harvest) : null
-  const harvestLabel = daysUntil === null ? null : daysUntil < 0 ? 'Ready' : `${daysUntil}d`
-
-  const specs = [1, 2, 3, 4, 5].map(n => crop[`specification_${n}`]).filter(Boolean)
-
-  return (
-    <div onClick={onClick} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-green-300 hover:shadow-lg transition-all duration-200 group cursor-pointer">
-      <div className="h-40 relative overflow-hidden bg-gray-100">
-        {imageSrc ? (
-          <img src={imageSrc} alt={crop.crop_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
-            <Sprout className="w-10 h-10 text-green-300" />
-          </div>
-        )}
-        {harvestLabel && (
-          <div className="absolute top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-            <Calendar className="w-2.5 h-2.5" />
-            {harvestLabel}
-          </div>
-        )}
-        {crop.stock > 0 && (
-          <div className="absolute top-2 right-2 bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-            In Stock
-          </div>
-        )}
-      </div>
-
-      <div className="p-4 space-y-3">
-        <div>
-          <p className="font-bold text-gray-900 text-sm truncate">{crop.crop_name}</p>
-          {crop.variety && <p className="text-xs text-gray-400 truncate mt-0.5">{crop.variety}</p>}
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <MapPin className="w-3 h-3 text-gray-400" />
-          <span className="text-xs text-gray-500 truncate">{crop.farm_name}</span>
-        </div>
-        {(crop.province || crop.municipality || crop.barangay) && (
-          <div className="flex items-center gap-1 pl-4">
-            <span className="text-[10px] text-gray-400 truncate">
-              {crop.barangay}{crop.municipality && `, ${crop.municipality}`}{crop.province && `, ${crop.province}`}
-            </span>
-          </div>
-        )}
-        {crop.farm_location && (
-          <div className="flex items-center gap-1 pl-4">
-            <span className="text-[10px] text-gray-400 truncate">{crop.farm_location}</span>
-          </div>
-        )}
-        {crop.gps_coordinates && (
-          <div className="flex items-center gap-1 pl-4">
-            <span className="text-[10px] text-gray-300 truncate">GPS: {crop.gps_coordinates}</span>
-          </div>
-        )}
-
-        <div className="flex items-center gap-2 flex-wrap">
-          {crop.volume && (
-            <span className="text-[10px] bg-green-50 text-green-700 px-2 py-1 rounded-lg flex items-center gap-1 font-medium">
-              <Package className="w-2.5 h-2.5" />{Number(crop.volume).toLocaleString()} kg
-            </span>
-          )}
-          {crop.stock && (
-            <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-1 rounded-lg flex items-center gap-1 font-medium">
-              <Archive className="w-2.5 h-2.5" />{Number(crop.stock).toLocaleString()} pcs
-            </span>
-          )}
-        </div>
-
-        {crop.expected_harvest && (
-          <div className="flex items-center gap-1 text-[10px] text-amber-600">
-            <Calendar className="w-2.5 h-2.5" />
-            <span>Harvest: {formatDate(crop.expected_harvest)}</span>
-          </div>
-        )}
-
-        {specs.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-2 border-t border-gray-100">
-            {specs.slice(0, 3).map((spec, i) => (
-              <span key={i} className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-medium">
-                {spec}
-              </span>
-            ))}
-            {specs.length > 3 && (
-              <span className="text-[9px] text-gray-400">+{specs.length - 3}</span>
-            )}
-          </div>
-        )}
-
-        <button
-          onClick={(e) => { e.stopPropagation(); onAddToCart(crop) }}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs font-semibold shadow-sm shadow-green-200 transition-all"
-        >
-          <ShoppingCart className="w-3.5 h-3.5" />
-          Add to Cart
-        </button>
-      </div>
-    </div>
-  )
-}
 
 const ShoppingPage = () => {
   const { items, openCart, addToCart } = useCartStore()
@@ -316,7 +210,7 @@ const ShoppingPage = () => {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
                   {paginatedCrops.map((crop) => (
-                    <CropCard key={crop.crop_id} crop={crop} onAddToCart={handleAddToCart} onClick={() => setSelectedCrop(crop)} />
+                    <CropCard key={crop.crop_id} crop={crop} onClick={() => setSelectedCrop(crop)} variant="shop" showAddToCart={true} onAddToCart={handleAddToCart} />
                   ))}
                 </div>
 

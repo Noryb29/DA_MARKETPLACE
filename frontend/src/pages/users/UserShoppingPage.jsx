@@ -9,6 +9,7 @@ import { getDaysUntilHarvest } from '../public/shopComponents/HarvestBadge'
 import { Wheat, Search, SlidersHorizontal, X, Loader2, Sprout, ShoppingCart, MapPin, Package, Archive, Calendar } from 'lucide-react'
 import Sidebar from '../public/components/SideBar'
 import Swal from 'sweetalert2'
+import CropLocation from '../../components/CropLocation'
 
 const UserShoppingPage = () => {
   const { items, openCart, addToCart } = useCartStore()
@@ -269,23 +270,7 @@ const UserShoppingPage = () => {
                         <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
                         <span className="text-[10px] text-gray-500 truncate">{crop.farm_name}</span>
                       </div>
-                      {(crop.province || crop.municipality || crop.barangay) && (
-                        <div className="flex items-center gap-1 pl-4">
-                          <span className="text-[9px] text-gray-400 truncate">
-                            {crop.barangay}{crop.municipality && `, ${crop.municipality}`}{crop.province && `, ${crop.province}`}
-                          </span>
-                        </div>
-                      )}
-                      {crop.farm_location && (
-                        <div className="flex items-center gap-1 pl-4">
-                          <span className="text-[9px] text-gray-400 truncate">{crop.farm_location}</span>
-                        </div>
-                      )}
-                      {crop.gps_coordinates && (
-                        <div className="flex items-center gap-1 pl-4">
-                          <span className="text-[9px] text-gray-300 truncate">GPS: {crop.gps_coordinates}</span>
-                        </div>
-                      )}
+                      <CropLocation crop={crop} showGps={true} />
 
                       <div className="flex items-center gap-2 flex-wrap">
                         {crop.volume && (

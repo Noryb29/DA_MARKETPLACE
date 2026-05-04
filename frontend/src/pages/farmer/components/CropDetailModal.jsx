@@ -1,4 +1,5 @@
 import { X, Wheat, Package, Calendar, MapPin, Sprout, Layers } from 'lucide-react'
+import CropLocation from '../../../components/CropLocation'
 
 const CropDetailModal = ({ crop, onClose }) => {
   if (!crop) return null
@@ -7,6 +8,7 @@ const CropDetailModal = ({ crop, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <h1></h1>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
@@ -130,15 +132,26 @@ const CropDetailModal = ({ crop, onClose }) => {
               </div>
             )}
 
-            {/* Location */}
-            {crop.location && (
+            {/* Farm Details */}
+            {(crop.province || crop.municipality || crop.barangay || crop.farm_location || crop.gps_coordinates || crop.farm_name) && (
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <MapPin className="w-4 h-4 text-gray-400" />
+                  <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Farm Details</h3>
+                </div>
+                <CropLocation crop={crop} showGps={true} />
+              </div>
+            )}
+
+            {/* Harvest Location */}
+            {crop.location && (
+              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl p-5 border border-amber-200">
                 <div className="flex items-center gap-3">
                   <div className="bg-white p-2 rounded-lg shadow-sm">
-                    <MapPin className="w-4 h-4 text-gray-400" />
+                    <MapPin className="w-4 h-4 text-amber-500" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Harvest Location</p>
+                    <p className="text-xs text-amber-600 font-semibold uppercase tracking-wide">Harvest Location</p>
                     <p className="text-sm font-medium text-gray-700 mt-0.5">{crop.location}</p>
                   </div>
                 </div>

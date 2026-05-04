@@ -8,6 +8,7 @@ import Swal from 'sweetalert2'
 import useCartStore from '../../../store/CartStore'
 import useUserStore from '../../../store/UserStore'
 import { getDaysUntilHarvest } from '../shopComponents/HarvestBadge'
+import CropLocation from '../../../components/CropLocation'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
@@ -266,22 +267,9 @@ const FarmDetailsPage = () => {
                         <div className="p-3.5">
                           <p className="font-bold text-gray-900 text-sm">{crop.crop_name}</p>
                           {crop.variety && <p className="text-xs text-gray-500 mt-0.5">{crop.variety}</p>}
-                          
-                          {(crop.province || crop.municipality || crop.barangay || crop.farm_location || crop.gps_coordinates) && (
-                            <div className="mt-2 pt-2 border-t border-gray-100">
-                              {(crop.province || crop.municipality || crop.barangay) && (
-                                <p className="text-[10px] text-gray-400 truncate">
-                                  {crop.barangay}{crop.municipality && `, ${crop.municipality}`}{crop.province && `, ${crop.province}`}
-                                </p>
-                              )}
-                              {crop.farm_location && (
-                                <p className="text-[10px] text-gray-400 truncate">{crop.farm_location}</p>
-                              )}
-                              {crop.gps_coordinates && (
-                                <p className="text-[10px] text-gray-300 truncate">GPS: {crop.gps_coordinates}</p>
-                              )}
-                            </div>
-                          )}
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <CropLocation crop={crop} showGps={true} />
+                          </div>
                           
                           <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                             {crop.volume && (
