@@ -69,6 +69,42 @@ const useOrderStore = create((set, get) => ({
       set({ loading: false, farmerInitialized: true })
     }
   },
+
+  approveOrder: async (orderId) => {
+    set({ loading: true })
+    const token = localStorage.getItem('farmer_token')
+    try {
+      await axios.post(`${BASE}/approveOrder/${orderId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      Swal.fire({ title: 'Approved!', text: 'Order has been approved.', icon: 'success', timer: 2000, showConfirmButton: false })
+      await get().getFarmerOrders()
+      set({ loading: false })
+      return true
+    } catch (error) {
+      set({ loading: false })
+      Swal.fire({ title: 'Error', text: error.response?.data?.message || 'Failed to approve order.', icon: 'error' })
+      return false
+    }
+  },
+
+  rejectOrder: async (orderId, reason) => {
+    set({ loading: true })
+    const token = localStorage.getItem('farmer_token')
+    try {
+      await axios.post(`${BASE}/rejectOrder/${orderId}`, { reason }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      Swal.fire({ title: 'Rejected', text: 'Order has been rejected.', icon: 'info', timer: 2000, showConfirmButton: false })
+      await get().getFarmerOrders()
+      set({ loading: false })
+      return true
+    } catch (error) {
+      set({ loading: false })
+      Swal.fire({ title: 'Error', text: error.response?.data?.message || 'Failed to reject order.', icon: 'error' })
+      return false
+    }
+  },
 }))
 
 export default useOrderStore

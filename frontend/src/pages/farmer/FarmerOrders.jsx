@@ -34,13 +34,12 @@ const FarmerOrders = () => {
 
   const stats = useMemo(() => {
     const total = farmerOrders.length
-    const pending = farmerOrders.filter(o => o.order_status === 'pending').length
-    const processing = farmerOrders.filter(o => o.order_status === 'processing').length
-    const shipped = farmerOrders.filter(o => o.order_status === 'shipped').length
-    const completed = farmerOrders.filter(o => o.order_status === 'completed').length
+    const pending = farmerOrders.filter(o => o.status === 'pending').length
+    const approved = farmerOrders.filter(o => o.status === 'approved').length
+    const rejected = farmerOrders.filter(o => o.status === 'rejected').length
     const totalRevenue = farmerOrders.reduce((sum, o) => sum + (parseFloat(o.total_price) || 0), 0)
     const totalVolume = farmerOrders.reduce((sum, o) => sum + (parseFloat(o.volume) || 0), 0)
-    return { total, pending, processing, shipped, completed, totalRevenue, totalVolume }
+    return { total, pending, approved, rejected, totalRevenue, totalVolume }
   }, [farmerOrders])
 
   return (

@@ -296,10 +296,11 @@ const UserShoppingPage = () => {
                         <div className="flex flex-wrap gap-1 pt-1">
                           {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
                             const name = crop[`specification_${n}_name`]
+                            const metric = crop[`specification_${n}_metric`]
                             const value = crop[`specification_${n}_value`]
                             return (name || value) ? (
                               <span key={n} className="text-[9px] bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded border border-green-200">
-                                {name}: {value}
+                                {name}: {value}{metric && <span className="text-green-600"> {metric}</span>}
                               </span>
                             ) : null
                           })}
@@ -387,7 +388,7 @@ const UserShoppingPage = () => {
                     <span className="text-sm text-gray-600">{selectedCrop.gps_coordinates}</span>
                   </div>
                 )}
-                {selectedCrop.volume && (
+                {selectedCrop.volume !== null && selectedCrop.volume !== undefined && (
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500 font-medium">Volume</span>
                     <span className="text-sm font-semibold text-green-700">{Number(selectedCrop.volume).toLocaleString()} kg</span>
@@ -420,10 +421,11 @@ const UserShoppingPage = () => {
                   <div className="flex flex-wrap gap-1.5">
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
                       const name = selectedCrop[`specification_${n}_name`]
+                      const metric = selectedCrop[`specification_${n}_metric`]
                       const value = selectedCrop[`specification_${n}_value`]
                       return (name || value) ? (
                         <span key={n} className="text-xs bg-white text-green-700 font-semibold px-3 py-1.5 rounded-lg border border-green-200">
-                          {name}: <span className="font-normal">{value}</span>
+                          {name}: <span className="font-normal">{value}</span>{metric && <span className="text-green-600"> {metric}</span>}
                         </span>
                       ) : null
                     })}

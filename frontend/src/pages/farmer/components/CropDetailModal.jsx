@@ -47,25 +47,25 @@ const CropDetailModal = ({ crop, onClose }) => {
                   <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Production</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {crop.volume && (
+                  {crop.volume !== null && crop.volume !== undefined && (
                     <div className="bg-white rounded-xl p-3 shadow-sm">
                       <p className="text-xs text-gray-400 font-medium uppercase">Volume</p>
                       <p className="text-lg font-bold text-gray-800 mt-1">{Number(crop.volume).toLocaleString()} <span className="text-xs font-normal text-gray-500">kg</span></p>
                     </div>
                   )}
-                  {crop.stock && (
+                  {crop.stock !== null && crop.stock !== undefined && (
                     <div className="bg-white rounded-xl p-3 shadow-sm">
                       <p className="text-xs text-gray-400 font-medium uppercase">Stock</p>
                       <p className="text-lg font-bold text-gray-800 mt-1">{Number(crop.stock).toLocaleString()} <span className="text-xs font-normal text-gray-500">pcs</span></p>
                     </div>
                   )}
-                  {crop.expected_volume && (
+                  {crop.expected_volume !== null && crop.expected_volume !== undefined && (
                     <div className="bg-white rounded-xl p-3 shadow-sm">
                       <p className="text-xs text-gray-400 font-medium uppercase">Expected</p>
                       <p className="text-lg font-bold text-gray-800 mt-1">{Number(crop.expected_volume).toLocaleString()} <span className="text-xs font-normal text-gray-500">kg</span></p>
                     </div>
                   )}
-                  {crop.total_harvest && (
+                  {crop.total_harvest !== null && crop.total_harvest !== undefined && (
                     <div className="bg-white rounded-xl p-3 shadow-sm">
                       <p className="text-xs text-gray-400 font-medium uppercase">Harvested</p>
                       <p className="text-lg font-bold text-green-600 mt-1">{Number(crop.total_harvest).toLocaleString()} <span className="text-xs font-normal text-gray-500">kg</span></p>
@@ -83,25 +83,25 @@ const CropDetailModal = ({ crop, onClose }) => {
                   <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Timeline</h3>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  {crop.planting_date && (
+                  {crop.planting_date !== null && crop.planting_date !== undefined && (
                     <div className="flex-1 min-w-[140px] bg-white rounded-xl p-3 shadow-sm">
                       <p className="text-xs text-green-600 font-semibold uppercase">Planted</p>
                       <p className="text-sm font-bold text-gray-800 mt-1">{formatDate(crop.planting_date)}</p>
                     </div>
                   )}
-                  {crop.maturity_days && (
+                  {crop.maturity_days !== null && crop.maturity_days !== undefined && (
                     <div className="flex-1 min-w-[140px] bg-white rounded-xl p-3 shadow-sm">
                       <p className="text-xs text-purple-600 font-semibold uppercase">Maturity</p>
                       <p className="text-sm font-bold text-gray-800 mt-1">{crop.maturity_days} <span className="text-xs font-normal text-gray-500">days</span></p>
                     </div>
                   )}
-                  {crop.expected_harvest && (
+                  {crop.expected_harvest !== null && crop.expected_harvest !== undefined && (
                     <div className="flex-1 min-w-[140px] bg-white rounded-xl p-3 shadow-sm">
                       <p className="text-xs text-amber-600 font-semibold uppercase">Expected</p>
                       <p className="text-sm font-bold text-gray-800 mt-1">{formatDate(crop.expected_harvest)}</p>
                     </div>
                   )}
-                  {crop.actual_harvest && (
+                  {crop.actual_harvest !== null && crop.actual_harvest !== undefined && (
                     <div className="flex-1 min-w-[140px] bg-white rounded-xl p-3 shadow-sm">
                       <p className="text-xs text-emerald-600 font-semibold uppercase">Harvested</p>
                       <p className="text-sm font-bold text-gray-800 mt-1">{formatDate(crop.actual_harvest)}</p>
@@ -121,10 +121,11 @@ const CropDetailModal = ({ crop, onClose }) => {
                 <div className="flex flex-wrap gap-2">
                   {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
                     const name = crop[`specification_${n}_name`]
+                    const metric = crop[`specification_${n}_metric`]
                     const value = crop[`specification_${n}_value`]
                     return (name || value) ? (
                       <span key={n} className="text-sm bg-white text-green-700 px-4 py-2 rounded-xl shadow-sm font-semibold border border-green-200">
-                        <span className="text-green-800">{name}:</span> {value}
+                        <span className="text-green-800">{name}:</span> {value}{metric && <span className="text-green-600"> {metric}</span>}
                       </span>
                     ) : null
                   })}

@@ -11,6 +11,11 @@ const EMPTY_FORM = {
   harvest_photo: '', location: '',
 }
 
+const METRIC_OPTIONS = [
+  '%', 'kg', 'g', 'tons', 'pcs', 'ml', 'L', 'cm', 'm', 'km',
+  'ppm', 'pH', '°C', 'days', 'months', 'ha', 'msl', 'mg/kg','',
+]
+
 const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = [] }) => {
 
   const isEdit = initialData && (initialData.crop_id || initialData.crop_name)
@@ -20,7 +25,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
 
   const addSpecification = () => {
     if (form.specifications.length < 8) {
-      setForm({ ...form, specifications: [...form.specifications, { name: '', value: '' }] })
+      setForm({ ...form, specifications: [...form.specifications, { name: '', metric: '', value: '' }] })
     }
   }
 
@@ -35,6 +40,24 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
     setForm({ ...form, specifications: updated })
   }
 
+  const getSubmitSpecifications = () => {
+    const submitForm = { ...form }
+    for (let i = 1; i <= 8; i++) {
+      submitForm[`specification_${i}`] = null
+    }
+    form.specifications.forEach((spec, index) => {
+      if (spec.name || spec.value) {
+        submitForm[`specification_${index + 1}`] = { 
+          name: spec.name, 
+          metric: spec.metric || '',
+          value: spec.value 
+        }
+      }
+    })
+    delete submitForm.specifications
+    return submitForm
+  }
+
   const getSubmitForm = () => {
     const submitForm = { ...form }
     for (let i = 1; i <= 8; i++) {
@@ -42,10 +65,25 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
     }
     form.specifications.forEach((spec, index) => {
       if (spec.name || spec.value) {
-        submitForm[`specification_${index + 1}`] = { name: spec.name, value: spec.value }
+        submitForm[`specification_${index + 1}`] = { 
+          name: spec.name, 
+          metric: spec.metric || '',
+          value: spec.value 
+        }
       }
     })
     delete submitForm.specifications
+    
+    const numericFields = ['volume', 'stock', 'maturity_days', 'expected_volume', 'total_harvest']
+    numericFields.forEach(field => {
+      if (submitForm[field] === '' || submitForm[field] === undefined) {
+        submitForm[field] = null
+      } else if (submitForm[field] !== null) {
+        const parsed = parseFloat(submitForm[field])
+        submitForm[field] = isNaN(parsed) ? null : parsed
+      }
+    })
+    
     return submitForm
   }
 
@@ -115,9 +153,14 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
       const specs = []
       for (let i = 1; i <= 8; i++) {
         const nameKey = `specification_${i}_name`
+        const metricKey = `specification_${i}_metric`
         const valueKey = `specification_${i}_value`
         if (initialData[nameKey] || initialData[valueKey]) {
-          specs.push({ name: initialData[nameKey] || '', value: initialData[valueKey] || '' })
+          specs.push({ 
+            name: initialData[nameKey] || '', 
+            metric: initialData[metricKey] || '',
+            value: initialData[valueKey] || '' 
+          })
         }
       }
       setForm({
@@ -125,6 +168,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
         specifications: specs,
         planting_date: initialData.planting_date?.slice(0, 10) || '',
         expected_harvest: initialData.expected_harvest?.slice(0, 10) || '',
+        actual_harvest: initialData.actual_harvest?.slice(0, 10) || '',
       })
       if (initialData?.harvest_photo) {
         setPhotoPreview(initialData.harvest_photo)
@@ -132,10 +176,19 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
         setPhotoPreview(null)
       }
     } else {
-      setForm({ ...EMPTY_FORM, farm_id: farms.length === 1 ? farms[0].farm_id : '', specifications: [] })
+      setForm({ 
+        ...EMPTY_FORM, 
+        farm_id: farms.length === 1 ? farms[0].farm_id : '',
+        specifications: [],
+        volume: '',
+        stock: '',
+        maturity_days: '',
+        expected_volume: '',
+        total_harvest: ''
+      })
       setPhotoPreview(null)
     }
-  }, [initialData, isOpen])
+  }, [initialData, isOpen, farms])
 
   if (!isOpen) return null
 
@@ -158,7 +211,6 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <h1>2312312hjashdkjahdkjahskdjahs</h1>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
@@ -167,7 +219,6 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <p>dasdasd</p>
             <div>
               <h2 className="text-lg font-bold text-gray-900">{isEdit ? 'Edit Crop' : 'Add New Crop'}</h2>
               <p className="text-xs text-gray-400 mt-0.5">{isEdit ? 'Update crop details below.' : 'Fill in the details for your new crop.'}</p>
@@ -346,10 +397,22 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                         placeholder="Name (e.g. Color)"
                         value={spec.name}
                         onChange={(e) => updateSpecification(index, 'name', e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                        className="w-1/3 px-3 py-2 rounded-xl border-2 border-gray-200 hover:border-gray-300
                           focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
                           outline-none text-sm text-gray-800 font-medium transition-all duration-200"
                       />
+                      <select
+                        value={spec.metric || ''}
+                        onChange={(e) => updateSpecification(index, 'metric', e.target.value)}
+                        className="w-24 px-2 py-2 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                          focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                          outline-none text-sm text-gray-800 font-medium transition-all duration-200 bg-white"
+                      >
+                        <option value=""> </option>
+                        {METRIC_OPTIONS.map((m) => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
                       <input
                         type="text"
                         placeholder="Value (e.g. Green)"

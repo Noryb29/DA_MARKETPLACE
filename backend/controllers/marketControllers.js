@@ -14,14 +14,14 @@ export const getAllCrops = async (req, res) => {
         f.municipality,
         f.barangay,
         f.user_id AS farmer_id,
-        s.specification_1_name, s.specification_1_value,
-        s.specification_2_name, s.specification_2_value,
-        s.specification_3_name, s.specification_3_value,
-        s.specification_4_name, s.specification_4_value,
-        s.specification_5_name, s.specification_5_value,
-        s.specification_6_name, s.specification_6_value,
-        s.specification_7_name, s.specification_7_value,
-        s.specification_8_name, s.specification_8_value
+        s.specification_1_name, s.specification_1_metric, s.specification_1_value,
+        s.specification_2_name, s.specification_2_metric, s.specification_2_value,
+        s.specification_3_name, s.specification_3_metric, s.specification_3_value,
+        s.specification_4_name, s.specification_4_metric, s.specification_4_value,
+        s.specification_5_name, s.specification_5_metric, s.specification_5_value,
+        s.specification_6_name, s.specification_6_metric, s.specification_6_value,
+        s.specification_7_name, s.specification_7_metric, s.specification_7_value,
+        s.specification_8_name, s.specification_8_metric, s.specification_8_value
       FROM crop_in_farm c
       INNER JOIN farm f ON c.farm_id = f.farm_id
       LEFT JOIN crop_specifications s ON c.crop_id = s.crop_id
@@ -103,14 +103,14 @@ export const getCropsByFarmId = async (req, res) => {
         f.municipality,
         f.barangay,
         f.user_id AS farmer_id,
-        s.specification_1_name, s.specification_1_value,
-        s.specification_2_name, s.specification_2_value,
-        s.specification_3_name, s.specification_3_value,
-        s.specification_4_name, s.specification_4_value,
-        s.specification_5_name, s.specification_5_value,
-        s.specification_6_name, s.specification_6_value,
-        s.specification_7_name, s.specification_7_value,
-        s.specification_8_name, s.specification_8_value
+        s.specification_1_name, s.specification_1_metric, s.specification_1_value,
+        s.specification_2_name, s.specification_2_metric, s.specification_2_value,
+        s.specification_3_name, s.specification_3_metric, s.specification_3_value,
+        s.specification_4_name, s.specification_4_metric, s.specification_4_value,
+        s.specification_5_name, s.specification_5_metric, s.specification_5_value,
+        s.specification_6_name, s.specification_6_metric, s.specification_6_value,
+        s.specification_7_name, s.specification_7_metric, s.specification_7_value,
+        s.specification_8_name, s.specification_8_metric, s.specification_8_value
       FROM crop_in_farm c
       INNER JOIN farm f ON c.farm_id = f.farm_id
       LEFT JOIN crop_specifications s ON c.crop_id = s.crop_id

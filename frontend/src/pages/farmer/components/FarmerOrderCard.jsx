@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import {ShoppingBag, Calendar, Package, User, MapPin, X, CheckCircle, Clock, Truck, DollarSign, MessageSquare, Store} from 'lucide-react'
+import {ShoppingBag, Calendar, Package, User, MapPin, X, CheckCircle, Clock, Truck, DollarSign, MessageSquare, Store, Check, Ban} from 'lucide-react'
+import useOrderStore from '../../../store/OrderStore'
+import Swal from 'sweetalert2'
 
 const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
@@ -12,6 +14,8 @@ const formatDateTime = (d) =>
 
 const statusConfig = {
   pending: { label: 'Pending', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: Clock },
+  approved: { label: 'Approved', color: 'bg-green-50 text-green-700 border-green-200', icon: Check },
+  rejected: { label: 'Rejected', color: 'bg-red-50 text-red-700 border-red-200', icon: Ban },
   processing: { label: 'Processing', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: Package },
   shipped: { label: 'Shipped', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: Truck },
   completed: { label: 'Completed', color: 'bg-green-50 text-green-700 border-green-200', icon: CheckCircle },
@@ -20,14 +24,37 @@ const statusConfig = {
 
 const FarmerOrderCard = ({ order }) => {
   const [modalOpen, setModalOpen] = useState(false)
+  const { approveOrder, rejectOrder } = useOrderStore()
   const specs = [1,2,3,4,5,6,7,8].map(n => {
     const name = order[`specification_${n}_name`]
     const value = order[`specification_${n}_value`]
     return (name || value) ? `${name}: ${value}` : null
   }).filter(Boolean)
 
-  const status = statusConfig[order.order_status] || statusConfig.pending
+  const status = statusConfig[order.status] || statusConfig.pending
   const StatusIcon = status.icon
+
+  const handleApprove = async (e) => {
+    e.stopPropagation()
+    await approveOrder(order.crop_order_id)
+  }
+
+  const handleReject = async (e) => {
+    e.stopPropagation()
+    const { value: reason } = await Swal.fire({
+      title: 'Reject Order',
+      input: 'textarea',
+      inputLabel: 'Rejection Reason (optional)',
+      inputPlaceholder: 'Enter reason for rejection...',
+      showCancelButton: true,
+      confirmButtonText: 'Reject',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#dc2626'
+    })
+    if (reason !== undefined) {
+      await rejectOrder(order.crop_order_id, reason)
+    }
+  }
 
   const CardContent = () => (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-green-300 hover:shadow-md transition-all duration-200">
@@ -50,6 +77,23 @@ const FarmerOrderCard = ({ order }) => {
                 {status.label}
               </span>
             </div>
+
+            {order.status === 'pending' && (
+              <div className="flex items-center gap-2 mt-2">
+                <button 
+                  onClick={handleApprove}
+                  className="flex-1 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1"
+                >
+                  <Check className="w-3 h-3" /> Approve
+                </button>
+                <button 
+                  onClick={handleReject}
+                  className="flex-1 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1"
+                >
+                  <X className="w-3 h-3" /> Reject
+                </button>
+              </div>
+            )}
             
             {order.variety && (
               <p className="text-xs text-gray-500 mt-0.5">{order.variety}</p>
@@ -75,7 +119,7 @@ const FarmerOrderCard = ({ order }) => {
                   <span className="text-[10px] font-semibold text-gray-600">x{order.quantity}</span>
                 </div>
               )}
-              {order.volume && (
+              {order.volume !== null && order.volume !== undefined && (
                 <div className="flex items-center gap-1 bg-green-50 border border-green-100 rounded px-2 py-1">
                   <ShoppingBag className="w-3 h-3 text-green-600" />
                   <span className="text-[10px] font-semibold text-green-700">{Number(order.volume).toLocaleString()} kg</span>
@@ -178,7 +222,7 @@ const FarmerOrderCard = ({ order }) => {
                   <span className="text-xs text-gray-500 font-medium">Quantity</span>
                   <span className="text-sm font-semibold text-gray-900">x{order.quantity || 1}</span>
                 </div>
-                {order.volume && (
+                {order.volume !== null && order.volume !== undefined && (
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500 font-medium">Volume</span>
                     <span className="text-sm font-semibold text-green-700">{Number(order.volume).toLocaleString()} kg</span>
