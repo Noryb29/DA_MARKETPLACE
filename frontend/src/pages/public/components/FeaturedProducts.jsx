@@ -74,10 +74,29 @@ const CropCard = ({ crop, index }) => {
           )}
         </div>
 
-        {/* Farm */}
-        <div className="flex items-center gap-1.5">
-          <MapPin className="w-3.5 h-3.5 text-green-500 shrink-0" />
-          <span className="text-xs text-gray-500 font-medium truncate">{crop.farm_name}</span>
+        {/* Farm + Location */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5 text-green-500 shrink-0" />
+            <span className="text-xs text-gray-500 font-medium truncate">{crop.farm_name}</span>
+          </div>
+          {(crop.province || crop.municipality || crop.barangay) && (
+            <div className="flex items-center gap-1 pl-5">
+              <span className="text-[10px] text-gray-400 truncate">
+                {crop.barangay}{crop.municipality && `, ${crop.municipality}`}{crop.province && `, ${crop.province}`}
+              </span>
+            </div>
+          )}
+          {crop.farm_location && (
+            <div className="flex items-center gap-1 pl-5">
+              <span className="text-[10px] text-gray-400 truncate">{crop.farm_location}</span>
+            </div>
+          )}
+          {crop.gps_coordinates && (
+            <div className="flex items-center gap-1 pl-5">
+              <span className="text-[10px] text-gray-300 truncate">GPS: {crop.gps_coordinates}</span>
+            </div>
+          )}
         </div>
 
         {/* Volume + Stock */}

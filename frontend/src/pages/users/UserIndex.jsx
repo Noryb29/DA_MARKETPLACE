@@ -263,6 +263,9 @@ const UserIndex = () => {
                             <div>
                               <p className="font-medium text-slate-900">{order.farmer_first_name} {order.farmer_last_name}</p>
                               <p className="text-xs text-slate-500">{order.farm_name}</p>
+                              {(order.province || order.municipality || order.barangay) && (
+                                <p className="text-[10px] text-slate-400">{order.barangay}{order.municipality && `, ${order.municipality}`}{order.province && `, ${order.province}`}</p>
+                              )}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-slate-700">

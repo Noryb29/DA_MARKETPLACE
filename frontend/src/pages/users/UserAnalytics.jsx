@@ -104,7 +104,12 @@ const UserAnalytics = () => {
                           recentOrders.map((order) => (
                             <tr key={order.crop_order_id} className="border-b border-gray-50 hover:bg-gray-50">
                               <td className="py-2 px-2">#{order.crop_order_id}</td>
-                              <td className="py-2 px-2">{order.farm_name}</td>
+                              <td className="py-2 px-2">
+                              {order.farm_name}
+                              {(order.province || order.municipality || order.barangay) && (
+                                <span className="text-[10px] text-gray-400 block">{order.barangay}{order.municipality && `, ${order.municipality}`}{order.province && `, ${order.province}`}</span>
+                              )}
+                            </td>
                               <td className="py-2 px-2">{order.crop_name}</td>
                               <td className="py-2 px-2">{order.quantity}</td>
                               <td className="py-2 px-2">₱{parseFloat(order.total_price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>

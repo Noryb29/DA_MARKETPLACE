@@ -1,26 +1,23 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Navigate } from 'react-router-dom'
-import Header from './pages/public/components/Header'
-import Hero from './pages/public/components/Hero'
-import FeaturedProducts from './pages/public/components/FeaturedProducts'
-import Footer from './pages/public/components/Footer'
 import useUserStore from './store/UserStore'
 import useFarmerAuthStore from './store/FarmerAuthStore'
 import ShopDashboard from './pages/public/ShopDashboard'
 
 const App = () => {
-  const checkUserAuth = useUserStore((state) => state.checkAuth)
   const user = useUserStore((state) => state.user)
   const userAuth = useUserStore((state) => state.isAuthenticated)
   const userChecking = useUserStore((state) => state.isCheckingAuth)
-  const checkFarmerAuth = useFarmerAuthStore((state) => state.checkAuth)
   const farmerAuth = useFarmerAuthStore((state) => state.isAuthenticated)
   const farmerChecking = useFarmerAuthStore((state) => state.isCheckingAuth)
 
+  const checkUserAuth = useRef(useUserStore.getState().checkAuth)
+  const checkFarmerAuth = useFarmerAuthStore.getState().checkAuth
+
   useEffect(() => {
-    checkUserAuth()
+    checkUserAuth.current()
     checkFarmerAuth()
-  }, [checkUserAuth, checkFarmerAuth])
+  }, [])
 
   // Wait for both stores to finish before deciding anything
   if (userChecking || farmerChecking) {
@@ -32,7 +29,7 @@ const App = () => {
   }
 
   // Redirect authenticated users away from the landing page
-  if (farmerAuth) return <Navigate to="/" replace /> //GI CHANGE
+  if (farmerAuth) return <Navigate to="/" replace />
   if (userAuth && user?.role === 'admin') return <Navigate to="/admin/dashboard" replace />
   if (userAuth) return <Navigate to="/user/index" replace />
 

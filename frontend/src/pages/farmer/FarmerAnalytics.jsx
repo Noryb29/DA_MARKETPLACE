@@ -221,6 +221,9 @@ const FarmerAnalytics = () => {
                     <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="text-sm font-semibold text-gray-800">{farm.farm_name}</p>
+                        {(farm.province || farm.municipality || farm.barangay) && (
+                          <p className="text-[10px] text-gray-400">{farm.barangay}{farm.municipality && `, ${farm.municipality}`}{farm.province && `, ${farm.province}`}</p>
+                        )}
                         <p className="text-xs text-gray-500">{farm.crop_count} crops</p>
                       </div>
                       <div className="text-right">

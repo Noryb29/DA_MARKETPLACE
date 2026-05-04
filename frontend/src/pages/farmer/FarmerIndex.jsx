@@ -148,6 +148,9 @@ const FarmerIndex = () => {
               </div>
               <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">My Farms</p>
               <p className="text-xl font-bold text-gray-900 mt-1">{hasFarm ? farm?.farm_name : 'None yet'}</p>
+                {hasFarm && (farm?.barangay || farm?.municipality || farm?.province) && (
+                  <p className="text-xs text-gray-400 mt-1">{farm?.barangay}{farm?.municipality && `, ${farm.municipality}`}{farm?.province && `, ${farm.province}`}</p>
+                )}
             </Link>
 
             <Link to="/farmer/dashboard/analytics" className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md hover:border-green-300 transition-all group">

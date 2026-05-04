@@ -384,13 +384,16 @@ export const getFarmerDashboardStats = async (req, res) => {
     const cropsByFarm = await db.query(`
       SELECT 
         f.farm_name,
+        f.province,
+        f.municipality,
+        f.barangay,
         COUNT(cf.crop_id) AS crop_count,
         COALESCE(SUM(cf.stock), 0) AS total_stock,
         COALESCE(SUM(cf.volume), 0) AS total_volume
       FROM farm f
       LEFT JOIN crop_in_farm cf ON f.farm_id = cf.farm_id
       WHERE f.user_id = $1
-      GROUP BY f.farm_id, f.farm_name
+      GROUP BY f.farm_id, f.farm_name, f.province, f.municipality, f.barangay
       ORDER BY crop_count DESC
     `, [user_id])
 

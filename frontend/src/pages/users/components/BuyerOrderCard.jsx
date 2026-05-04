@@ -36,16 +36,18 @@ const BuyerOrderCard = ({ order, onViewDetails }) => {
         </div>
 
         {order.farm_name && (
-          <div className="flex items-center gap-1">
-            <Store className="w-3 h-3 text-gray-400" />
-            <span className="text-[10px] text-gray-500 truncate">{order.farm_name}</span>
-          </div>
-        )}
-
-        {order.farm_location && (
-          <div className="flex items-center gap-1">
-            <MapPin className="w-3 h-3 text-gray-400" />
-            <span className="text-[10px] text-gray-400 truncate">{order.farm_location}</span>
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-1">
+              <Store className="w-3 h-3 text-gray-400" />
+              <span className="text-[10px] text-gray-500 truncate">{order.farm_name}</span>
+            </div>
+            {(order.province || order.municipality || order.barangay) && (
+              <div className="flex items-center gap-1 pl-4">
+                <span className="text-[9px] text-gray-400 truncate">
+                  {order.barangay}{order.municipality && `, ${order.municipality}`}{order.province && `, ${order.province}`}
+                </span>
+              </div>
+            )}
           </div>
         )}
 

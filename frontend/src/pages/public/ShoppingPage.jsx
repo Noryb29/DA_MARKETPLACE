@@ -59,6 +59,23 @@ const CropCard = ({ crop, onAddToCart, onClick }) => {
           <MapPin className="w-3 h-3 text-gray-400" />
           <span className="text-xs text-gray-500 truncate">{crop.farm_name}</span>
         </div>
+        {(crop.province || crop.municipality || crop.barangay) && (
+          <div className="flex items-center gap-1 pl-4">
+            <span className="text-[10px] text-gray-400 truncate">
+              {crop.barangay}{crop.municipality && `, ${crop.municipality}`}{crop.province && `, ${crop.province}`}
+            </span>
+          </div>
+        )}
+        {crop.farm_location && (
+          <div className="flex items-center gap-1 pl-4">
+            <span className="text-[10px] text-gray-400 truncate">{crop.farm_location}</span>
+          </div>
+        )}
+        {crop.gps_coordinates && (
+          <div className="flex items-center gap-1 pl-4">
+            <span className="text-[10px] text-gray-300 truncate">GPS: {crop.gps_coordinates}</span>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 flex-wrap">
           {crop.volume && (
@@ -438,9 +455,28 @@ const ShoppingPage = () => {
               )}
 
               {selectedCrop.farm_name && (
-                <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
-                  <MapPin className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-700">{selectedCrop.farm_name}</span>
+                <div className="flex flex-col gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-700">{selectedCrop.farm_name}</span>
+                  </div>
+                  {(selectedCrop.province || selectedCrop.municipality || selectedCrop.barangay) && (
+                    <div className="flex items-center gap-2 pl-6">
+                      <span className="text-xs text-gray-500">
+                        {selectedCrop.barangay}{selectedCrop.municipality && `, ${selectedCrop.municipality}`}{selectedCrop.province && `, ${selectedCrop.province}`}
+                      </span>
+                    </div>
+                  )}
+                  {selectedCrop.farm_location && (
+                    <div className="flex items-center gap-2 pl-6">
+                      <span className="text-xs text-gray-500">{selectedCrop.farm_location}</span>
+                    </div>
+                  )}
+                  {selectedCrop.gps_coordinates && (
+                    <div className="flex items-center gap-2 pl-6">
+                      <span className="text-xs text-gray-400">GPS: {selectedCrop.gps_coordinates}</span>
+                    </div>
+                  )}
                 </div>
               )}
 

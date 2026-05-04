@@ -32,6 +32,22 @@ const CropCard = ({ crop, onEdit, onDelete, onClick }) => {
           <div>
             <p className="font-bold text-gray-800 text-sm leading-tight">{crop.crop_name}</p>
             <p className="text-xs text-gray-400 mt-0.5">{crop.variety || 'No variety'}</p>
+            {crop.farm_name && (
+            <div className="flex flex-col gap-0.5">
+              <p className="text-[10px] text-gray-500 flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />{crop.farm_name}</p>
+              {(crop.province || crop.municipality || crop.barangay) && (
+                <p className="text-[9px] text-gray-400 pl-4 truncate">
+                  {crop.barangay}{crop.municipality && `, ${crop.municipality}`}{crop.province && `, ${crop.province}`}
+                </p>
+              )}
+              {crop.farm_location && (
+                <p className="text-[9px] text-gray-400 pl-4 truncate">{crop.farm_location}</p>
+              )}
+              {crop.gps_coordinates && (
+                <p className="text-[9px] text-gray-300 pl-4 truncate">GPS: {crop.gps_coordinates}</p>
+              )}
+            </div>
+          )}
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>

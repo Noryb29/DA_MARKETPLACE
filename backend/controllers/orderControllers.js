@@ -35,7 +35,7 @@ export const getMyOrders = async (req, res) => {
                 c.specification_4, c.specification_5,
                 c.planting_date, c.expected_harvest,
                 c.harvest_photo, c.location AS crop_location,
-                f.farm_name, f.gps_coordinates,
+                f.farm_name, f.farm_location, f.gps_coordinates, f.province, f.municipality, f.barangay,
                 fa.firstname AS farmer_first_name,
                 fa.lastname  AS farmer_last_name
             FROM crop_orders co
@@ -63,7 +63,7 @@ export const getFarmerOrders = async (req, res) => {
                 c.specification_1, c.specification_2, c.specification_3,
                 c.specification_4, c.specification_5,
                 c.harvest_photo, c.location AS crop_location,
-                f.farm_name,
+                f.farm_name, f.farm_location, f.gps_coordinates, f.province, f.municipality, f.barangay,
                 u.firstname AS buyer_first_name,
                 u.lastname  AS buyer_last_name,
                 ud.profile_picture AS buyer_profile_picture

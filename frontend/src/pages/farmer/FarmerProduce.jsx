@@ -65,6 +65,11 @@ const FarmerProduce = () => {
               </div>
                   <h2 className="text-3xl font-bold text-gray-800">My Produce</h2>
                   <p className="text-gray-500 text-sm mt-0.5">Farm: {farm?.farm_name}</p>
+                  {(farm?.barangay || farm?.municipality || farm?.province) && (
+                    <p className="text-gray-400 text-xs mt-0.5 pl-4">{farm?.barangay}{farm?.municipality && `, ${farm.municipality}`}{farm?.province && `, ${farm.province}`}</p>
+                  )}
+                  {farm?.farm_location && <p className="text-gray-400 text-xs mt-0.5 pl-4">{farm.farm_location}</p>}
+                  {farm?.gps_coordinates && <p className="text-gray-400 text-xs mt-0.5 pl-4">GPS: {farm.gps_coordinates}</p>}
 
                   <button
                     onClick={() => { setEditTarget(null); setModalOpen(true) }}

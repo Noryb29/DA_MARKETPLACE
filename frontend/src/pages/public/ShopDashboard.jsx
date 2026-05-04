@@ -96,6 +96,23 @@ const CropCard = ({ crop, onClick }) => {
           </div>
           <span className="text-xs text-gray-500 truncate">{crop.farm_name}</span>
         </div>
+        {(crop.province || crop.municipality || crop.barangay) && (
+          <div className="flex items-center gap-1 pl-6">
+            <span className="text-[10px] text-gray-400 truncate">
+              {crop.barangay}{crop.municipality && `, ${crop.municipality}`}{crop.province && `, ${crop.province}`}
+            </span>
+          </div>
+        )}
+        {crop.farm_location && (
+          <div className="flex items-center gap-1 pl-6">
+            <span className="text-[10px] text-gray-400 truncate">{crop.farm_location}</span>
+          </div>
+        )}
+        {crop.gps_coordinates && (
+          <div className="flex items-center gap-1 pl-6">
+            <span className="text-[10px] text-gray-300 truncate">GPS: {crop.gps_coordinates}</span>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 flex-wrap">
           {crop.volume && (
@@ -144,11 +161,33 @@ const FarmCard = ({ farm, onClick }) => (
 
     <div className="p-4 space-y-2">
       <p className="font-bold text-gray-900 truncate">{farm.farm_name}</p>
-      <div className="flex items-center gap-1.5">
-        <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
-        <span className="text-xs text-gray-500 truncate">
-          {farm.farm_location || farm.gps_coordinates || 'Location not set'}
-        </span>
+      <div className="flex flex-col gap-1">
+        {(farm.province || farm.municipality || farm.barangay) && (
+          <div className="flex items-center gap-1.5">
+            <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
+            <span className="text-xs text-gray-500 truncate">
+              {farm.barangay}{farm.municipality && `, ${farm.municipality}`}{farm.province && `, ${farm.province}`}
+            </span>
+          </div>
+        )}
+        {farm.farm_location && (
+          <div className="flex items-center gap-1.5">
+            <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
+            <span className="text-xs text-gray-500 truncate">{farm.farm_location}</span>
+          </div>
+        )}
+        {farm.gps_coordinates && (
+          <div className="flex items-center gap-1.5">
+            <MapPin className="w-3 h-3 text-gray-300 flex-shrink-0" />
+            <span className="text-xs text-gray-400 truncate">GPS: {farm.gps_coordinates}</span>
+          </div>
+        )}
+        {!farm.province && !farm.municipality && !farm.barangay && !farm.farm_location && !farm.gps_coordinates && (
+          <div className="flex items-center gap-1.5">
+            <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
+            <span className="text-xs text-gray-400 truncate">Location not set</span>
+          </div>
+        )}
       </div>
       {farm.farm_area && (
         <div className="flex items-center gap-1.5 pt-1">

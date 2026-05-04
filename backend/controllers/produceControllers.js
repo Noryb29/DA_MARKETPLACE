@@ -279,8 +279,12 @@ export const getAllCrops = async (req, res) => {
             `SELECT 
                 c.*,
                 f.farm_name,
+                f.farm_location,
                 f.gps_coordinates,
                 f.farm_area,
+                f.province,
+                f.municipality,
+                f.barangay,
                 f.user_id AS farmer_id,
                 s.specification_1_name, s.specification_1_value,
                 s.specification_2_name, s.specification_2_value,

@@ -91,9 +91,14 @@ const FarmerOrderCard = ({ order }) => {
           </div>
           
           <div className="flex items-center justify-between text-xs text-gray-400">
-            <div className="flex items-center gap-1">
-              <Store className="w-3 h-3" />
-              <span className="truncate">{order.farm_name}</span>
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-1">
+                <Store className="w-3 h-3" />
+                <span className="truncate">{order.farm_name}</span>
+              </div>
+              {(order.province || order.municipality || order.barangay) && (
+                <span className="text-[10px] pl-4 truncate">{order.barangay}{order.municipality && `, ${order.municipality}`}{order.province && `, ${order.province}`}</span>
+              )}
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-3 h-3" />
@@ -210,10 +215,24 @@ const FarmerOrderCard = ({ order }) => {
                   <span className="text-xs text-gray-500 font-medium">Farm</span>
                   <span className="text-sm font-medium text-gray-800">{order.farm_name}</span>
                 </div>
-                {order.crop_location && (
+                {(order.province || order.municipality || order.barangay) && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Address</span>
+                    <span className="text-sm text-gray-600 text-right max-w-[180px] truncate">
+                      {order.barangay}{order.municipality && `, ${order.municipality}`}{order.province && `, ${order.province}`}
+                    </span>
+                  </div>
+                )}
+                {order.farm_location && (
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500 font-medium">Location</span>
-                    <span className="text-sm text-gray-800">{order.crop_location}</span>
+                    <span className="text-sm text-gray-600">{order.farm_location}</span>
+                  </div>
+                )}
+                {order.gps_coordinates && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">GPS</span>
+                    <span className="text-sm text-gray-500">{order.gps_coordinates}</span>
                   </div>
                 )}
               </div>

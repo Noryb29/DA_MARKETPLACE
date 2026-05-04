@@ -32,7 +32,7 @@ const UserShoppingPage = () => {
   , [crops])
 
   const locations = useMemo(() =>
-    [...new Set(crops.map((c) => c.location).filter(Boolean))].sort()
+    [...new Set(crops.map((c) => c.farm_location || c.location).filter(Boolean))].sort()
   , [crops])
 
   const filtered = useMemo(() => {
@@ -56,7 +56,7 @@ const UserShoppingPage = () => {
         return true
       })()
 
-      const matchLocation = !filterLocation || c.location === filterLocation
+      const matchLocation = !filterLocation || c.farm_location === filterLocation || c.location === filterLocation
 
       const matchStock = (() => {
         if (!filterStock) return true
@@ -252,10 +252,10 @@ const UserShoppingPage = () => {
                           <Wheat className="w-12 h-12 text-gray-300" />
                         </div>
                       )}
-                      {crop.location && (
+                      {(crop.province || crop.municipality || crop.barangay || crop.farm_location) && (
                         <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full flex items-center gap-1">
                           <MapPin className="w-2.5 h-2.5" />
-                          {crop.location}
+                          {crop.barangay || crop.municipality || crop.province || crop.farm_location}
                         </div>
                       )}
                     </div>
@@ -269,6 +269,23 @@ const UserShoppingPage = () => {
                         <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
                         <span className="text-[10px] text-gray-500 truncate">{crop.farm_name}</span>
                       </div>
+                      {(crop.province || crop.municipality || crop.barangay) && (
+                        <div className="flex items-center gap-1 pl-4">
+                          <span className="text-[9px] text-gray-400 truncate">
+                            {crop.barangay}{crop.municipality && `, ${crop.municipality}`}{crop.province && `, ${crop.province}`}
+                          </span>
+                        </div>
+                      )}
+                      {crop.farm_location && (
+                        <div className="flex items-center gap-1 pl-4">
+                          <span className="text-[9px] text-gray-400 truncate">{crop.farm_location}</span>
+                        </div>
+                      )}
+                      {crop.gps_coordinates && (
+                        <div className="flex items-center gap-1 pl-4">
+                          <span className="text-[9px] text-gray-300 truncate">GPS: {crop.gps_coordinates}</span>
+                        </div>
+                      )}
 
                       <div className="flex items-center gap-2 flex-wrap">
                         {crop.volume && (
@@ -355,10 +372,34 @@ const UserShoppingPage = () => {
                   <span className="text-xs text-gray-500 font-medium">Farm</span>
                   <span className="text-sm text-gray-800">{selectedCrop.farm_name}</span>
                 </div>
-                {selectedCrop.location && (
+                {(selectedCrop.province || selectedCrop.municipality || selectedCrop.barangay) && (
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 font-medium">Location</span>
-                    <span className="text-sm text-gray-800">{selectedCrop.location}</span>
+                    <span className="text-xs text-gray-500 font-medium">Barangay</span>
+                    <span className="text-sm text-gray-800">{selectedCrop.barangay}</span>
+                  </div>
+                )}
+                {(selectedCrop.province || selectedCrop.municipality) && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Municipality</span>
+                    <span className="text-sm text-gray-800">{selectedCrop.municipality}</span>
+                  </div>
+                )}
+                {selectedCrop.province && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Province</span>
+                    <span className="text-sm text-gray-800">{selectedCrop.province}</span>
+                  </div>
+                )}
+                {selectedCrop.farm_location && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Farm Location</span>
+                    <span className="text-sm text-gray-800">{selectedCrop.farm_location}</span>
+                  </div>
+                )}
+                {selectedCrop.gps_coordinates && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">GPS</span>
+                    <span className="text-sm text-gray-600">{selectedCrop.gps_coordinates}</span>
                   </div>
                 )}
                 {selectedCrop.volume && (

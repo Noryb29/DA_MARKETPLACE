@@ -96,6 +96,17 @@ const BuyerOrderModal = ({ order, onClose }) => {
               </div>
               <span className="text-sm text-gray-800">{order.farm_name}</span>
             </div>
+            {(order.province || order.municipality || order.barangay) && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                  <span className="text-xs text-blue-600 font-semibold uppercase">Address</span>
+                </div>
+                <span className="text-sm text-gray-600 max-w-[180px] truncate text-right">
+                  {order.barangay}{order.municipality && `, ${order.municipality}`}{order.province && `, ${order.province}`}
+                </span>
+              </div>
+            )}
             {order.farm_location && (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -103,6 +114,15 @@ const BuyerOrderModal = ({ order, onClose }) => {
                   <span className="text-xs text-blue-600 font-semibold uppercase">Location</span>
                 </div>
                 <span className="text-sm text-gray-600 max-w-[150px] truncate">{order.farm_location}</span>
+              </div>
+            )}
+            {order.gps_coordinates && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                  <span className="text-xs text-blue-600 font-semibold uppercase">GPS</span>
+                </div>
+                <span className="text-sm text-gray-500">{order.gps_coordinates}</span>
               </div>
             )}
           </div>
