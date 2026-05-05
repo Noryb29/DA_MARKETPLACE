@@ -19,7 +19,7 @@ const app = express()
 const PORT = process.env.PORT
 const FRONTEND_LINK = process.env.CORS_ORIGIN
 app.use(cors({
-  // origin: ['http://localhost:5173', `https://${FRONTEND_LINK}`],
+  origin: ['https://da-marketplace.vercel.app', `https://${FRONTEND_LINK}`],
   origin:'*',
   credentials: true
 }))
