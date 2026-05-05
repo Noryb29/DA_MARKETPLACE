@@ -192,7 +192,8 @@ export const useAdminPriceStore = create((set, get) => ({
       Swal.fire({
         icon: "warning",
         title: "Nothing to Import",
-        text: `Form ${form} has no records to import.`
+        text: `Form ${form} has no records to import.`,
+        customClass: { container: 'swal-z-index' }
       })
       return { success: false }
     }
@@ -202,7 +203,8 @@ export const useAdminPriceStore = create((set, get) => ({
       html: `Uploading <strong>${data.length}</strong> record(s) from Form ${form}.<br/>Please wait.`,
       allowOutsideClick: false,
       allowEscapeKey: false,
-      didOpen: () => Swal.showLoading()
+      didOpen: () => Swal.showLoading(),
+      customClass: { container: 'swal-z-index' }
     })
 
     try {
@@ -227,7 +229,8 @@ export const useAdminPriceStore = create((set, get) => ({
               File: <strong>${parsed.fileName}</strong>
             </p>
           `,
-          confirmButtonColor: "#15803d"
+          confirmButtonColor: "#15803d",
+          customClass: { container: 'swal-z-index' }
         })
 
         await get().fetchCrops()
@@ -244,7 +247,8 @@ export const useAdminPriceStore = create((set, get) => ({
         icon: "error",
         title: "Import Failed",
         text: serverMessage || "An unexpected error occurred. Please try again.",
-        confirmButtonColor: "#dc2626"
+        confirmButtonColor: "#dc2626",
+        customClass: { container: 'swal-z-index' }
       })
 
       return {

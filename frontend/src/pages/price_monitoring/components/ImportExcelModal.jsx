@@ -249,7 +249,7 @@ const ImportExcelModal = ({ isOpen, OnClose }) => {
         const workbook = XLSX.read(e.target.result, { type: "binary", cellDates: true })
         const { marketName, priceDate, rows: parsed } = parseDAExcel(workbook)
         if (parsed.length === 0) {
-          Swal.fire({ icon: "warning", title: "No Data Found", text: "Could not extract any commodity rows." })
+          Swal.fire({ icon: "warning", title: "No Data Found", text: "Could not extract any commodity rows.", customClass: { container: 'swal-z-index' } })
           return
         }
         setRows(annotateRows(parsed))
@@ -258,7 +258,7 @@ const ImportExcelModal = ({ isOpen, OnClose }) => {
         setStep("preview")
       } catch (err) {
         console.error(err)
-        Swal.fire({ icon: "error", title: "Parse Error", text: "Failed to read the Excel file." })
+        Swal.fire({ icon: "error", title: "Parse Error", text: "Failed to read the Excel file.", customClass: { container: 'swal-z-index' } })
       }
     }
     reader.readAsBinaryString(file)
@@ -273,10 +273,21 @@ const ImportExcelModal = ({ isOpen, OnClose }) => {
 
   const handleSubmit = async () => {
     const processableRows = rows.filter((r) => r._errors.length === 0)
+    const skipped = rows.filter((r) => r._errors.length > 0).length
+
     if (processableRows.length === 0) {
-      Swal.fire({ icon: "warning", title: "No Valid Rows", text: "All rows have errors." })
+      Swal.fire({
+        icon: "warning",
+        title: "Import Complete - No Valid Rows",
+        html: `
+          <p>All <strong>${rows.length}</strong> row(s) have errors and could not be processed.</p>
+          ${skipped > 0 ? `<p class="mt-2 text-gray-500">Skipped due to errors.</p>` : ""}
+        `,
+        customClass: { container: 'swal-z-index' }
+      })
       return
     }
+
     setIsSubmitting(true)
     setSubmitProgress({ current: 0, total: processableRows.length })
     const categoryCache = {}
@@ -340,18 +351,23 @@ const ImportExcelModal = ({ isOpen, OnClose }) => {
       }
     }
 
-    const skipped = rows.filter((r) => r._errors.length > 0).length
     setIsSubmitting(false)
     setSubmitProgress({ current: 0, total: 0 })
+
+    const allProcessed = successCount + failCount
     Swal.fire({
       icon: failCount === 0 ? "success" : "warning",
       title: "Import Complete",
       html: `
-        <p><strong>${successCount}</strong> price record(s) inserted.</p>
-        ${createdCount > 0 ? `<p><strong>${createdCount}</strong> new entry/entries auto-created.</p>` : ""}
-        ${failCount > 0 ? `<p><strong>${failCount}</strong> row(s) failed.</p>` : ""}
-        ${skipped > 0 ? `<p><strong>${skipped}</strong> row(s) skipped.</p>` : ""}
+        <div class="text-left space-y-2">
+          <p>Processed: <strong>${allProcessed}</strong> row(s)</p>
+          <p class="text-green-600">✓ Inserted: <strong>${successCount}</strong> price record(s)</p>
+          ${createdCount > 0 ? `<p class="text-blue-600">✓ Auto-created: <strong>${createdCount}</strong> new entry/entries</p>` : ""}
+          ${failCount > 0 ? `<p class="text-red-500">✗ Failed: <strong>${failCount}</strong> row(s)</p>` : ""}
+          ${skipped > 0 ? `<p class="text-gray-500">○ Skipped: <strong>${skipped}</strong> row(s) with errors</p>` : ""}
+        </div>
       `,
+      customClass: { container: 'swal-z-index' }
     })
     fetchCrops(); fetchCommodities(); fetchMarkets(); fetchCategories()
     handleClose()
