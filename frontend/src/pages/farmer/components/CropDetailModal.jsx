@@ -24,6 +24,12 @@ const CropDetailModal = ({ crop, onClose }) => {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">{crop.crop_name}</h2>
                 <p className="text-sm text-gray-500 mt-0.5">{crop.variety || 'No variety specified'}</p>
+                {crop.category_name && (
+                  <p className="text-xs text-purple-600 font-medium mt-1">{crop.category_name}</p>
+                )}
+                {crop.commodity_spec && (
+                  <p className="text-xs text-orange-600 font-medium mt-0.5">Spec: {crop.commodity_spec}</p>
+                )}
               </div>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
@@ -39,6 +45,29 @@ const CropDetailModal = ({ crop, onClose }) => {
           )}
 
           <div className="space-y-5">
+            {/* Price Info */}
+            {(crop.price || crop.market_price) && (
+              <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl p-5 border border-emerald-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-sm font-bold text-emerald-800 uppercase tracking-wide">Pricing</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {crop.price !== null && crop.price !== undefined && (
+                    <div className="bg-white rounded-xl p-3 shadow-sm">
+                      <p className="text-xs text-emerald-600 font-semibold uppercase">Your Price</p>
+                      <p className="text-lg font-bold text-emerald-700 mt-1">₱{Number(crop.price).toLocaleString()} <span className="text-xs font-normal text-gray-500">/kg</span></p>
+                    </div>
+                  )}
+                  {crop.market_price !== null && crop.market_price !== undefined && (
+                    <div className="bg-white rounded-xl p-3 shadow-sm">
+                      <p className="text-xs text-gray-500 font-semibold uppercase">Market Price</p>
+                      <p className="text-lg font-bold text-gray-700 mt-1">₱{Number(crop.market_price).toLocaleString()} <span className="text-xs font-normal text-gray-500">/kg</span></p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Production Stats */}
             {(crop.volume || crop.stock || crop.total_harvest || crop.expected_volume) && (
               <div className="bg-gray-50 rounded-2xl p-5">

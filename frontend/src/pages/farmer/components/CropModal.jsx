@@ -1,6 +1,9 @@
 import { Loader2 ,X, MapPin, Upload, Image as ImageIcon, AlertTriangle, Info, Plus, Trash2 } from 'lucide-react'
 import { useEffect,useState } from 'react'
 import cropData from '../../../assets/CROP_NAMES.json'
+import axios from 'axios'
+
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 const EMPTY_FORM = {
   crop_name: '', variety: '', volume: '', stock: '', farm_id: '',
@@ -8,7 +11,7 @@ const EMPTY_FORM = {
   maturity_days: '', expected_volume: '',
   planting_date: '', expected_harvest: '',
   actual_harvest: '', total_harvest: '',
-  harvest_photo: '', location: '',
+  harvest_photo: '', price: '', location: '',
 }
 
 const METRIC_OPTIONS = [
@@ -21,6 +24,30 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
   const [form, setForm] = useState(initialData && initialData.farm_id ? { ...EMPTY_FORM, farm_id: initialData.farm_id } : EMPTY_FORM)
   const [photoPreview, setPhotoPreview] = useState(null)
   const [warnings, setWarnings] = useState({})
+  const [latestPrice, setLatestPrice] = useState(null)
+  const [priceLoading, setPriceLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchLatestPrice = async () => {
+      if (!form.crop_name) {
+        setLatestPrice(null)
+        return
+      }
+      setPriceLoading(true)
+      try {
+        const response = await axios.get(`${BASE_URL}/api/produce/getLatestPrice?crop_name=${encodeURIComponent(form.crop_name)}`)
+        setLatestPrice(response.data)
+        if (!isEdit && !form.price && response.data?.prevailing_price) {
+          setForm(prev => ({ ...prev, price: response.data.prevailing_price.toString() }))
+        }
+      } catch (err) {
+        setLatestPrice(null)
+      } finally {
+        setPriceLoading(false)
+      }
+    }
+    fetchLatestPrice()
+  }, [form.crop_name, isEdit])
 
   const addSpecification = () => {
     if (form.specifications.length < 8) {
@@ -73,7 +100,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
     })
     delete submitForm.specifications
     
-    const numericFields = ['volume', 'stock', 'maturity_days', 'expected_volume', 'total_harvest']
+    const numericFields = ['volume', 'stock', 'maturity_days', 'expected_volume', 'total_harvest', 'price']
     numericFields.forEach(field => {
       if (submitForm[field] === '' || submitForm[field] === undefined) {
         submitForm[field] = null
@@ -247,10 +274,28 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                     <option key={c.name} value={c.name}>{c.name}</option>
                   ))}
                 </select>
+                {latestPrice && latestPrice.category_name && (
+                  <div className="text-[10px] text-purple-600 bg-purple-50 rounded-lg p-2 mt-1 flex items-center gap-1">
+                    Category: {latestPrice.category_name}
+                  </div>
+                )}
                 {form.crop_name && getCropRanges(form.crop_name) && (
                   <div className="text-[10px] text-blue-600 bg-blue-50 rounded-lg p-2 mt-1 flex items-center gap-1">
                     <Info className="w-3 h-3" />
                     Avg: {getCropRanges(form.crop_name).avgYieldTons} tons/ha • {getCropRanges(form.crop_name).maturityDays} days
+                  </div>
+                )}
+                {latestPrice && latestPrice.commodity_spec && (
+                  <div className="text-[10px] text-orange-600 bg-orange-50 rounded-lg p-2 mt-1 flex items-center gap-1">
+                    Spec: {latestPrice.commodity_spec}
+                  </div>
+                )}
+                {priceLoading && (
+                  <div className="text-[10px] text-gray-500 mt-1">Loading latest price...</div>
+                )}
+                {latestPrice && !priceLoading && (
+                  <div className="text-[10px] text-green-600 bg-green-50 rounded-lg p-2 mt-1 flex items-center gap-1">
+                    Market Price: ₱{latestPrice.prevailing_price}/kg ({latestPrice.market_name} - {new Date(latestPrice.price_date).toLocaleDateString()})
                   </div>
                 )}
               </div>
@@ -279,7 +324,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
             </div>
 
             {/* Volume + Stock */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Volume</label>
                 <div className="relative">
@@ -311,6 +356,20 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                       outline-none text-sm text-gray-800 font-medium transition-all duration-200"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">pcs</span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Price/kg</label>
+                <div className="relative">
+                  <input
+                    type="number" placeholder={latestPrice ? latestPrice.prevailing_price : "0"} value={form.price}
+                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    className="w-full px-3 py-2.5 pr-10 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                      focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                      outline-none text-sm text-gray-800 font-medium transition-all duration-200"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">₱</span>
                 </div>
               </div>
             </div>

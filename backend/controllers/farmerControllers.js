@@ -229,9 +229,25 @@ export const getCrops = async (req, res) => {
         const rows = await db.query(
             `SELECT c.*, 
                     f.farm_name, f.farm_location, f.gps_coordinates, 
-                    f.province, f.municipality, f.barangay
+                    f.province, f.municipality, f.barangay,
+                    com.id AS commodity_id,
+                    com.name AS commodity_name,
+                    com.specification AS commodity_spec,
+                    cat.id AS category_id,
+                    cat.name AS category_name,
+                    latest_price.prevailing_price AS market_price,
+                    latest_price.price_date AS market_price_date
              FROM crop_in_farm c
              INNER JOIN farm f ON c.farm_id = f.farm_id
+             LEFT JOIN commodities com ON LOWER(com.name) = LOWER(c.crop_name)
+             LEFT JOIN categories cat ON com.category_id = cat.id
+             LEFT JOIN LATERAL (
+                 SELECT pr.prevailing_price, pr.price_date
+                 FROM price_records pr
+                 WHERE pr.commodity_id = com.id
+                 ORDER BY pr.price_date DESC
+                 LIMIT 1
+             ) latest_price ON true
              WHERE f.user_id = $1
              ORDER BY c.crop_id DESC`,
             [user_id]

@@ -260,10 +260,32 @@ const ShoppingPage = () => {
                 )}
               </div>
 
+              {selectedCrop.category_name && (
+                <div className="mb-2">
+                  <span className="text-xs text-purple-600 font-semibold">{selectedCrop.category_name}</span>
+                  {selectedCrop.commodity_spec && <span className="text-xs text-orange-600 ml-2">• {selectedCrop.commodity_spec}</span>}
+                </div>
+              )}
               {selectedCrop.variety && (
                 <div className="mb-3">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Variety</p>
                   <p className="text-sm text-gray-800">{selectedCrop.variety}</p>
+                </div>
+              )}
+              {(selectedCrop.price || selectedCrop.market_price) && (
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {selectedCrop.price && (
+                    <div className="bg-emerald-50 rounded-lg p-3">
+                      <span className="text-[10px] text-emerald-700 font-semibold uppercase">Your Price</span>
+                      <p className="text-lg font-bold text-emerald-700">₱{Number(selectedCrop.price).toLocaleString()}/kg</p>
+                    </div>
+                  )}
+                  {selectedCrop.market_price && (
+                    <div className="bg-gray-100 rounded-lg p-3">
+                      <span className="text-[10px] text-gray-600 font-semibold uppercase">Market Price</span>
+                      <p className="text-lg font-bold text-gray-700">₱{Number(selectedCrop.market_price).toLocaleString()}/kg</p>
+                    </div>
+                  )}
                 </div>
               )}
 

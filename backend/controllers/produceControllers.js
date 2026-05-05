@@ -9,6 +9,11 @@ export const getCrops = async (req, res) => {
             `SELECT c.*, 
                     f.farm_name, f.farm_location, f.gps_coordinates,
                     f.province, f.municipality, f.barangay,
+                    com.id AS commodity_id,
+                    com.name AS commodity_name,
+                    com.specification AS commodity_spec,
+                    cat.id AS category_id,
+                    cat.name AS category_name,
                     s.specification_1_name, s.specification_1_metric, s.specification_1_value,
                     s.specification_2_name, s.specification_2_metric, s.specification_2_value,
                     s.specification_3_name, s.specification_3_metric, s.specification_3_value,
@@ -16,15 +21,52 @@ export const getCrops = async (req, res) => {
                     s.specification_5_name, s.specification_5_metric, s.specification_5_value,
                     s.specification_6_name, s.specification_6_metric, s.specification_6_value,
                     s.specification_7_name, s.specification_7_metric, s.specification_7_value,
-                    s.specification_8_name, s.specification_8_metric, s.specification_8_value
+                    s.specification_8_name, s.specification_8_metric, s.specification_8_value,
+                    latest_price.prevailing_price AS market_price,
+                    latest_price.price_date AS market_price_date
              FROM crop_in_farm c
              INNER JOIN farm f ON c.farm_id = f.farm_id
              LEFT JOIN crop_specifications s ON c.crop_id = s.crop_id
+             LEFT JOIN commodities com ON LOWER(com.name) = LOWER(c.crop_name)
+             LEFT JOIN categories cat ON com.category_id = cat.id
+             LEFT JOIN LATERAL (
+                 SELECT pr.prevailing_price, pr.price_date
+                 FROM price_records pr
+                 WHERE pr.commodity_id = com.id
+                 ORDER BY pr.price_date DESC
+                 LIMIT 1
+             ) latest_price ON true
              WHERE f.user_id = $1
              ORDER BY c.crop_id DESC`,
             [user_id]
         );
         res.status(200).json({ crops: rows.rows });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Database error", error: error.message });
+    }
+};
+
+export const getLatestPrice = async (req, res) => {
+    const { crop_name } = req.query;
+    if (!crop_name) {
+        return res.status(400).json({ message: "Crop name is required" });
+    }
+    try {
+        const result = await db.query(
+            `SELECT pr.prevailing_price, pr.price_date, m.name as market_name
+             FROM price_records pr
+             JOIN commodities com ON pr.commodity_id = com.id
+             JOIN markets m ON pr.market_id = m.id
+             WHERE LOWER(com.name) = LOWER($1)
+             ORDER BY pr.price_date DESC
+             LIMIT 1`,
+            [crop_name]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "No price found for this crop" });
+        }
+        res.status(200).json(result.rows[0]);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Database error", error: error.message });
@@ -39,6 +81,7 @@ export const addCrop = async (req, res) => {
         specification_4, specification_5, specification_6, specification_7, specification_8,
         maturity_days, expected_volume,
         planting_date, expected_harvest, actual_harvest, total_harvest,
+        price,
         location
     } = req.body;
 
@@ -94,13 +137,13 @@ export const addCrop = async (req, res) => {
                 farm_id, crop_name, variety, volume, stock,
                 maturity_days, expected_volume,
                 planting_date, expected_harvest, actual_harvest, total_harvest,
-                harvest_photo, location
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                harvest_photo, price, location
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             RETURNING crop_id`,
             [farm_id, crop_name, variety || null, volume || null, stock || null,
              maturity_days || null, expected_volume || null,
              planting_date || null, expected_harvest || null, actual_harvest || null, total_harvest || null,
-             harvest_photo, location || null]
+             harvest_photo, price || null, location || null]
         );
 
         const cropId = result.rows[0].crop_id;
@@ -323,6 +366,11 @@ export const getAllCrops = async (req, res) => {
                 f.municipality,
                 f.barangay,
                 f.user_id AS farmer_id,
+                com.id AS commodity_id,
+                com.name AS commodity_name,
+                com.specification AS commodity_spec,
+                cat.id AS category_id,
+                cat.name AS category_name,
                 s.specification_1_name, s.specification_1_value,
                 s.specification_2_name, s.specification_2_value,
                 s.specification_3_name, s.specification_3_value,
@@ -330,10 +378,21 @@ export const getAllCrops = async (req, res) => {
                 s.specification_5_name, s.specification_5_value,
                 s.specification_6_name, s.specification_6_value,
                 s.specification_7_name, s.specification_7_value,
-                s.specification_8_name, s.specification_8_value
+                s.specification_8_name, s.specification_8_value,
+                latest_price.prevailing_price AS market_price,
+                latest_price.price_date AS market_price_date
             FROM crop_in_farm c
             INNER JOIN farm f ON c.farm_id = f.farm_id
             LEFT JOIN crop_specifications s ON c.crop_id = s.crop_id
+            LEFT JOIN commodities com ON LOWER(com.name) = LOWER(c.crop_name)
+            LEFT JOIN categories cat ON com.category_id = cat.id
+            LEFT JOIN LATERAL (
+                SELECT pr.prevailing_price, pr.price_date
+                FROM price_records pr
+                WHERE pr.commodity_id = com.id
+                ORDER BY pr.price_date DESC
+                LIMIT 1
+            ) latest_price ON true
             ORDER BY c.crop_id DESC`
         );
         res.status(200).json({ crops: rows.rows });

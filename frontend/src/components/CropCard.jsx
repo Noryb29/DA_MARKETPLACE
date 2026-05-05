@@ -67,6 +67,8 @@ export const CropCard = ({
           <div>
             <h3 className="font-bold text-gray-900 text-base leading-tight">{crop.crop_name}</h3>
             {crop.variety && <p className="text-xs text-gray-400 mt-0.5">{crop.variety}</p>}
+            {crop.category_name && <p className="text-[10px] text-purple-600 font-medium mt-0.5">{crop.category_name}</p>}
+            {crop.commodity_spec && <p className="text-[10px] text-orange-600 font-medium mt-0.5">Spec: {crop.commodity_spec}</p>}
           </div>
           
           <CropLocation crop={crop} showGps={true} />
@@ -95,6 +97,17 @@ export const CropCard = ({
                   {s}
                 </span>
               ))}
+            </div>
+)}
+
+          {(crop.price || crop.market_price) && (
+            <div className="flex flex-col gap-1 pt-2">
+              {crop.price && (
+                <span className="text-xs font-bold text-emerald-700">₱{crop.price}/kg</span>
+              )}
+              {crop.market_price && (
+                <span className="text-[10px] text-gray-500">Market: ₱{crop.market_price}/kg</span>
+              )}
             </div>
           )}
 
@@ -132,6 +145,12 @@ export const CropCard = ({
           <div>
             <p className="font-bold text-gray-900 truncate">{crop.crop_name}</p>
             {crop.variety && <p className="text-xs text-gray-400 truncate mt-0.5">{crop.variety}</p>}
+            {crop.category_name && (
+              <p className="text-[10px] text-purple-600 font-medium truncate mt-0.5">{crop.category_name}</p>
+            )}
+            {crop.commodity_spec && (
+              <p className="text-[10px] text-orange-600 font-medium truncate mt-0.5">Spec: {crop.commodity_spec}</p>
+            )}
           </div>
           
           <CropLocation crop={crop} showGps={true} />
@@ -147,6 +166,20 @@ export const CropCard = ({
                 <Leaf className="w-2.5 h-2.5" />{crop.stock} pcs
               </span>
             )}
+{(crop.price || crop.market_price) && (
+            <div className="flex items-center gap-2">
+              {crop.price && (
+                <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg font-medium">
+                  ₱{crop.price}/kg
+                </span>
+              )}
+              {crop.market_price && (
+                <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-lg font-medium">
+                  Market: ₱{crop.market_price}/kg
+                </span>
+              )}
+            </div>
+          )}
           </div>
 
           {crop.expected_harvest && (
@@ -197,6 +230,8 @@ export const CropCard = ({
             <div>
               <p className="font-bold text-gray-800 text-sm leading-tight">{crop.crop_name}</p>
               <p className="text-xs text-gray-400 mt-0.5">{crop.variety || 'No variety'}</p>
+              {crop.category_name && <p className="text-[10px] text-purple-600 font-medium mt-0.5">{crop.category_name}</p>}
+              {crop.commodity_spec && <p className="text-[10px] text-orange-600 font-medium mt-0.5">Spec: {crop.commodity_spec}</p>}
               <div className="mt-1">
                 <CropLocation crop={crop} showGps={true} />
               </div>
@@ -222,6 +257,20 @@ export const CropCard = ({
           <div className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2">
             <Package className="w-3.5 h-3.5 text-green-500 shrink-0" />
             <span className="text-xs font-semibold text-green-700">{Number(crop.volume).toLocaleString()} kg</span>
+          </div>
+        )}
+        {(crop.price || crop.market_price) && (
+          <div className="flex flex-col gap-1">
+            {crop.price && (
+              <div className="flex items-center gap-2 bg-emerald-50 rounded-lg px-3 py-2">
+                <span className="text-xs font-semibold text-emerald-700">Your Price: ₱{crop.price}/kg</span>
+              </div>
+            )}
+            {crop.market_price && (
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
+                <span className="text-xs font-medium text-gray-600">Market Price: ₱{crop.market_price}/kg</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -287,6 +336,8 @@ export const CropCard = ({
         <div>
           <p className="font-bold text-gray-900 text-sm">{crop.crop_name}</p>
           {crop.variety && <p className="text-xs text-gray-400">{crop.variety}</p>}
+          {crop.category_name && <p className="text-[10px] text-purple-600 font-medium">{crop.category_name}</p>}
+          {crop.commodity_spec && <p className="text-[10px] text-orange-600 font-medium">Spec: {crop.commodity_spec}</p>}
         </div>
         <CropLocation crop={crop} />
         <div className="flex items-center gap-2 flex-wrap">
@@ -299,6 +350,20 @@ export const CropCard = ({
             <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded flex items-center gap-1">
               <Archive className="w-2.5 h-2.5" />{crop.stock} pcs
             </span>
+          )}
+          {(crop.price || crop.market_price) && (
+            <div className="flex items-center gap-2 mt-1">
+              {crop.price && (
+                <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-medium">
+                  ₱{crop.price}/kg
+                </span>
+              )}
+              {crop.market_price && (
+                <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded font-medium">
+                  Market: ₱{crop.market_price}/kg
+                </span>
+              )}
+            </div>
           )}
         </div>
         {crop.expected_harvest && (

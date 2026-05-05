@@ -109,6 +109,7 @@ export const createDB = async() => {
                 actual_harvest DATE NOT NULL,
                 total_harvest DECIMAL(10,2),
                 harvest_photo VARCHAR(500),
+                price DECIMAL(10,2),
                 location VARCHAR(255)
             )
         `)
