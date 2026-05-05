@@ -12,8 +12,7 @@ const EMPTY_FORM = {
 }
 
 const METRIC_OPTIONS = [
-  '%', 'kg', 'g', 'tons', 'pcs', 'ml', 'L', 'cm', 'm', 'km',
-  'ppm', 'pH', '°C', 'days', 'months', 'ha', 'msl', 'mg/kg','',
+  '%',' ',
 ]
 
 const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = [] }) => {
