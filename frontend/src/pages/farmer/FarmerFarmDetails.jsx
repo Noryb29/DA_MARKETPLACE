@@ -168,24 +168,37 @@ const FarmerFarmDetails = () => {
                     <h2 className="text-lg font-bold text-gray-900">Your Crops</h2>
                     <span className="text-xs text-gray-400 font-medium">({farmCrops.length})</span>
                   </div>
-                  <button
-                    onClick={() => setCropModalOpen(true)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                  >
-                    + Add Crop
-                  </button>
+                  {currentFarm?.is_verified ? (
+                    <button
+                      onClick={() => setCropModalOpen(true)}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                    >
+                      + Add Crop
+                    </button>
+                  ) : (
+                    <div className="px-4 py-2 bg-gray-300 text-gray-500 text-sm font-semibold rounded-lg cursor-not-allowed flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      Farm Pending
+                    </div>
+                  )}
                 </div>
 
                 {farmCrops.length === 0 ? (
                   <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
                     <Sprout className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                    <p className="text-gray-500 text-sm">No crops listed yet</p>
-                    <button
-                      onClick={() => setCropModalOpen(true)}
-                      className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                    >
-                      + Add Your First Crop
-                    </button>
+                    {currentFarm?.is_verified ? (
+                      <>
+                        <p className="text-gray-500 text-sm">No crops listed yet</p>
+                        <button
+                          onClick={() => setCropModalOpen(true)}
+                          className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                        >
+                          + Add Your First Crop
+                        </button>
+                      </>
+                    ) : (
+                      <p className="text-amber-600 text-sm font-medium">Farm must be verified before adding crops</p>
+                    )}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -409,6 +422,10 @@ const FarmerFarmDetails = () => {
         isOpen={cropModalOpen}
         onClose={() => setCropModalOpen(false)}
         onSubmit={async (form) => {
+          if (!currentFarm?.is_verified) {
+            alert('This farm is still pending approval. You cannot add crops until the farm is verified.')
+            return
+          }
           await addCrop({ ...form, farm_id: parseInt(id) })
           setCropModalOpen(false)
           getCrops()

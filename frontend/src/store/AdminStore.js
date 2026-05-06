@@ -62,6 +62,50 @@ export const useAdminStore = create((set, get) => ({
     }
   },
 
+  // Verify Product (Approve/Reject)
+  verifyProduct: async (productId, is_verified, rejection_reason = null) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axios.put(`${API_URL}/api/admin/products/${productId}/verify`, { is_verified, rejection_reason });
+      if (response.data.success) {
+        set((state) => ({
+          products: state.products.map(p => 
+            p.crop_id === productId ? { ...p, is_verified, rejection_reason } : p
+          ),
+          loading: false,
+        }));
+        return response.data;
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      set({ error: errorMessage, loading: false });
+      console.error("Error verifying product:", errorMessage);
+      throw error;
+    }
+  },
+
+  // Verify Farm (Approve/Reject)
+  verifyFarm: async (farmId, is_verified, rejection_reason = null) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await axios.put(`${API_URL}/api/admin/farms/${farmId}/verify`, { is_verified, rejection_reason });
+      if (response.data.success) {
+        set((state) => ({
+          farms: state.farms.map(f => 
+            f.farm_id === farmId ? { ...f, is_verified, rejection_reason } : f
+          ),
+          loading: false,
+        }));
+        return response.data;
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      set({ error: errorMessage, loading: false });
+      console.error("Error verifying farm:", errorMessage);
+      throw error;
+    }
+  },
+
   // Get All Farms
   getAllFarms: async (forceRefresh = false) => {
     set({ loading: true, error: null });

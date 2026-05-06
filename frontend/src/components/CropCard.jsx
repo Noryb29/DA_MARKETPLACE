@@ -1,4 +1,4 @@
-import { MapPin, Package, Archive, Calendar, Leaf, Sprout, Wheat, Pencil, Trash2, ImageIcon } from 'lucide-react'
+import { MapPin, Package, Archive, Calendar, Leaf, Sprout, Wheat, Pencil, Trash2, ImageIcon, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
 import CropLocation from './CropLocation'
 
 const formatDate = (d) =>
@@ -34,8 +34,12 @@ export const CropCard = ({
   onAddToCart,
   showActions = false,
   onEdit,
-  onDelete
+  onDelete,
+  onAddHarvestDetails,
+  onResubmit
 }) => {
+  const isHarvested = crop.actual_harvest && !String(crop.actual_harvest).includes('2099')
+  const isVerified = crop.is_verified === true
   const imageSrc = crop.harvest_photo
     ? (crop.harvest_photo.startsWith('http') ? crop.harvest_photo : `${BASE_URL}${crop.harvest_photo}`)
     : null
@@ -215,8 +219,8 @@ export const CropCard = ({
           </div>
         )}
 
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {!crop.harvest_photo && (
               <div className="bg-green-100 p-2.5 rounded-xl shrink-0">
                 <Wheat className="w-5 h-5 text-green-600" />
@@ -227,7 +231,24 @@ export const CropCard = ({
                 <ImageIcon className="w-4 h-4 text-green-600" />
               </div>
             )}
-            <div>
+            <div className="min-w-0">
+              {variant === 'farmer' && (
+                <div className="mb-2">
+                  {isVerified ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-green-500 text-white shadow-sm">
+                      <CheckCircle size={12} /> Verified
+                    </span>
+                  ) : crop.rejection_reason ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-red-500 text-white shadow-sm">
+                      <XCircle size={12} /> Rejected
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-amber-500 text-white shadow-sm">
+                      <AlertCircle size={12} /> Pending Approval
+                    </span>
+                  )}
+                </div>
+              )}
               <p className="font-bold text-gray-800 text-sm leading-tight">{crop.crop_name}</p>
               <p className="text-xs text-gray-400 mt-0.5">{crop.variety || 'No variety'}</p>
               {crop.category_name && <p className="text-[10px] text-purple-600 font-medium mt-0.5">{crop.category_name}</p>}
@@ -238,15 +259,20 @@ export const CropCard = ({
             </div>
           </div>
           {showActions && (
-            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+            <div className="flex flex-wrap items-center gap-2 shrink-0 mt-2 sm:mt-0" onClick={(e) => e.stopPropagation()}>
+              {crop.rejection_reason && onResubmit && (
+                <button onClick={() => onResubmit(crop)} className="px-3 py-1.5 rounded-lg bg-orange-100 text-orange-600 text-xs font-semibold hover:bg-orange-200 transition-colors">
+                  Resubmit
+                </button>
+              )}
               {onEdit && (
-                <button onClick={() => onEdit(crop)} className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-500 transition-colors" title="Edit">
-                  <Pencil className="w-3.5 h-3.5" />
+                <button onClick={() => onEdit(crop)} className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-semibold hover:bg-blue-100 transition-colors">
+                  Edit
                 </button>
               )}
               {onDelete && (
-                <button onClick={() => onDelete(crop.crop_id)} className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
-                  <Trash2 className="w-3.5 h-3.5" />
+                <button onClick={() => onDelete(crop.crop_id)} className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors">
+                  Delete
                 </button>
               )}
             </div>
@@ -315,6 +341,23 @@ export const CropCard = ({
             <MapPin className="w-3 h-3 shrink-0" />
             <span className="line-clamp-1">{crop.location}</span>
           </div>
+        )}
+
+        {variant === 'farmer' && crop.rejection_reason && (
+          <div className="mt-2 p-2 bg-red-50 rounded-lg border border-red-200">
+            <p className="text-[10px] font-semibold text-red-600 uppercase">Rejection Reason:</p>
+            <p className="text-xs text-red-700 mt-1">{crop.rejection_reason}</p>
+          </div>
+        )}
+
+        {variant === 'farmer' && !isHarvested && onAddHarvestDetails && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onAddHarvestDetails(crop); }}
+            className="w-full py-2 mt-2 rounded-lg bg-amber-100 border border-amber-200 text-xs font-semibold text-amber-700 hover:bg-amber-200 transition-colors flex items-center justify-center gap-1.5"
+          >
+            <Sprout className="w-3.5 h-3.5" />
+            Add Harvest Details
+          </button>
         )}
       </div>
     )

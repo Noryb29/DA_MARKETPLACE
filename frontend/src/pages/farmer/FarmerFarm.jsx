@@ -7,7 +7,7 @@ import AddFarmModal from './components/AddFarmModal.jsx';
 import CropModal from './components/CropModal.jsx';
 import EditFarmModal from './components/EditFarmModal.jsx';
 import { getDaysUntilHarvest } from '../public/shopComponents/HarvestBadge';
-import { Search, Loader2, Sprout, Leaf, MapPin, Ruler, X, Calendar, SlidersHorizontal, User, FileText, MapPinned, Grid3X3, Droplets, Package } from 'lucide-react';
+import { Search, Loader2, Sprout, Leaf,XCircle, MapPin, Ruler, X, Calendar, SlidersHorizontal, User, FileText, MapPinned, Grid3X3, Droplets, Package, CheckCircle, AlertCircle } from 'lucide-react';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
@@ -88,6 +88,13 @@ const FarmerFarm = () => {
   };
 
   const openAddCropModal = (farmId = null) => {
+    if (farmId) {
+      const selectedFarm = farms.find(f => f.farm_id === farmId)
+      if (selectedFarm && !selectedFarm.is_verified) {
+        alert('This farm is still pending approval. You cannot add crops until the farm is verified.')
+        return
+      }
+    }
     setCropModalFarmId(farmId);
     setCropModalOpen(true);
   };
@@ -109,7 +116,21 @@ const FarmerFarm = () => {
 
   const handleEditFarm = async (form) => {
     if (!editFarm) return;
-    await updateFarm(editFarm.farm_id, form);
+    
+    const formWithResubmit = {}
+    
+    Object.keys(form).forEach(key => {
+      if (form[key] !== undefined && form[key] !== null && form[key] !== '') {
+        formWithResubmit[key] = form[key]
+      }
+    })
+    
+    if (editFarm.rejection_reason) {
+      formWithResubmit.is_verified = false
+      formWithResubmit.rejection_reason = null
+    }
+    
+    await updateFarm(editFarm.farm_id, formWithResubmit);
     setEditFarm(null);
     getFarms();
     getFarm();
@@ -271,6 +292,31 @@ const FarmerFarm = () => {
                     </div>
 
                     <div className="p-4">
+                      {f.is_verified ? (
+                        <div className="mb-2">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-green-500 text-white shadow-sm">
+                            <CheckCircle size={12} /> Verified
+                          </span>
+                        </div>
+                      ) : f.rejection_reason ? (
+                        <div className="mb-2">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-red-500 text-white shadow-sm">
+                            <XCircle size={12} /> Rejected
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="mb-2">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-amber-500 text-white shadow-sm">
+                            <AlertCircle size={12} /> Pending Approval
+                          </span>
+                        </div>
+                      )}
+                      {f.rejection_reason && (
+                        <div className="mt-2 mb-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                          <p className="text-[10px] font-semibold text-red-600 uppercase">Rejection Reason:</p>
+                          <p className="text-sm text-red-700 mt-1">{f.rejection_reason}</p>
+                        </div>
+                      )}
                       <h1 className="text-xl font-bold text-gray-900 mb-1">{f.farm_name}</h1>
 
                       {location(f) && (
@@ -310,15 +356,23 @@ const FarmerFarm = () => {
                         )}
                       </div>
 
-                      <div className="mt-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
-                       
-
-                        {/* <button
-                          onClick={() => openEditFarm(f)}
-                          className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-lg transition-colors"
-                        >
-                          Edit
-                        </button> */}
+<div className="mt-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        {f.rejection_reason && (
+                          <button
+                            onClick={() => openEditFarm(f)}
+                            className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                          >
+                            Resubmit Farm
+                          </button>
+                        )}
+                        {!f.is_verified && !f.rejection_reason && (
+                          <button
+                            onClick={() => openEditFarm(f)}
+                            className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold rounded-lg transition-colors"
+                          >
+                            Edit
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

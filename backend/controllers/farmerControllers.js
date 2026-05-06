@@ -179,8 +179,8 @@ if (!farm_name || !farm_area) {
         const farmDocUrls = handleFarmDocsUpload(req)
 
         const result = await db.query(
-            `INSERT INTO farm (user_id, farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries, farm_image, farm_docs)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            `INSERT INTO farm (user_id, farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries, farm_image, farm_docs, is_verified)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
              RETURNING *`,
             [
                 user_id,
@@ -195,7 +195,8 @@ if (!farm_name || !farm_area) {
                 farm_hectares || null,
                 plot_boundaries || null,
                 farmImageUrl,
-                farmDocUrls.length > 0 ? farmDocUrls : null
+                farmDocUrls.length > 0 ? farmDocUrls : null,
+                false
             ]
         );
         res.status(201).json({ message: "Farm registered successfully", farm: result.rows[0] });
@@ -262,7 +263,7 @@ export const getCrops = async (req, res) => {
 
 export const updateFarm = async (req, res) => {
     const { farm_id } = req.params;
-    const { farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries } = req.body;
+    const { farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries, is_verified, rejection_reason } = req.body;
     const user_id = req.user.user_id;
 
     if (!farm_name || !farm_area) {
@@ -288,38 +289,53 @@ export const updateFarm = async (req, res) => {
             farmImageUrl = `/uploads/farm_images/${filename}`
         }
 
-        const updateFields = [
-            'farm_name = $1', 'gps_coordinates = $2', 'farm_location = $3', 'farm_area = $4', 
-            'farm_elevation = $5', 'province = $6', 'municipality = $7', 'barangay = $8', 
-            'farm_hectares = $9', 'plot_boundaries = $10'
-        ]
-        const updateValues = [
-            farm_name, gps_coordinates || null, farm_location || null, farm_area,
-            farm_elevation || null, province || null, municipality || null, barangay || null,
-            farm_hectares || null, plot_boundaries || null
-        ]
-
-        if (farmImageUrl) {
-            updateFields.push('farm_image = $11')
-            updateValues.push(farmImageUrl)
-        }
-
-        updateFields.push('farm_id = $' + (updateFields.length - 1))
-        updateValues.push(farm_id)
-
-        const setClause = updateFields.slice(0, farmImageUrl ? 11 : 10).join(', ')
+        const boolIsVerified = (is_verified === true || is_verified === 'true') ? true : (is_verified === false ? false : undefined)
         
+        const rejReason = (rejection_reason === undefined || rejection_reason === null || rejection_reason === '') ? null : rejection_reason
+
+        let query = `
+            UPDATE farm SET 
+                farm_name = $1, 
+                gps_coordinates = $2, 
+                farm_location = $3, 
+                farm_area = $4, 
+                farm_elevation = $5, 
+                province = $6, 
+                municipality = $7, 
+                barangay = $8, 
+                farm_hectares = $9, 
+                plot_boundaries = $10
+        `
+        const params = [
+            farm_name,
+            gps_coordinates || null,
+            farm_location || null,
+            farm_area,
+            farm_elevation || null,
+            province || null,
+            municipality || null,
+            barangay || null,
+            farm_hectares || null,
+            plot_boundaries || null
+        ]
+
         if (farmImageUrl) {
-            await db.query(
-                `UPDATE farm SET ${setClause} WHERE farm_id = $${updateValues.length} AND user_id = $${updateValues.length + 1}`,
-                [...updateValues.slice(0, -1), user_id]
-            )
-        } else {
-            await db.query(
-                `UPDATE farm SET ${setClause} WHERE farm_id = $${updateValues.length} AND user_id = $${updateValues.length + 1}`,
-                [...updateValues, user_id]
-            )
+            query += `, farm_image = $${params.length + 1}`
+            params.push(farmImageUrl)
         }
+
+        if (boolIsVerified !== undefined) {
+            query += `, is_verified = $${params.length + 1}`
+            params.push(boolIsVerified)
+        }
+
+        query += `, rejection_reason = $${params.length + 1}`
+        params.push(rejReason)
+
+        query += ` WHERE farm_id = $${params.length + 1} AND user_id = $${params.length + 2}`
+        params.push(farm_id, user_id)
+
+        await db.query(query, params)
 
         const updatedFarm = await db.query(`SELECT * FROM farm WHERE farm_id = $1`, [farm_id]);
         res.status(200).json({ message: "Farm updated successfully", farm: updatedFarm.rows[0] });

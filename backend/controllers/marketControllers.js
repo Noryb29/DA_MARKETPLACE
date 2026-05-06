@@ -41,6 +41,7 @@ export const getAllCrops = async (req, res) => {
         ORDER BY pr.price_date DESC
         LIMIT 1
       ) latest_price ON true
+      WHERE c.is_verified = true AND f.is_verified = true
       ORDER BY c.crop_id DESC
     `)
     res.status(200).json({ crops: rows.rows })

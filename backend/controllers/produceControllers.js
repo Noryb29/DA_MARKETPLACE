@@ -82,7 +82,8 @@ export const addCrop = async (req, res) => {
         maturity_days, expected_volume,
         planting_date, expected_harvest, actual_harvest, total_harvest,
         price,
-        location
+        location,
+        is_harvested
     } = req.body;
 
     const parseSpec = (spec) => {
@@ -132,18 +133,20 @@ export const addCrop = async (req, res) => {
             const farmCheck = await db.query(`SELECT farm_id FROM farm WHERE farm_id = $1 AND user_id = $2`, [farm_id, user_id]);
             if (farmCheck.rows.length === 0) return res.status(403).json({ message: "Invalid farm selected." });
         }
+        const harvestDate = (is_harvested && actual_harvest) ? actual_harvest : '2099-12-31'
+
         const result = await db.query(
             `INSERT INTO crop_in_farm (
                 farm_id, crop_name, variety, volume, stock,
                 maturity_days, expected_volume,
                 planting_date, expected_harvest, actual_harvest, total_harvest,
-                harvest_photo, price, location
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                harvest_photo, price, location, is_verified
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
             RETURNING crop_id`,
             [farm_id, crop_name, variety || null, volume || null, stock || null,
              maturity_days || null, expected_volume || null,
-             planting_date || null, expected_harvest || null, actual_harvest || null, total_harvest || null,
-             harvest_photo, price || null, location || null]
+             planting_date || null, expected_harvest || null, harvestDate, total_harvest || null,
+             harvest_photo, price || null, location || null, false]
         );
 
         const cropId = result.rows[0].crop_id;
@@ -189,7 +192,7 @@ export const updateCrop = async (req, res) => {
         specification_4, specification_5, specification_6, specification_7, specification_8,
         maturity_days, expected_volume,
         planting_date, expected_harvest, actual_harvest, total_harvest,
-        location
+        location, is_verified, rejection_reason
     } = req.body;
 
     const parseSpec = (spec) => {
@@ -238,19 +241,34 @@ export const updateCrop = async (req, res) => {
         const currentPhoto = rows.rows[0].harvest_photo
         const finalPhoto = harvest_photo || (req.body.harvest_photo === '' ? null : currentPhoto)
 
-        await db.query(
-            `UPDATE crop_in_farm SET
-                crop_name=$1, variety=$2, volume=$3, stock=$4,
-                maturity_days=$5, expected_volume=$6,
-                planting_date=$7, expected_harvest=$8, actual_harvest=$9, total_harvest=$10,
-                harvest_photo=$11, location=$12
-            WHERE crop_id=$13`,
-            [crop_name, variety || null, volume || null, stock || null,
-             maturity_days || null, expected_volume || null,
-             planting_date || null, expected_harvest || null, actual_harvest || null, total_harvest || null,
-             finalPhoto, location || null,
-             crop_id]
-        );
+        const boolIsVerified = (is_verified === true || is_verified === 'true') ? true : (is_verified === false ? false : undefined)
+        const rejReason = (rejection_reason === undefined || rejection_reason === null || rejection_reason === '') ? null : rejection_reason
+
+        let query = `UPDATE crop_in_farm SET
+            crop_name=$1, variety=$2, volume=$3, stock=$4,
+            maturity_days=$5, expected_volume=$6,
+            planting_date=$7, expected_harvest=$8, actual_harvest=$9, total_harvest=$10,
+            harvest_photo=$11, location=$12`
+        
+        const params = [
+            crop_name, variety || null, volume || null, stock || null,
+            maturity_days || null, expected_volume || null,
+            planting_date || null, expected_harvest || null, actual_harvest || null, total_harvest || null,
+            finalPhoto, location || null
+        ]
+
+        if (boolIsVerified !== undefined) {
+            query += `, is_verified = $${params.length + 1}`
+            params.push(boolIsVerified)
+        }
+
+        query += `, rejection_reason = $${params.length + 1}`
+        params.push(rejReason)
+
+        query += ` WHERE crop_id = $${params.length + 1}`
+        params.push(crop_id)
+
+        await db.query(query, params)
 
         const existingSpec = await db.query(`SELECT spec_id FROM crop_specifications WHERE crop_id = $1`, [crop_id]);
         
@@ -393,6 +411,7 @@ export const getAllCrops = async (req, res) => {
                 ORDER BY pr.price_date DESC
                 LIMIT 1
             ) latest_price ON true
+            WHERE c.is_verified = true AND f.is_verified = true
             ORDER BY c.crop_id DESC`
         );
         res.status(200).json({ crops: rows.rows });

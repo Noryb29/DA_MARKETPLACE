@@ -3,10 +3,35 @@ import Header from '../public/components/Header'
 import Sidebar from '../public/components/SideBar'
 import ProductDetailModal from './components/ProductDetailModal'
 import { useAdminStore } from '../../store/AdminStore'
-import { Search, ChevronDown, X, AlertCircle } from 'lucide-react'
+import { Search, ChevronDown, X, AlertCircle, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 
 const AdminProducts = () => {
-  const { products, loading, error, getAllProducts, clearError } = useAdminStore()
+  const { products, loading, error, getAllProducts, verifyProduct, clearError } = useAdminStore()
+  const [filter, setFilter] = useState('pending')
+  const [verifyingId, setVerifyingId] = useState(null)
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectProductId, setRejectProductId] = useState(null)
+  const [rejectionReason, setRejectionReason] = useState('')
+
+  const handleVerify = async (productId, is_verified, reason = null) => {
+    setVerifyingId(productId)
+    try {
+      await verifyProduct(productId, is_verified, reason)
+      setShowRejectModal(false)
+      setRejectProductId(null)
+      setRejectionReason('')
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setVerifyingId(null)
+    }
+  }
+
+  const openRejectModal = (productId) => {
+    setRejectProductId(productId)
+    setRejectionReason('')
+    setShowRejectModal(true)
+  }
   const [filteredProducts, setFilteredProducts] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -24,13 +49,19 @@ const AdminProducts = () => {
   useEffect(() => {
     let filtered = products.filter(product => {
       const searchLower = searchTerm.toLowerCase()
-      return (
+      const matchesSearch = (
         product.crop_name?.toLowerCase().includes(searchLower) ||
         product.variety?.toLowerCase().includes(searchLower) ||
         product.farm_name?.toLowerCase().includes(searchLower) ||
         product.firstname?.toLowerCase().includes(searchLower) ||
         product.lastname?.toLowerCase().includes(searchLower)
       )
+      
+      if (filter === 'all') return matchesSearch
+      if (filter === 'pending') return matchesSearch && !product.is_verified && !product.rejection_reason
+      if (filter === 'approved') return matchesSearch && product.is_verified
+      if (filter === 'rejected') return matchesSearch && !product.is_verified && product.rejection_reason
+      return matchesSearch
     })
 
     // Sort
@@ -52,7 +83,7 @@ const AdminProducts = () => {
 
     setFilteredProducts(filtered)
     setCurrentPage(1)
-  }, [searchTerm, products, sortField, sortOrder])
+  }, [searchTerm, products, sortField, sortOrder, filter])
 
   // Pagination
   const paginatedProducts = filteredProducts.slice(
@@ -121,6 +152,16 @@ const AdminProducts = () => {
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+                <select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Products</option>
+                  <option value="pending">Pending Approval</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
                 <div className="flex gap-2">
                   <select
                     value={sortField}
@@ -189,8 +230,9 @@ const AdminProducts = () => {
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Farm</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Volume</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Stock</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Harvest Date</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+<th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Harvest Date</th>
+                              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -226,13 +268,64 @@ const AdminProducts = () => {
                               <td className="px-6 py-4 text-sm text-gray-600">
                                 {new Date(product.expected_harvest).toLocaleDateString()}
                               </td>
+                              <td className="px-6 py-4">
+                                {product.is_verified ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                    <CheckCircle size={12} /> Approved
+                                  </span>
+                                ) : product.rejection_reason ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                    <XCircle size={12} /> Rejected
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                                    <AlertCircle size={12} /> Pending
+                                  </span>
+                                )}
+                              </td>
                               <td className="px-6 py-4 text-sm">
-                                <button
-                                  onClick={() => handleOpenModal(product)}
-                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors font-medium"
-                                >
-                                  View Details
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  {(!product.is_verified && !product.rejection_reason) && (
+                                    <>
+                                      <button
+                                        onClick={() => handleVerify(product.crop_id, true)}
+                                        disabled={verifyingId === product.crop_id}
+                                        className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors text-xs font-medium"
+                                      >
+                                        {verifyingId === product.crop_id ? (
+                                          <Loader2 size={12} className="animate-spin" />
+                                        ) : (
+                                          <CheckCircle size={12} />
+                                        )}
+                                        Approve
+                                      </button>
+                                      <button
+                                        onClick={() => openRejectModal(product.crop_id)}
+                                        disabled={verifyingId === product.crop_id}
+                                        className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors text-xs font-medium"
+                                      >
+                                        <XCircle size={12} />
+                                        Reject
+                                      </button>
+                                    </>
+                                  )}
+                                  {product.rejection_reason && (
+                                    <button
+                                      onClick={() => handleVerify(product.crop_id, true)}
+                                      disabled={verifyingId === product.crop_id}
+                                      className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors text-xs font-medium"
+                                    >
+                                      <CheckCircle size={12} />
+                                      Approve
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => handleOpenModal(product)}
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors font-medium"
+                                  >
+                                    View Details
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           )
@@ -280,6 +373,45 @@ const AdminProducts = () => {
         product={selectedProduct}
         onClose={handleCloseModal}
       />
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-full">
+                <XCircle className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Reject Product</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Please provide a reason for rejecting this product. This will be shown to the farmer.
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+              rows={4}
+            />
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowRejectModal(false)}
+                className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleVerify(rejectProductId, false, rejectionReason)}
+                disabled={!rejectionReason.trim() || verifyingId === rejectProductId}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {verifyingId === rejectProductId ? 'Rejecting...' : 'Reject Product'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

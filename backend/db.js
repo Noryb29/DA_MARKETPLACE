@@ -71,6 +71,8 @@ export const createDB = async() => {
                 farm_image VARCHAR(500),
                 farm_docs VARCHAR(1000)[],
                 farm_elevation INTEGER,
+                is_verified BOOLEAN DEFAULT false,
+                rejection_reason VARCHAR(500),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `)
@@ -110,7 +112,9 @@ export const createDB = async() => {
                 total_harvest DECIMAL(10,2),
                 harvest_photo VARCHAR(500),
                 price DECIMAL(10,2),
-                location VARCHAR(255)
+                location VARCHAR(255),
+                is_verified BOOLEAN DEFAULT false,
+                rejection_reason VARCHAR(500)
             )
         `)
         console.log('✓ Table "crop_in_farm" created')
