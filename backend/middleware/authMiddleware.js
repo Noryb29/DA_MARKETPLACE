@@ -75,6 +75,39 @@ export const anyAuthMiddleware = (req, res, next) => {
   }
 }
 
+// ─── Verify token (for chat - handles both users and farmers) ───────────────
+export const verifyToken = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer '))
+      return res.status(401).json({ message: 'Authorization header missing or malformed' })
+
+    const token = authHeader.split(' ')[1]
+
+    let decoded = null
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET_USER)
+      if (decoded.role !== 'user' && decoded.role !== 'admin') {
+        throw new Error('Invalid role')
+      }
+    } catch {
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET_FARMER)
+        if (decoded.role !== 'farmer') {
+          throw new Error('Invalid role')
+        }
+      } catch {
+        return res.status(401).json({ message: 'Invalid or expired token' })
+      }
+    }
+
+    req.user = decoded
+    next()
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid or expired token' })
+  }
+}
+
 // ─── Admin middleware (STRICT - only admin role) ──────────────────────────────
 // Must be a user with role === 'admin' using JWT_SECRET_USER
 export const adminAuthMiddleware = (req, res, next) => {

@@ -41,6 +41,8 @@ import AdminOrders from "./pages/admin/AdminOrders.jsx";
 import AdminUsers from "./pages/admin/AdminUsers.jsx";
 import AboutPage from "./pages/public/AboutPage.jsx";
 import AdminPriceMonitoring from "./pages/admin/AdminPriceMonitoring.jsx";
+import UserChatPage from "./pages/users/UserChatPage.jsx";
+import FarmerChatPage from "./pages/farmer/FarmerChatPage.jsx";
 
 export const router = createBrowserRouter([
 
@@ -81,6 +83,7 @@ export const router = createBrowserRouter([
           { path: "/user/dashboard/profile",  element: <UserProfile /> },
           { path: "/user/dashboard/orders",   element: <UserOrdersPage /> },
           { path: "/user/dashboard/analytics",element: <UserAnalytics /> },
+          { path: "/user/dashboard/chat",     element: <UserChatPage /> },
           { path: "/user/shop",               element: <UserShoppingPage /> },
         ],
       },
@@ -100,6 +103,7 @@ export const router = createBrowserRouter([
           { path: "/farmer/dashboard/orders",    element: <FarmerOrders /> },
           { path: "/farmer/dashboard/inventory", element: <FarmerInventory /> },
           { path: "/farmer/dashboard/profile",   element: <FarmerProfile /> },
+          { path: "/farmer/dashboard/chat",     element: <FarmerChatPage /> },
           { path: "/farmer/dashboard/farm",      element: <FarmerFarm /> },
           { path: "/farmer/dashboard/farm/:id", element: <FarmerFarmDetails /> },
         ],

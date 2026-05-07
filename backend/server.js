@@ -2,6 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import multer from 'multer'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 
 import { farmerRoutes } from './routes/farmerRoutes.js'
 import { produceRoutes } from './routes/produceRoutes.js'
@@ -12,6 +14,7 @@ import {analyticsRoutes} from './routes/analyticsRoutes.js'
 import authRouter from './routes/authRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import userDetailsRouter from './routes/userDetailsRoutes.js'
+import chatRouter from './routes/chatRoutes.js'
 
 dotenv.config()
 
@@ -38,8 +41,29 @@ app.use('/api/crops',vegetableRouter)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/auth', userDetailsRouter)
+app.use('/api/chat', chatRouter)
 
-app.listen(PORT, () => {
+const httpServer = createServer(app)
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+})
+
+io.on('connection', (socket) => {
+  socket.on('join', ({ userId, role }) => {
+    if (role === 'farmer') {
+      socket.join(`farmer_${userId}`)
+    } else {
+      socket.join(`user_${userId}`)
+    }
+  })
+})
+
+app.set('io', io)
+
+httpServer.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
 
   // CHECK IF NEON IS CONNECTED

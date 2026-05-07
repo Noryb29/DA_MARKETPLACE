@@ -254,7 +254,34 @@ export const createDB = async() => {
         `)
         console.log('✓ Table "price_records" created')
 
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS conversations (
+                conversation_id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                farmer_id INTEGER NOT NULL,
+                crop_order_id INTEGER,
+                last_message_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_conversation_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                CONSTRAINT fk_conversation_farmer FOREIGN KEY (farmer_id) REFERENCES farmer(user_id) ON DELETE CASCADE,
+                CONSTRAINT fk_conversation_order FOREIGN KEY (crop_order_id) REFERENCES crop_orders(crop_order_id) ON DELETE SET NULL
+            )
+        `)
+        console.log('✓ Table "conversations" created')
 
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS messages (
+                message_id SERIAL PRIMARY KEY,
+                conversation_id INTEGER NOT NULL,
+                sender_id INTEGER NOT NULL,
+                sender_type VARCHAR(10) NOT NULL,
+                content TEXT NOT NULL,
+                is_read BOOLEAN DEFAULT false,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_message_conversation FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id) ON DELETE CASCADE
+            )
+        `)
+        console.log('✓ Table "messages" created')
 
         console.log('\n✅ Database setup completed successfully!')
 

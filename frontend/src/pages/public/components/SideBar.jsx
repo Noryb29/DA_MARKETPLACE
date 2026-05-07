@@ -63,6 +63,7 @@ const Sidebar = ({ onLogout }) => {
           group: 'Account',
           items: [
             { label: 'Profile', icon: '👤', to: '/farmer/dashboard/profile' },
+            { label: 'Messages', icon: '💬', to: '/farmer/dashboard/chat' },
           ],
         },
       ]
@@ -89,6 +90,7 @@ const Sidebar = ({ onLogout }) => {
           group: 'Account',
           items: [
             { label: 'Profile', icon: '👤', to: '/user/dashboard/profile' },
+            { label: 'Messages', icon: '💬', to: '/user/dashboard/chat' },
           ],
         },
       ]

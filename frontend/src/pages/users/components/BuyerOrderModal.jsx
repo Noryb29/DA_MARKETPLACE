@@ -1,8 +1,10 @@
 import React from 'react'
 import {
   X, User, Calendar, ClipboardList, Store,
-  Package, Archive, MapPin, Sprout
+  Package, Archive, MapPin, Sprout, MessageCircle
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import useChatStore from '../../../store/ChatStore'
 
 const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
@@ -14,7 +16,21 @@ const formatDateTime = (d) =>
   }) : '—'
 
 const BuyerOrderModal = ({ order, onClose }) => {
+  const navigate = useNavigate()
+  const { createConversation, getConversations } = useChatStore()
+
   if (!order) return null
+
+  const handleChat = async () => {
+    if (order.farmer_id) {
+      const conversationId = await createConversation(order.farmer_id, order.crop_order_id)
+      if (conversationId) {
+        await getConversations()
+        navigate('/user/dashboard/chat')
+      }
+    }
+  }
+
   const specs = [1,2,3,4,5,6,7,8].map(n => {
     const name = order[`specification_${n}_name`]
     const value = order[`specification_${n}_value`]
@@ -124,6 +140,15 @@ const BuyerOrderModal = ({ order, onClose }) => {
                 </div>
                 <span className="text-sm text-gray-500">{order.gps_coordinates}</span>
               </div>
+            )}
+            {order.farmer_id && (
+              <button
+                onClick={handleChat}
+                className="w-full mt-3 py-2 rounded-lg bg-green-50 text-green-700 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-green-100 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Message Farmer
+              </button>
             )}
           </div>
 

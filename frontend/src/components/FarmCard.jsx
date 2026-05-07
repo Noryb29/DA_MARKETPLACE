@@ -1,8 +1,23 @@
-import { Sprout, MapPin, User, Ruler, MapPinned, Leaf, FileText } from 'lucide-react'
+import { Sprout, MapPin, User, Ruler, MapPinned, Leaf, FileText, MessageCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import useChatStore from '../store/ChatStore'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 export const FarmCard = ({ farm, onViewClick, index }) => {
+  const navigate = useNavigate()
+  const { createConversation, getConversations } = useChatStore()
+
+  const handleChat = async (e) => {
+    e.stopPropagation()
+    if (farm.user_id) {
+      const conversationId = await createConversation(farm.user_id, null)
+      if (conversationId) {
+        await getConversations()
+        navigate('/user/dashboard/chat')
+      }
+    }
+  }
   const getDocsCount = () => {
     if (!farm.farm_docs) return 0
     if (Array.isArray(farm.farm_docs)) return farm.farm_docs.length
@@ -68,30 +83,41 @@ export const FarmCard = ({ farm, onViewClick, index }) => {
           </div>
         )}
 
-        <div className="flex items-center gap-3 flex-wrap pt-2 border-t border-gray-100">
-          {farm.farm_area && (
-            <div className="flex items-center gap-1">
-              <Ruler className="w-3.5 h-3.5 text-green-500" />
-              <span className="text-xs font-semibold text-green-700">{(parseFloat(farm.farm_area) / 1000).toFixed(1)}k m²</span>
-            </div>
-          )}
-          {farm.farm_hectares && (
-            <div className="flex items-center gap-1">
-              <MapPinned className="w-3.5 h-3.5 text-blue-500" />
-              <span className="text-xs font-semibold text-blue-700">{farm.farm_hectares} ha</span>
-            </div>
-          )}
-          {farm.farm_elevation && (
-            <div className="flex items-center gap-1">
-              <Leaf className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-xs font-semibold text-amber-700">{parseFloat(farm.farm_elevation).toFixed(0)}m</span>
-            </div>
-          )}
-          {docsCount > 0 && (
-            <div className="flex items-center gap-1">
-              <FileText className="w-3.5 h-3.5 text-purple-500" />
-              <span className="text-xs font-semibold text-purple-700">{docsCount} docs</span>
-            </div>
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+          <div className="flex items-center gap-3 flex-wrap">
+            {farm.farm_area && (
+              <div className="flex items-center gap-1">
+                <Ruler className="w-3.5 h-3.5 text-green-500" />
+                <span className="text-xs font-semibold text-green-700">{(parseFloat(farm.farm_area) / 1000).toFixed(1)}k m²</span>
+              </div>
+            )}
+            {farm.farm_hectares && (
+              <div className="flex items-center gap-1">
+                <MapPinned className="w-3.5 h-3.5 text-blue-500" />
+                <span className="text-xs font-semibold text-blue-700">{farm.farm_hectares} ha</span>
+              </div>
+            )}
+            {farm.farm_elevation && (
+              <div className="flex items-center gap-1">
+                <Leaf className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-xs font-semibold text-amber-700">{parseFloat(farm.farm_elevation).toFixed(0)}m</span>
+              </div>
+            )}
+            {docsCount > 0 && (
+              <div className="flex items-center gap-1">
+                <FileText className="w-3.5 h-3.5 text-purple-500" />
+                <span className="text-xs font-semibold text-purple-700">{docsCount} docs</span>
+              </div>
+            )}
+          </div>
+          {farm.user_id && (
+            <button
+              onClick={handleChat}
+              className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1 font-medium"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Chat
+            </button>
           )}
         </div>
       </div>
