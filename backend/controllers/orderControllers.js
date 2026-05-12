@@ -27,13 +27,13 @@ export const getMyOrders = async (req, res) => {
     const user_id = req.user.user_id
     try {
         const rows = await db.query(
-            `SELECT 
+            `SELECT
                 co.*,
                 c.crop_name, c.variety,
                 c.specification_1, c.specification_2, c.specification_3,
                 c.specification_4, c.specification_5,
                 c.planting_date, c.expected_harvest,
-                c.harvest_photo, c.location AS crop_location,
+                c.harvest_photo, c.harvest_photo_data, c.location AS crop_location,
                 f.farm_name, f.farm_location, f.gps_coordinates, f.province, f.municipality, f.barangay,
                 fa.firstname AS farmer_first_name,
                 fa.lastname  AS farmer_last_name
@@ -56,16 +56,18 @@ export const getFarmerOrders = async (req, res) => {
     const user_id = req.user.user_id
     try {
         const rows = await db.query(
-            `SELECT 
+            `SELECT
                 co.*,
                 c.crop_name, c.variety,
                 c.specification_1, c.specification_2, c.specification_3,
                 c.specification_4, c.specification_5,
-                c.harvest_photo, c.location AS crop_location,
+                c.harvest_photo, c.harvest_photo_data, c.location AS crop_location,
                 f.farm_name, f.farm_location, f.gps_coordinates, f.province, f.municipality, f.barangay,
                 u.firstname AS buyer_first_name,
                 u.lastname  AS buyer_last_name,
-                ud.profile_picture AS buyer_profile_picture
+                u.user_id   AS buyer_user_id,
+                ud.profile_picture AS buyer_profile_picture,
+                ud.profile_picture_data AS buyer_profile_picture_data
             FROM crop_orders co
             LEFT JOIN crop_in_farm  c ON co.crop_id  = c.crop_id
             LEFT JOIN farm   f ON co.farm_id  = f.farm_id

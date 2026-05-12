@@ -3,6 +3,40 @@ import {ShoppingBag, Calendar, Package, User, MapPin, X, CheckCircle, Clock, Tru
 import useOrderStore from '../../../store/OrderStore'
 import Swal from 'sweetalert2'
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+
+const getImageSrc = (obj) => {
+  if (obj.harvest_photo_data) {
+    const raw = obj.harvest_photo_data
+    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
+    const bytes = new Uint8Array(data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (obj.harvest_photo) {
+    return obj.harvest_photo.startsWith('http') ? obj.harvest_photo : `${BASE_URL}${obj.harvest_photo}`
+  }
+  const cropId = obj.crop_id || obj.crop?.crop_id
+  return cropId ? `${BASE_URL}/api/images/crop/${cropId}` : null
+}
+
+const getBuyerPicSrc = (order) => {
+  if (!order) return null
+  if (order.buyer_profile_picture_data) {
+    const bytes = new Uint8Array(order.buyer_profile_picture_data.data || order.buyer_profile_picture_data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (order.buyer_profile_picture) {
+    if (order.buyer_profile_picture.startsWith('http')) return order.buyer_profile_picture
+    return `${BASE_URL}${order.buyer_profile_picture}`
+  }
+  if (order.buyer_user_id) {
+    return `${BASE_URL}/api/images/user/${order.buyer_user_id}`
+  }
+  return null
+}
+
 const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
 
@@ -61,8 +95,8 @@ const FarmerOrderCard = ({ order }) => {
       <div className="h-2 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
       <div className="p-4">
         <div className="flex items-start gap-3">
-          {order.harvest_photo ? (
-            <img src={order.harvest_photo} alt="Harvest" className="w-16 h-16 rounded-lg object-cover shrink-0" />
+          {getImageSrc(order) ? (
+            <img src={getImageSrc(order)} alt="Harvest" className="w-16 h-16 rounded-lg object-cover shrink-0" />
           ) : (
             <div className="w-16 h-16 rounded-lg bg-green-50 border border-green-100 flex items-center justify-center shrink-0">
               <ShoppingBag className="w-7 h-7 text-green-500" />
@@ -100,8 +134,8 @@ const FarmerOrderCard = ({ order }) => {
             )}
             
             <div className="flex items-center gap-2 mt-2">
-              {order.buyer_profile_picture ? (
-                <img src={order.buyer_profile_picture} alt="Buyer" className="w-4 h-4 rounded-full object-cover" />
+              {getBuyerPicSrc(order) ? (
+                <img src={getBuyerPicSrc(order)} alt="Buyer" className="w-4 h-4 rounded-full object-cover" />
               ) : (
                 <User className="w-3.5 h-3.5 text-gray-400 shrink-0" />
               )}
@@ -186,9 +220,9 @@ const FarmerOrderCard = ({ order }) => {
                 </button>
               </div>
 
-              {order.harvest_photo && (
+              {getImageSrc(order) && (
                 <div className="rounded-xl overflow-hidden mb-4">
-                  <img src={order.harvest_photo} alt="Harvest" className="w-full h-48 object-cover" />
+                  <img src={getImageSrc(order)} alt="Harvest" className="w-full h-48 object-cover" />
                 </div>
               )}
 
@@ -239,8 +273,8 @@ const FarmerOrderCard = ({ order }) => {
               <div className="bg-blue-50 rounded-xl p-4 mt-4 space-y-3">
                 <p className="text-[10px] text-blue-600 font-semibold uppercase tracking-widest">Buyer</p>
                 <div className="flex items-center gap-3">
-                  {order.buyer_profile_picture ? (
-                    <img src={order.buyer_profile_picture} alt="Buyer" className="w-14 h-14 rounded-full object-cover" />
+                  {getBuyerPicSrc(order) ? (
+                    <img src={getBuyerPicSrc(order)} alt="Buyer" className="w-14 h-14 rounded-full object-cover" />
                   ) : (
                     <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
                       <User className="w-7 h-7 text-blue-400" />

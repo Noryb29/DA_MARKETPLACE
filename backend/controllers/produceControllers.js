@@ -2,6 +2,15 @@ import { db } from '../db.js'
 import fs from 'fs'
 import path from 'path'
 
+const readFileAsBuffer = (file) => {
+    if (!file) return null
+    try {
+        return fs.readFileSync(file.path)
+    } catch {
+        return null
+    }
+}
+
 export const getCrops = async (req, res) => {
     const user_id = req.user.user_id;
     try {
@@ -46,6 +55,7 @@ export const getCrops = async (req, res) => {
         res.status(500).json({ message: "Database error", error: error.message });
     }
 };
+
 
 export const getLatestPrice = async (req, res) => {
     const { crop_name } = req.query;
@@ -110,16 +120,11 @@ export const addCrop = async (req, res) => {
     if (!crop_name) return res.status(400).json({ message: "Crop name is required." });
 
     let harvest_photo = null;
+    let harvest_photo_data = null;
+    console.log('addCrop - req.file:', req.file)
     if (req.file) {
-        const uploadsDir = path.join(process.cwd(), 'uploads', 'harvest_photos')
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true })
-        }
-        const ext = path.extname(req.file.originalname) || '.jpg'
-        const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${ext}`
-        const filepath = path.join(uploadsDir, filename)
-        fs.renameSync(req.file.path, filepath)
-        harvest_photo = `/uploads/harvest_photos/${filename}`
+        harvest_photo_data = fs.readFileSync(req.file.path)
+        console.log('harvest_photo_data:', harvest_photo_data ? `Buffer of ${harvest_photo_data.length} bytes` : 'null')
     }
 
     try {
@@ -140,13 +145,13 @@ export const addCrop = async (req, res) => {
                 farm_id, crop_name, variety, volume, stock,
                 maturity_days, expected_volume,
                 planting_date, expected_harvest, actual_harvest, total_harvest,
-                harvest_photo, price, location, is_verified
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                harvest_photo, harvest_photo_data, price, location, is_verified
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             RETURNING crop_id`,
             [farm_id, crop_name, variety || null, volume || null, stock || null,
              maturity_days || null, expected_volume || null,
              planting_date || null, expected_harvest || null, harvestDate, total_harvest || null,
-             harvest_photo, price || null, location || null, false]
+             harvest_photo, harvest_photo_data, price || null, location || null, false]
         );
 
         const cropId = result.rows[0].crop_id;
@@ -217,16 +222,11 @@ export const updateCrop = async (req, res) => {
     const spec8 = getSpec(specification_8)
 
     let harvest_photo = null;
+    let harvest_photo_data = null;
+    console.log('updateCrop - req.file:', req.file)
     if (req.file) {
-        const uploadsDir = path.join(process.cwd(), 'uploads', 'harvest_photos')
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true })
-        }
-        const ext = path.extname(req.file.originalname) || '.jpg'
-        const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${ext}`
-        const filepath = path.join(uploadsDir, filename)
-        fs.renameSync(req.file.path, filepath)
-        harvest_photo = `/uploads/harvest_photos/${filename}`
+        harvest_photo_data = fs.readFileSync(req.file.path)
+        console.log('updateCrop harvest_photo_data:', harvest_photo_data ? `Buffer of ${harvest_photo_data.length} bytes` : 'null')
     }
 
     try {
@@ -248,14 +248,18 @@ export const updateCrop = async (req, res) => {
             crop_name=$1, variety=$2, volume=$3, stock=$4,
             maturity_days=$5, expected_volume=$6,
             planting_date=$7, expected_harvest=$8, actual_harvest=$9, total_harvest=$10,
-            harvest_photo=$11, location=$12`
-        
+            location=$11`
         const params = [
             crop_name, variety || null, volume || null, stock || null,
             maturity_days || null, expected_volume || null,
             planting_date || null, expected_harvest || null, actual_harvest || null, total_harvest || null,
-            finalPhoto, location || null
+            location || null
         ]
+
+        if (harvest_photo_data) {
+            query += `, harvest_photo = null, harvest_photo_data = $${params.length + 1}`
+            params.push(harvest_photo_data)
+        }
 
         if (boolIsVerified !== undefined) {
             query += `, is_verified = $${params.length + 1}`

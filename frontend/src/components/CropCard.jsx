@@ -1,10 +1,39 @@
 import { MapPin, Package, Archive, Calendar, Leaf, Sprout, Wheat, Pencil, Trash2, ImageIcon, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
 import CropLocation from './CropLocation'
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+
+const getImageSrc = (crop) => {
+  if (crop.harvest_photo_data) {
+    const bytes = new Uint8Array(crop.harvest_photo_data.data || crop.harvest_photo_data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (crop.harvest_photo) {
+    if (crop.harvest_photo.startsWith('http')) return crop.harvest_photo
+    return `${BASE_URL}${crop.harvest_photo}`
+  }
+  return crop.crop_id ? `${BASE_URL}/api/images/crop/${crop.crop_id}` : null
+}
+
+const getFarmImageSrc = (farm) => {
+  if (farm.farm_image_data) {
+    const bytes = new Uint8Array(farm.farm_image_data.data || farm.farm_image_data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (farm.farm_image) {
+    if (farm.farm_image.startsWith('http')) return farm.farm_image
+    return `${BASE_URL}${farm.farm_image}`
+  }
+  if (farm.farm_id) {
+    return `${BASE_URL}/api/images/farm/${farm.farm_id}`
+  }
+  return null
+}
+
 const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '—'
-
-const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 const getCropEmoji = (name = '') => {
   const n = name.toLowerCase()
@@ -40,9 +69,7 @@ export const CropCard = ({
 }) => {
   const isHarvested = crop.actual_harvest && !String(crop.actual_harvest).includes('2099')
   const isVerified = crop.is_verified === true
-  const imageSrc = crop.harvest_photo
-    ? (crop.harvest_photo.startsWith('http') ? crop.harvest_photo : `${BASE_URL}${crop.harvest_photo}`)
-    : null
+  const imageSrc = getImageSrc(crop)
 
   const specs = [1,2,3,4,5,6,7,8].map(n => {
     const name = crop[`specification_${n}_name`]

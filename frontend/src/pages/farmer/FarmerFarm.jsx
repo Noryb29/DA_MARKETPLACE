@@ -11,6 +11,35 @@ import { Search, Loader2, Sprout, Leaf,XCircle, MapPin, Ruler, X, Calendar, Slid
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
+const getImageSrc = (obj) => {
+  if (obj.harvest_photo_data) {
+    const raw = obj.harvest_photo_data
+    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
+    const bytes = new Uint8Array(data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (obj.harvest_photo) {
+    return obj.harvest_photo.startsWith('http') ? obj.harvest_photo : `${BASE_URL}${obj.harvest_photo}`
+  }
+  const cropId = obj.crop_id || obj.crop?.crop_id
+  return cropId ? `${BASE_URL}/api/images/crop/${cropId}` : null
+}
+
+const getFarmImageSrc = (obj) => {
+  if (obj.farm_image_data) {
+    const raw = obj.farm_image_data
+    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
+    const bytes = new Uint8Array(data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (obj.farm_image) {
+    return obj.farm_image.startsWith('http') ? obj.farm_image : `${BASE_URL}${obj.farm_image}`
+  }
+  return obj.farm_id ? `${BASE_URL}/api/images/farm/${obj.farm_id}` : null
+}
+
 const FarmerFarm = () => {
   const navigate = useNavigate();
   const { addFarm, loading, getFarm, getFarms, getCrops, farm, farms, hasFarm, crops, deleteFarm, updateFarm } = useFarmerStore();
@@ -25,6 +54,8 @@ const FarmerFarm = () => {
   const [sortBy, setSortBy] = useState('name');
   const [showFilters, setShowFilters] = useState(false);
   const [filterArea, setFilterArea] = useState('');
+
+  const selectedCropImg = useMemo(() => selectedCrop ? getImageSrc(selectedCrop) : null, [selectedCrop])
 
   const getCropsForFarm = (farmId) => crops.filter(c => c.farm_id === farmId) || [];
 
@@ -276,11 +307,13 @@ const FarmerFarm = () => {
 
             {!loading && filtered.length > 0 && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {filtered.map((f) => (
+                {filtered.map((f) => {
+                  const farmImg = getFarmImageSrc(f)
+                  return (
                   <div key={f.farm_id} onClick={() => navigate(`/farmer/dashboard/farm/${f.farm_id}`)} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
                     <div className="h-40 bg-linear-to-br from-green-400 to-emerald-600 relative">
-                      {f.farm_image ? (
-                        <img src={`${BASE_URL}${f.farm_image}`} alt={f.farm_name} className="w-full h-full object-cover" />
+                      {farmImg ? (
+                        <img src={farmImg} alt={f.farm_name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Sprout className="w-12 h-12 text-white/40" />
@@ -373,10 +406,11 @@ const FarmerFarm = () => {
                             Edit
                           </button>
                         )}
-                      </div>
+</div>
                     </div>
                   </div>
-                ))}
+                )
+                })}
               </div>
             )}
           </div>
@@ -423,8 +457,8 @@ const FarmerFarm = () => {
               </div>
 
               <div className="rounded-xl overflow-hidden mb-4">
-                {selectedCrop.harvest_photo ? (
-                  <img src={selectedCrop.harvest_photo} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
+                {selectedCropImg ? (
+                  <img src={selectedCropImg} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
                 ) : (
                   <div className="w-full h-44 bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                     <Sprout className="w-12 h-12 text-green-300" />

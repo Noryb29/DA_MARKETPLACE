@@ -14,6 +14,21 @@ import CropCard from '../../components/CropCard'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
+const getImageSrc = (obj) => {
+  if (obj.harvest_photo_data) {
+    const raw = obj.harvest_photo_data
+    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
+    const bytes = new Uint8Array(data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (obj.harvest_photo) {
+    return obj.harvest_photo.startsWith('http') ? obj.harvest_photo : `${BASE_URL}${obj.harvest_photo}`
+  }
+  const cropId = obj.crop_id || obj.crop?.crop_id
+  return cropId ? `${BASE_URL}/api/images/crop/${cropId}` : null
+}
+
 const ITEMS_PER_PAGE = 12
 
 const ShoppingPage = () => {
@@ -32,6 +47,7 @@ const ShoppingPage = () => {
   const [sortBy, setSortBy] = useState('newest')
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCrop, setSelectedCrop] = useState(null)
+  const selectedCropImg = useMemo(() => selectedCrop ? getImageSrc(selectedCrop) : null, [selectedCrop])
 
   useEffect(() => { getAllCrops() }, [])
 
@@ -251,8 +267,8 @@ const ShoppingPage = () => {
               </div>
 
               <div className="rounded-xl overflow-hidden mb-4">
-                {selectedCrop.harvest_photo ? (
-                  <img src={selectedCrop.harvest_photo.startsWith('http') ? selectedCrop.harvest_photo : `${BASE_URL}${selectedCrop.harvest_photo}`} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
+                {selectedCropImg ? (
+                  <img src={selectedCropImg} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
                 ) : (
                   <div className="w-full h-44 bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                     <Sprout className="w-12 h-12 text-green-300" />

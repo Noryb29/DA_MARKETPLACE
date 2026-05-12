@@ -1,6 +1,23 @@
 import { X, Wheat, Package, Calendar, MapPin, Sprout, Layers } from 'lucide-react'
 import CropLocation from '../../../components/CropLocation'
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+
+const getImageSrc = (obj) => {
+  if (obj.harvest_photo_data) {
+    const raw = obj.harvest_photo_data
+    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
+    const bytes = new Uint8Array(data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (obj.harvest_photo) {
+    return obj.harvest_photo.startsWith('http') ? obj.harvest_photo : `${BASE_URL}${obj.harvest_photo}`
+  }
+  const cropId = obj.crop_id || obj.crop?.crop_id
+  return cropId ? `${BASE_URL}/api/images/crop/${cropId}` : null
+}
+
 const CropDetailModal = ({ crop, onClose }) => {
   if (!crop) return null
 
@@ -38,9 +55,9 @@ const CropDetailModal = ({ crop, onClose }) => {
           </div>
 
           {/* Image */}
-          {crop.harvest_photo && (
+          {getImageSrc(crop) && (
             <div className="mb-6 rounded-xl overflow-hidden">
-              <img src={crop.harvest_photo} alt="Harvest" className="w-full h-56 object-cover" />
+              <img src={getImageSrc(crop)} alt="Harvest" className="w-full h-56 object-cover" />
             </div>
           )}
 

@@ -4,9 +4,26 @@ import useChatStore from '../store/ChatStore'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
+const getFarmImageSrc = (farm) => {
+  if (farm.farm_image_data) {
+    const bytes = new Uint8Array(farm.farm_image_data.data || farm.farm_image_data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (farm.farm_image) {
+    if (farm.farm_image.startsWith('http')) return farm.farm_image
+    return `${BASE_URL}${farm.farm_image}`
+  }
+  if (farm.farm_id) {
+    return `${BASE_URL}/api/images/farm/${farm.farm_id}`
+  }
+  return null
+}
+
 export const FarmCard = ({ farm, onViewClick, index }) => {
   const navigate = useNavigate()
   const { createConversation, getConversations } = useChatStore()
+  const farmImageSrc = getFarmImageSrc(farm)
 
   const handleChat = async (e) => {
     e.stopPropagation()
@@ -36,11 +53,12 @@ export const FarmCard = ({ farm, onViewClick, index }) => {
       onClick={onViewClick}
     >
       <div className="h-36 bg-gradient-to-br from-green-400 to-emerald-600 relative">
-        {farm.farm_image ? (
-          <img 
-            src={farm.farm_image.startsWith('http') ? farm.farm_image : `${BASE_URL}${farm.farm_image}`} 
-            alt={farm.farm_name} 
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+        {farmImageSrc ? (
+          <img
+            src={farmImageSrc}
+            alt={farm.farm_name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

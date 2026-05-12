@@ -8,6 +8,23 @@ import { FaMars, FaVenus } from 'react-icons/fa'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
+const getProfileImageSrc = (details, userId) => {
+  if (!details) return null
+  if (details.profile_picture_data) {
+    const bytes = new Uint8Array(details.profile_picture_data.data || details.profile_picture_data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (details.profile_picture) {
+    if (details.profile_picture.startsWith('http')) return details.profile_picture
+    return `${BASE_URL}${details.profile_picture}`
+  }
+  if (userId) {
+    return `${BASE_URL}/api/images/farmer/${userId}`
+  }
+  return null
+}
+
 const FarmerProfile = () => {
   const user = useFarmerAuthStore((state) => state.farmer)
   const logout = useFarmerAuthStore((state) => state.logout)
@@ -47,11 +64,8 @@ const FarmerProfile = () => {
 
   useEffect(() => {
     if (farmerDetails) {
-      const profilePic = farmerDetails.profile_picture 
-        ? (farmerDetails.profile_picture.startsWith('http') ? farmerDetails.profile_picture : `${BASE_URL}${farmerDetails.profile_picture}`)
-        : ''
       setDetailsForm({
-        profile_picture: profilePic,
+        profile_picture: '',
         gender: farmerDetails.gender || '',
         age: farmerDetails.age || '',
         farmer_organization: farmerDetails.farmer_organization || '',
@@ -60,7 +74,7 @@ const FarmerProfile = () => {
         municipality: farmerDetails.municipality || '',
         barangay: farmerDetails.barangay || '',
       })
-      setPhotoPreview(profilePic || null)
+      setPhotoPreview(farmerDetails.profile_picture_data ? getProfileImageSrc(farmerDetails, user?.user_id) : (farmerDetails.profile_picture ? (farmerDetails.profile_picture.startsWith('http') ? farmerDetails.profile_picture : `${BASE_URL}${farmerDetails.profile_picture}`) : null))
     }
   }, [farmerDetails])
 
@@ -157,11 +171,7 @@ const FarmerProfile = () => {
     return '?'
   }
 
-  const getProfilePicture = () => {
-    if (!farmerDetails?.profile_picture) return null
-    const pic = farmerDetails.profile_picture
-    return pic.startsWith('http') ? pic : `${BASE_URL}${pic}`
-  }
+  const getProfilePicture = () => getProfileImageSrc(farmerDetails, user?.user_id)
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'
 

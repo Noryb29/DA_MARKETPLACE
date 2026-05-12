@@ -43,6 +43,7 @@ export const createDB = async() => {
                 detail_id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL UNIQUE,
                 profile_picture VARCHAR(255),
+                profile_picture_data BYTEA,
                 gender VARCHAR(10),
                 age VARCHAR(6),
                 farmer_organization VARCHAR(100),
@@ -69,6 +70,7 @@ export const createDB = async() => {
                 municipality VARCHAR(100),
                 barangay VARCHAR(100),
                 farm_image VARCHAR(500),
+                farm_image_data BYTEA,
                 farm_docs VARCHAR(1000)[],
                 farm_elevation INTEGER,
                 is_verified BOOLEAN DEFAULT false,
@@ -111,6 +113,7 @@ export const createDB = async() => {
                 actual_harvest DATE NOT NULL,
                 total_harvest DECIMAL(10,2),
                 harvest_photo VARCHAR(500),
+                harvest_photo_data BYTEA,
                 price DECIMAL(10,2),
                 location VARCHAR(255),
                 is_verified BOOLEAN DEFAULT false,
@@ -140,19 +143,20 @@ export const createDB = async() => {
         console.log('✓ Table "users" created')
 
          await pool.query(`
-            CREATE TABLE IF NOT EXISTS user_details (
-                detail_id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL UNIQUE,
-                profile_picture VARCHAR(255),
-                bio TEXT,
-                gender VARCHAR(10),
-                date_of_birth DATE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                CONSTRAINT fk_user_details FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-            )
-        `)
-        console.log('✓ Table "user_details" created')
+             CREATE TABLE IF NOT EXISTS user_details (
+                 detail_id SERIAL PRIMARY KEY,
+                 user_id INTEGER NOT NULL UNIQUE,
+                 profile_picture VARCHAR(255),
+                 profile_picture_data BYTEA,
+                 bio TEXT,
+                 gender VARCHAR(10),
+                 date_of_birth DATE,
+                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                 CONSTRAINT fk_user_details FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+             )
+         `)
+         console.log('✓ Table "user_details" created')
 
 
         await pool.query(`

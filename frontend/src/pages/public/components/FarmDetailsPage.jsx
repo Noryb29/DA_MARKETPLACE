@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState,useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Header from './Header'
 import Sidebar from './SideBar'
@@ -11,6 +11,38 @@ import { getDaysUntilHarvest } from '../shopComponents/HarvestBadge'
 import CropLocation from '../../../components/CropLocation'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+
+const getFarmImageSrc = (farm) => {
+  if (farm.farm_image_data) {
+    const bytes = new Uint8Array(farm.farm_image_data.data || farm.farm_image_data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (farm.farm_image) {
+    if (farm.farm_image.startsWith('http')) return farm.farm_image
+    return `${BASE_URL}${farm.farm_image}`
+  }
+  if (farm.farm_id) {
+    return `${BASE_URL}/api/images/farm/${farm.farm_id}`
+  }
+  return null
+}
+
+const getCropImageSrc = (crop) => {
+  if (crop.harvest_photo_data) {
+    const bytes = new Uint8Array(crop.harvest_photo_data.data || crop.harvest_photo_data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (crop.harvest_photo) {
+    if (crop.harvest_photo.startsWith('http')) return crop.harvest_photo
+    return `${BASE_URL}${crop.harvest_photo}`
+  }
+  if (crop.crop_id) {
+    return `${BASE_URL}/api/images/crop/${crop.crop_id}`
+  }
+  return null
+}
 
 const FarmDetailsPage = () => {
   const { id } = useParams()
@@ -128,8 +160,8 @@ const FarmDetailsPage = () => {
               <div className="lg:col-span-1 space-y-4">
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   <div className="h-40 bg-linear-to-br from-green-400 to-emerald-600 relative">
-                    {farm.farm_image ? (
-                      <img src={farm.farm_image.startsWith('http') ? farm.farm_image : `${BASE_URL}${farm.farm_image}`} alt={farm.farm_name} className="w-full h-full object-cover" />
+                    {getFarmImageSrc(farm) ? (
+                      <img src={getFarmImageSrc(farm)} alt={farm.farm_name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Sprout className="w-12 h-12 text-white/40" />
@@ -245,8 +277,8 @@ const FarmDetailsPage = () => {
                     {crops.map(crop => (
                       <div key={crop.crop_id} onClick={() => setSelectedCrop(crop)} className="bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-md transition-all cursor-pointer overflow-hidden">
                         <div className="h-32 relative">
-                          {crop.harvest_photo ? (
-                            <img src={crop.harvest_photo} alt={crop.crop_name} className="w-full h-full object-cover" />
+                          {getCropImageSrc(crop) ? (
+                            <img src={getCropImageSrc(crop)} alt={crop.crop_name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                               <Sprout className="w-10 h-10 text-green-300" />
@@ -338,8 +370,8 @@ const FarmDetailsPage = () => {
               </div>
 
               <div className="rounded-xl overflow-hidden mb-4">
-                {selectedCrop.harvest_photo ? (
-                  <img src={selectedCrop.harvest_photo} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
+                {getCropImageSrc(selectedCrop) ? (
+                  <img src={getCropImageSrc(selectedCrop)} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
                 ) : (
                   <div className="w-full h-44 bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                     <Sprout className="w-12 h-12 text-green-300" />

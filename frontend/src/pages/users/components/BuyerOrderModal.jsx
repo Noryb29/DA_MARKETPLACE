@@ -6,6 +6,8 @@ import {
 import { useNavigate } from 'react-router-dom'
 import useChatStore from '../../../store/ChatStore'
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+
 const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
 
@@ -15,12 +17,28 @@ const formatDateTime = (d) =>
     hour: '2-digit', minute: '2-digit'
   }) : '—'
 
+const getImageSrc = (obj) => {
+  if (obj.harvest_photo_data) {
+    const raw = obj.harvest_photo_data
+    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
+    const bytes = new Uint8Array(data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (obj.harvest_photo) {
+    return obj.harvest_photo.startsWith('http') ? obj.harvest_photo : `${BASE_URL}${obj.harvest_photo}`
+  }
+  const cropId = obj.crop_id || obj.crop?.crop_id
+  return cropId ? `${BASE_URL}/api/images/crop/${cropId}` : null
+}
+
 const BuyerOrderModal = ({ order, onClose }) => {
   const navigate = useNavigate()
   const { createConversation, getConversations } = useChatStore()
 
   if (!order) return null
 
+  const orderImg = getImageSrc(order)
   const handleChat = async () => {
     if (order.farmer_id) {
       const conversationId = await createConversation(order.farmer_id, order.crop_order_id)
@@ -52,13 +70,11 @@ const BuyerOrderModal = ({ order, onClose }) => {
             </button>
           </div>
 
-          {order.harvest_photo && (
+          {orderImg ? (
             <div className="rounded-xl overflow-hidden mb-4">
-              <img src={order.harvest_photo} alt={order.crop_name} className="w-full h-44 object-cover" />
+              <img src={orderImg} alt={order.crop_name} className="w-full h-44 object-cover" />
             </div>
-          )}
-
-          {!order.harvest_photo && (
+          ) : (
             <div className="w-full h-44 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
               <Sprout className="w-12 h-12 text-gray-300" />
             </div>

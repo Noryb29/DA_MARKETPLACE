@@ -1,6 +1,23 @@
 import React from 'react'
 import { Wheat, Package, Archive, Store, ChevronRight, MapPin, Calendar, Sprout } from 'lucide-react'
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+
+const getImageSrc = (obj) => {
+  if (obj.harvest_photo_data) {
+    const raw = obj.harvest_photo_data
+    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
+    const bytes = new Uint8Array(data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (obj.harvest_photo) {
+    return obj.harvest_photo.startsWith('http') ? obj.harvest_photo : `${BASE_URL}${obj.harvest_photo}`
+  }
+  const cropId = obj.crop_id || obj.crop?.crop_id
+  return cropId ? `${BASE_URL}/api/images/crop/${cropId}` : null
+}
+
 const formatDateTime = (d) =>
   d ? new Date(d).toLocaleString('en-PH', {
     month: 'short', day: 'numeric', year: 'numeric',
@@ -14,8 +31,8 @@ const BuyerOrderCard = ({ order, onViewDetails }) => {
       className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-green-300 hover:shadow-md transition-all duration-200 cursor-pointer"
     >
       <div className="h-28 bg-gray-100 relative">
-        {order.harvest_photo ? (
-          <img src={order.harvest_photo} alt={order.crop_name} className="w-full h-full object-cover" />
+        {getImageSrc(order) ? (
+          <img src={getImageSrc(order)} alt={order.crop_name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Sprout className="w-10 h-10 text-gray-300" />

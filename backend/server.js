@@ -15,6 +15,7 @@ import authRouter from './routes/authRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import userDetailsRouter from './routes/userDetailsRoutes.js'
 import chatRouter from './routes/chatRoutes.js'
+import {imageRouter} from './routes/imageRoutes.js'
 
 dotenv.config()
 
@@ -22,11 +23,10 @@ const app = express()
 const PORT = process.env.PORT
 const FRONTEND_LINK = process.env.CORS_ORIGIN
 app.use(cors({
-  // origin: ['http://localhost:5173', `https://${FRONTEND_LINK}`],
   origin:'*',
   credentials: true
 }))
-app.use(express.json())
+app.use(express.json({ limit: '10mb' }))
 app.use('/uploads', express.static('uploads'))
 
 const upload = multer({ dest: 'uploads/' })
@@ -42,6 +42,7 @@ app.use('/api/analytics', analyticsRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/auth', userDetailsRouter)
 app.use('/api/chat', chatRouter)
+app.use('/api/images', imageRouter)
 
 const httpServer = createServer(app)
 const io = new Server(httpServer, {

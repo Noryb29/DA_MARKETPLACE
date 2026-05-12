@@ -19,38 +19,26 @@ const useMarketStore = create((set, get) => ({
     set({ loading: true })
     try {
       const response = await axios.get(`${BASE_URL}/api/market/getAllCrops`)
-      const cropsWithFullUrl = response.data.crops.map(crop => ({
-        ...crop,
-        harvest_photo: crop.harvest_photo ? `${BASE_URL}${crop.harvest_photo}` : null
-      }))
-      set({ crops: cropsWithFullUrl, loading: false, initialized: true })
+      set({ crops: response.data.crops, loading: false, initialized: true })
     } catch (error) {
       console.error('Failed to fetch market crops:', error)
       set({ loading: false, initialized: true })
     }
   },
 
-  // ✅ Get all farms
   getAllFarms: async () => {
     const { initialized, farms, loading } = get()
     if (initialized && farms.length > 0) return
     set({ loading: true })
     try {
       const response = await axios.get(`${BASE_URL}/api/market/getAllFarms`)
-      const farmsWithImages = response.data.farms.map(farm => ({
-        ...farm,
-        farm_image: farm.farm_image ? 
-          (farm.farm_image.startsWith('http') ? farm.farm_image : `${BASE_URL}${farm.farm_image}`) 
-          : null
-      }))
-      set({ farms: farmsWithImages, loading: false, initialized: true })
+      set({ farms: response.data.farms, loading: false, initialized: true })
     } catch (error) {
       console.error('Failed to fetch Farms', error)
       set({ loading: false, initialized: true })
     }
   },
 
-  // ✅ NEW: Get single farm
   getFarmById: async (farmId) => {
     set({ farmLoading: true })
     try {
@@ -62,21 +50,19 @@ const useMarketStore = create((set, get) => ({
     }
   },
 
-  // ✅ NEW: Get crops of a farm
   getCropsByFarmId: async (farmId) => {
-  set({ farmLoading: true })
-  try {
-    const response = await axios.get(
-      `${BASE_URL}/api/market/farm/${farmId}/crops`
-    )
-    set({ farmCrops: response.data.crops, farmLoading: false })
-  } catch (error) {
-    console.error('Failed to fetch farm crops:', error)
-    set({ farmLoading: false })
-  }
-},
+    set({ farmLoading: true })
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/market/farm/${farmId}/crops`
+      )
+      set({ farmCrops: response.data.crops, farmLoading: false })
+    } catch (error) {
+      console.error('Failed to fetch farm crops:', error)
+      set({ farmLoading: false })
+    }
+  },
 
-  // ✅ BEST: Fetch both at once
   getFarmDetails: async (farmId) => {
     set({ farmLoading: true })
     try {
@@ -85,21 +71,9 @@ const useMarketStore = create((set, get) => ({
         axios.get(`${BASE_URL}/api/market/farm/${farmId}/crops`)
       ])
 
-      const farmWithFullUrl = {
-        ...farmRes.data.farm,
-        farm_image: farmRes.data.farm?.farm_image ? 
-          (farmRes.data.farm.farm_image.startsWith('http') ? farmRes.data.farm.farm_image : `${BASE_URL}${farmRes.data.farm.farm_image}`) 
-          : null
-      }
-
-      const cropsWithFullUrl = cropsRes.data.crops.map(crop => ({
-        ...crop,
-        harvest_photo: crop.harvest_photo ? `${BASE_URL}${crop.harvest_photo}` : null
-      }))
-
       set({
-        selectedFarm: farmWithFullUrl,
-        farmCrops: cropsWithFullUrl,
+        selectedFarm: farmRes.data.farm,
+        farmCrops: cropsRes.data.crops,
         farmLoading: false
       })
     } catch (error) {
@@ -108,7 +82,6 @@ const useMarketStore = create((set, get) => ({
     }
   },
 
-  // ✅ Optional cleanup (very useful)
   clearFarmDetails: () => {
     set({ selectedFarm: null, farmCrops: [] })
   }

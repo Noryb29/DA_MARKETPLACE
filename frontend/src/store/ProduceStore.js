@@ -17,11 +17,7 @@ const useProduceStore = create((set, get) => ({
         `${BASE_URL}/api/produce/getCrops`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      const cropsWithFullUrl = response.data.crops.map(crop => ({
-        ...crop,
-        harvest_photo: crop.harvest_photo ? `${BASE_URL}${crop.harvest_photo}` : null
-      }))
-      set({ crops: cropsWithFullUrl, cropsLoading: false, cropsInitialized: true })
+      set({ crops: response.data.crops, cropsLoading: false, cropsInitialized: true })
     } catch (error) {
       set({ cropsLoading: false, cropsInitialized: true })
       console.error('Failed to fetch crops:', error)

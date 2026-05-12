@@ -13,6 +13,23 @@ import {
   MapPin, ChevronRight
 } from 'lucide-react'
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+
+const getImageSrc = (obj) => {
+  if (obj.harvest_photo_data) {
+    const raw = obj.harvest_photo_data
+    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
+    const bytes = new Uint8Array(data)
+    const blob = new Blob([bytes], { type: 'image/jpeg' })
+    return URL.createObjectURL(blob)
+  }
+  if (obj.harvest_photo) {
+    return obj.harvest_photo.startsWith('http') ? obj.harvest_photo : `${BASE_URL}${obj.harvest_photo}`
+  }
+  const cropId = obj.crop_id || obj.crop?.crop_id
+  return cropId ? `${BASE_URL}/api/images/crop/${cropId}` : null
+}
+
 const FarmerIndex = () => {
   const { farmer, logout, farmerDetails } = useFarmerAuthStore()
   const { farm, farms, hasFarm, getFarm } = useFarmerStore()
@@ -60,9 +77,14 @@ const FarmerIndex = () => {
     d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '—'
 
   const getProfilePicture = () => {
+    const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+    if (farmerDetails?.profile_picture_data) {
+      const bytes = new Uint8Array(farmerDetails.profile_picture_data.data || farmerDetails.profile_picture_data)
+      const blob = new Blob([bytes], { type: 'image/jpeg' })
+      return URL.createObjectURL(blob)
+    }
     if (!farmerDetails?.profile_picture) return null
     const pic = farmerDetails.profile_picture
-    const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
     return pic.startsWith('http') ? pic : `${BASE_URL}${pic}`
   }
 
@@ -177,12 +199,14 @@ const FarmerIndex = () => {
               </div>
               <div className="divide-y divide-gray-50">
                 {recentOrders.length > 0 ? (
-                  recentOrders.map((order) => (
+                  recentOrders.map((order) => {
+                    const orderImg = getImageSrc(order)
+                    return (
                     <div key={order.crop_order_id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
-                          {order.harvest_photo ? (
-                            <img src={order.harvest_photo} alt={order.crop_name} className="w-full h-full object-cover" />
+                          {orderImg ? (
+                            <img src={orderImg} alt={order.crop_name} className="w-full h-full object-cover" />
                           ) : (
                             <Package className="w-5 h-5 text-gray-400" />
                           )}
@@ -204,7 +228,8 @@ const FarmerIndex = () => {
                         <p className="text-[10px] text-gray-400">{formatDate(order.order_date)}</p>
                       </div>
                     </div>
-                  ))
+                    )
+                  })
                 ) : (
                   <div className="p-8 text-center">
                     <ShoppingCart className="w-10 h-10 text-gray-200 mx-auto mb-3" />
