@@ -472,74 +472,98 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                   )}
                 </div>
               </div>
-            ) : harvestStatus === 'not-harvested' && !showHarvestDetails ? (
-              <button
-                type="button"
-                onClick={() => setShowHarvestDetails(true)}
-                className="w-full py-3 rounded-xl border-2 border-dashed border-gray-300 text-sm font-medium text-gray-500 hover:border-green-400 hover:text-green-600 transition-colors flex items-center justify-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Add Harvest Details
-              </button>
             ) : null}
 
             {/* Specifications */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Specifications</label>
-              {form.specifications.length < 8 && (
-                <button
-                  type="button"
-                  onClick={addSpecification}
-                  className="w-full py-2.5 rounded-xl border-2 border-dashed border-green-300 bg-green-50 text-sm font-semibold text-green-600 hover:bg-green-100 hover:border-green-400 transition-all flex items-center justify-center gap-2"
-                >
-                  <Plus className="w-4 h-4" /> Add Specification
-                </button>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Specifications</label>
+                <span className="text-[10px] text-gray-400">{form.specifications.length}/8</span>
+              </div>
+              
+              {form.specifications.length === 0 && (
+                <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
+                  <p className="text-xs text-gray-400 mb-3">No specifications added yet</p>
+                  {form.specifications.length < 8 && (
+                    <button
+                      type="button"
+                      onClick={addSpecification}
+                      className="px-4 py-2 rounded-lg border-2 border-green-300 bg-green-50 text-sm font-semibold text-green-600 hover:bg-green-100 hover:border-green-400 transition-all flex items-center justify-center gap-2 mx-auto"
+                    >
+                      <Plus className="w-4 h-4" /> Add Specification
+                    </button>
+                  )}
+                </div>
               )}
-              {form.specifications.length === 0 ? (
-                <div className="text-xs text-gray-400 py-2 text-center">No specifications added yet</div>
-              ) : (
-                <div className="space-y-2">
+
+              {form.specifications.length > 0 && (
+                <div className="space-y-3">
+                  {/* Header Row */}
+                  <div className="grid gap-2 px-1">
+                    <div className="grid grid-cols-12 gap-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                      <span className="col-span-4">Name</span>
+                      <span className="col-span-2">Unit</span>
+                      <span className="col-span-5">Value</span>
+                      <span className="col-span-1"></span>
+                    </div>
+                  </div>
+
                   {form.specifications.map((spec, index) => (
-                    <div key={index} className="flex gap-2 items-center">
+                    <div key={index} className="bg-green-50 border border-green-200 rounded-xl p-3 flex gap-2 items-center">
+                      <span className="w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                        {index + 1}
+                      </span>
                       <input
                         type="text"
-                        placeholder="Name (e.g. Color)"
+                        placeholder="e.g. Color"
                         value={spec.name}
                         onChange={(e) => updateSpecification(index, 'name', e.target.value)}
-                        className="w-1/3 px-3 py-2 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                        className="w-1/4 px-3 py-2 rounded-lg border-2 border-gray-200 hover:border-green-300
                           focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
                           outline-none text-sm text-gray-800 font-medium transition-all duration-200"
                       />
                       <select
                         value={spec.metric || ''}
                         onChange={(e) => updateSpecification(index, 'metric', e.target.value)}
-                        className="w-24 px-2 py-2 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                        className="w-20 px-2 py-2 rounded-lg border-2 border-gray-200 hover:border-green-300
                           focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
                           outline-none text-sm text-gray-800 font-medium transition-all duration-200 bg-white"
                       >
-                        <option value=""> </option>
+                        <option value="">—</option>
                         {METRIC_OPTIONS.map((m) => (
                           <option key={m} value={m}>{m}</option>
                         ))}
                       </select>
                       <input
                         type="text"
-                        placeholder="Value (e.g. Green)"
+                        placeholder="e.g. Green"
                         value={spec.value}
                         onChange={(e) => updateSpecification(index, 'value', e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                        className="flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 hover:border-green-300
                           focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
                           outline-none text-sm text-gray-800 font-medium transition-all duration-200"
                       />
                       <button
                         type="button"
                         onClick={() => removeSpecification(index)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors shrink-0"
+                        title="Remove"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
+
+                  {/* Add Another Button */}
+                  {form.specifications.length < 8 && (
+                    <button
+                      type="button"
+                      onClick={addSpecification}
+                      className="w-full py-2.5 rounded-xl border-2 border-dashed border-green-300 bg-green-50 text-sm font-semibold text-green-600 hover:bg-green-100 hover:border-green-400 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" /> Add Another Specification
+                    </button>
+                  )}
                 </div>
               )}
             </div>

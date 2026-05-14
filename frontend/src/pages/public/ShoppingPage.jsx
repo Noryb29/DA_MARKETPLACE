@@ -19,7 +19,7 @@ const ShoppingPage = () => {
   const { items, openCart, addToCart } = useCartStore()
   const { user } = useUserStore()
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0)
-  const { crops, initialized, getAllCrops } = useMarketStore()
+  const { crops, initialized, getAllCrops, resetCrops } = useMarketStore()
 
   const [search, setSearch] = useState('')
   const [filterVariety, setFilterVariety] = useState('')
@@ -33,7 +33,10 @@ const ShoppingPage = () => {
   const [selectedCrop, setSelectedCrop] = useState(null)
   const selectedCropImg = useMemo(() => selectedCrop ? getImageSrc(selectedCrop) : null, [selectedCrop])
 
-  useEffect(() => { getAllCrops() }, [])
+  useEffect(() => { 
+    resetCrops()
+    getAllCrops()
+  }, [])
 
   useEffect(() => { setCurrentPage(1) }, [search, filterVariety, filterHarvest, filterLocation, filterStock, filterMinVolume, sortBy])
 

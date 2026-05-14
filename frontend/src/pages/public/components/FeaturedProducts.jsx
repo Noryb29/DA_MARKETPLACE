@@ -64,9 +64,12 @@ const SkeletonCard = () => (
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const FeaturedProducts = () => {
-  const { crops, loading, initialized, getAllCrops } = useMarketStore()
+  const { crops, loading, initialized, getAllCrops, resetCrops } = useMarketStore()
 
-  useEffect(() => { getAllCrops() }, [])
+  useEffect(() => { 
+    resetCrops()
+    getAllCrops()
+  }, [])
 
   // Show only the 6 most recent
   const featured = crops.slice(0, 6)

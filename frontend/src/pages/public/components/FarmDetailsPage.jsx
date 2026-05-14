@@ -11,6 +11,8 @@ import { getDaysUntilHarvest } from '../shopComponents/HarvestBadge'
 import CropLocation from '../../../components/CropLocation'
 import { getImageSrc, getFarmImageSrc } from '../../../utils/imageUtils'
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+
 const getCropImageSrc = (crop) => getImageSrc(crop)
 
 const FarmDetailsPage = () => {

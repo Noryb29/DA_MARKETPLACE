@@ -13,13 +13,15 @@ const useMarketStore = create((set, get) => ({
   farmLoading: false,
   initialized: false,
 
+  resetCrops: () => set({ crops: [], initialized: false }),
+
   getAllCrops: async () => {
-    const { initialized, crops, loading } = get()
-    if (initialized && crops.length > 0) return
+    const { loading } = get()
+    if (loading) return
     set({ loading: true })
     try {
       const response = await axios.get(`${BASE_URL}/api/market/getAllCrops`)
-      set({ crops: response.data.crops, loading: false, initialized: true })
+      set({ crops: response.data.crops || [], loading: false, initialized: true })
     } catch (error) {
       console.error('Failed to fetch market crops:', error)
       set({ loading: false, initialized: true })
@@ -27,12 +29,12 @@ const useMarketStore = create((set, get) => ({
   },
 
   getAllFarms: async () => {
-    const { initialized, farms, loading } = get()
-    if (initialized && farms.length > 0) return
+    const { loading } = get()
+    if (loading) return
     set({ loading: true })
     try {
       const response = await axios.get(`${BASE_URL}/api/market/getAllFarms`)
-      set({ farms: response.data.farms, loading: false, initialized: true })
+      set({ farms: response.data.farms || [], loading: false, initialized: true })
     } catch (error) {
       console.error('Failed to fetch Farms', error)
       set({ loading: false, initialized: true })

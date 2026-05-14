@@ -10,12 +10,13 @@ import { Wheat, Search, SlidersHorizontal, X, Loader2, Sprout, ShoppingCart, Map
 import Sidebar from '../public/components/SideBar'
 import Swal from 'sweetalert2'
 import CropLocation from '../../components/CropLocation'
+import CropCard from '../../components/CropCard'
 import { getImageSrc } from '../../utils/imageUtils'
 
 const UserShoppingPage = () => {
   const { items, openCart, addToCart } = useCartStore()
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0)
-  const { crops, initialized, getAllCrops } = useMarketStore()
+  const { crops, initialized, getAllCrops, resetCrops } = useMarketStore()
   const { user } = useUserStore()
 
   const [search, setSearch] = useState('')
@@ -28,7 +29,10 @@ const UserShoppingPage = () => {
   const [selectedCrop, setSelectedCrop] = useState(null)
   const selectedCropImg = useMemo(() => selectedCrop ? getImageSrc(selectedCrop) : null, [selectedCrop])
 
-  useEffect(() => { getAllCrops() }, [])
+  useEffect(() => { 
+    resetCrops()
+    getAllCrops()
+  }, [])
 
   const varieties = useMemo(() =>
     [...new Set(crops.map((c) => c.variety).filter(Boolean))].sort()
@@ -118,31 +122,126 @@ const UserShoppingPage = () => {
         <main className="flex-1 px-6 py-8 overflow-y-auto">
           <div className="max-w-6xl mx-auto">
 
-            <div className="mb-7 flex items-start justify-between">
-              <div>
-                <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
-                  <Sprout className="w-3.5 h-3.5" />
-                  Public Marketplace
+            <div className="mb-7 flex flex-col gap-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+                    <Sprout className="w-3.5 h-3.5" />
+                    Public Marketplace
+                  </div>
+                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Browse Produce</h1>
+                  <p className="text-gray-500 mt-1 text-sm">Fresh crops listed directly by registered farmers.</p>
                 </div>
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Browse Produce</h1>
-                <p className="text-gray-500 mt-1 text-sm">Fresh crops listed directly by registered farmers.</p>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center gap-2 px-4 py-2.5 border-2 rounded-xl text-sm font-semibold transition-all mt-1 ${showFilters ? 'bg-green-50 border-green-400 text-green-700' : 'bg-white border-gray-200 text-gray-700 hover:border-green-400'}`}
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <span className="bg-green-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={openCart}
+                    className="relative flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 hover:border-green-400 rounded-xl text-sm font-semibold text-gray-700 hover:text-green-700 transition-all mt-1"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Cart
+                    {totalItems > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-green-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                        {totalItems}
+                      </span>
+                    )}
+                  </button>
+                </div>
               </div>
 
-              <button
-                onClick={openCart}
-                className="relative flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 hover:border-green-400 rounded-xl text-sm font-semibold text-gray-700 hover:text-green-700 transition-all mt-1"
-              >
-                <ShoppingCart className="w-4 h-4" />
-                Cart
-                {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-green-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
-                    {totalItems}
-                  </span>
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="Search crops, varieties, farms..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)] text-sm text-gray-800 font-medium transition-all"
+                />
+                {search && (
+                  <button
+                    onClick={() => setSearch('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={18} />
+                  </button>
                 )}
-              </button>
+              </div>
             </div>
 
             <CartDrawer />
+
+            {showFilters && (
+              <MarketFilterPanel 
+                varieties={varieties} 
+                filterVariety={filterVariety} 
+                setFilterVariety={setFilterVariety} 
+                filterHarvest={filterHarvest} 
+                setFilterHarvest={setFilterHarvest} 
+                locations={locations} 
+                filterLocation={filterLocation} 
+                setFilterLocation={setFilterLocation} 
+                filterStock={filterStock} 
+                setFilterStock={setFilterStock} 
+                filterMinVolume={filterMinVolume} 
+                setFilterMinVolume={setFilterMinVolume} 
+                activeFilterCount={activeFilterCount} 
+                clearFilters={clearFilters} 
+              />
+            )}
+
+            {initialized && (
+              <p className="text-xs text-gray-400 font-medium mb-4">
+                {filtered.length === crops.length ? `${crops.length} listings` : `${filtered.length} of ${crops.length} listings`}
+              </p>
+            )}
+
+            {!initialized && (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-7 h-7 animate-spin text-green-600" />
+              </div>
+            )}
+
+            {initialized && filtered.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+                <div className="bg-gray-100 p-5 rounded-full">
+                  <Wheat className="w-10 h-10 text-gray-300" />
+                </div>
+                <p className="font-semibold text-gray-500">No crops found</p>
+                <p className="text-xs text-gray-400">Try adjusting your search or filters.</p>
+                {(search || activeFilterCount > 0) && (
+                  <button onClick={clearFilters} className="mt-1 text-xs text-green-600 font-semibold hover:underline">Clear all filters</button>
+                )}
+              </div>
+            )}
+
+            {initialized && filtered.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+                {filtered.map((crop) => (
+                  <CropCard 
+                    key={crop.crop_id} 
+                    crop={crop} 
+                    onClick={() => setSelectedCrop(crop)} 
+                    variant="shop" 
+                    showAddToCart={true} 
+                    onAddToCart={handleAddToCart} 
+                  />
+                ))}
+              </div>
+            )}
 
           </div>
         </main>
