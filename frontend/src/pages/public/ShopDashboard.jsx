@@ -247,14 +247,13 @@ const CTABanner = ({ onShop, onFarm }) => (
 /* ─── Main component ──────────────────────────────────────────── */
 const ShopDashboard = () => {
   const navigate = useNavigate()
-  const { crops, farms, loading, getAllCrops, getAllFarms, resetCrops } = useMarketStore()
+  const { crops, farms, loading, getAllCrops, getAllFarms } = useMarketStore()
   const [featuredCrops, setFeaturedCrops] = useState([])
   const [featuredFarms, setFeaturedFarms] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategory, setActiveCategory] = useState('All')
 
   useEffect(() => {
-    resetCrops()
     getAllCrops()
     getAllFarms()
   }, [])

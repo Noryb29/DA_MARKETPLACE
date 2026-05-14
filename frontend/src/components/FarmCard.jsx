@@ -1,9 +1,10 @@
+import React, { memo } from 'react'
 import { Sprout, MapPin, User, Ruler, MapPinned, Leaf, FileText, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useChatStore from '../store/ChatStore'
 import { getFarmImageSrc } from '../utils/imageUtils'
 
-export const FarmCard = ({ farm, onViewClick, index }) => {
+export const FarmCard = memo(({ farm, onViewClick, index }) => {
   const navigate = useNavigate()
   const { createConversation, getConversations } = useChatStore()
   const farmImageSrc = getFarmImageSrc(farm)
@@ -124,6 +125,6 @@ export const FarmCard = ({ farm, onViewClick, index }) => {
       </div>
     </div>
   )
-}
+})
 
 export default FarmCard

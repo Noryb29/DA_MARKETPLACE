@@ -16,7 +16,7 @@ import { getImageSrc } from '../../utils/imageUtils'
 const UserShoppingPage = () => {
   const { items, openCart, addToCart } = useCartStore()
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0)
-  const { crops, initialized, getAllCrops, resetCrops } = useMarketStore()
+  const { crops, initialized, getAllCrops } = useMarketStore()
   const { user } = useUserStore()
 
   const [search, setSearch] = useState('')
@@ -29,10 +29,7 @@ const UserShoppingPage = () => {
   const [selectedCrop, setSelectedCrop] = useState(null)
   const selectedCropImg = useMemo(() => selectedCrop ? getImageSrc(selectedCrop) : null, [selectedCrop])
 
-  useEffect(() => { 
-    resetCrops()
-    getAllCrops()
-  }, [])
+  useEffect(() => { getAllCrops() }, [])
 
   const varieties = useMemo(() =>
     [...new Set(crops.map((c) => c.variety).filter(Boolean))].sort()

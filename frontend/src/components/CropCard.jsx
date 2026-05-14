@@ -1,9 +1,9 @@
+import React, { memo } from 'react'
 import { MapPin, Package, Archive, Calendar, Leaf, Sprout, Wheat, Pencil, Trash2, ImageIcon, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
 import CropLocation from './CropLocation'
 import { getImageSrc, getFarmImageSrc } from '../utils/imageUtils'
 
-const formatDate = (d) =>
-  d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '—'
+const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '—'
 
 const getCropEmoji = (name = '') => {
   const n = name.toLowerCase()
@@ -417,4 +417,5 @@ export const CropCard = ({
   )
 }
 
-export default CropCard
+const MemoizedCropCard = memo(CropCard)
+export default MemoizedCropCard
