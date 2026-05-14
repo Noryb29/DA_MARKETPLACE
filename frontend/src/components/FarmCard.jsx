@@ -1,24 +1,7 @@
 import { Sprout, MapPin, User, Ruler, MapPinned, Leaf, FileText, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useChatStore from '../store/ChatStore'
-
-const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
-
-const getFarmImageSrc = (farm) => {
-  if (farm.farm_image_data) {
-    const bytes = new Uint8Array(farm.farm_image_data.data || farm.farm_image_data)
-    const blob = new Blob([bytes], { type: 'image/jpeg' })
-    return URL.createObjectURL(blob)
-  }
-  if (farm.farm_image) {
-    if (farm.farm_image.startsWith('http')) return farm.farm_image
-    return `${BASE_URL}${farm.farm_image}`
-  }
-  if (farm.farm_id) {
-    return `${BASE_URL}/api/images/farm/${farm.farm_id}`
-  }
-  return null
-}
+import { getFarmImageSrc } from '../utils/imageUtils'
 
 export const FarmCard = ({ farm, onViewClick, index }) => {
   const navigate = useNavigate()

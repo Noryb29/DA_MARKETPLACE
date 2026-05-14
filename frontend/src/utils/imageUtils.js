@@ -32,6 +32,12 @@ export const getImageSrc = (dataObj, fallbackUrl = null) => {
       ? dataObj.harvest_photo
       : `${BASE_URL}${dataObj.harvest_photo}`
   }
+  if (dataObj.crop_id) {
+    return `${BASE_URL}/api/images/crop/${dataObj.crop_id}`
+  }
+  if (dataObj.crop?.crop_id) {
+    return `${BASE_URL}/api/images/crop/${dataObj.crop.crop_id}`
+  }
   return fallbackUrl
 }
 
@@ -40,6 +46,22 @@ export const getUserImageSrc = (dataObj, userId) => {
   if (url) return url
   if (userId) {
     return `${BASE_URL}/api/images/user/${userId}`
+  }
+  return null
+}
+
+export const getFarmImageSrc = (dataObj) => {
+  if (!dataObj) return null
+  if (dataObj.farm_image_data) {
+    return binaryToImageUrl(dataObj.farm_image_data)
+  }
+  if (dataObj.farm_image) {
+    return dataObj.farm_image.startsWith('http')
+      ? dataObj.farm_image
+      : `${BASE_URL}${dataObj.farm_image}`
+  }
+  if (dataObj.farm_id) {
+    return `${BASE_URL}/api/images/farm/${dataObj.farm_id}`
   }
   return null
 }

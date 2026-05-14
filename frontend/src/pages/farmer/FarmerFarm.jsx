@@ -8,37 +8,7 @@ import CropModal from './components/CropModal.jsx';
 import EditFarmModal from './components/EditFarmModal.jsx';
 import { getDaysUntilHarvest } from '../public/shopComponents/HarvestBadge';
 import { Search, Loader2, Sprout, Leaf,XCircle, MapPin, Ruler, X, Calendar, SlidersHorizontal, User, FileText, MapPinned, Grid3X3, Droplets, Package, CheckCircle, AlertCircle } from 'lucide-react';
-
-const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
-
-const getImageSrc = (obj) => {
-  if (obj.harvest_photo_data) {
-    const raw = obj.harvest_photo_data
-    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
-    const bytes = new Uint8Array(data)
-    const blob = new Blob([bytes], { type: 'image/jpeg' })
-    return URL.createObjectURL(blob)
-  }
-  if (obj.harvest_photo) {
-    return obj.harvest_photo.startsWith('http') ? obj.harvest_photo : `${BASE_URL}${obj.harvest_photo}`
-  }
-  const cropId = obj.crop_id || obj.crop?.crop_id
-  return cropId ? `${BASE_URL}/api/images/crop/${cropId}` : null
-}
-
-const getFarmImageSrc = (obj) => {
-  if (obj.farm_image_data) {
-    const raw = obj.farm_image_data
-    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
-    const bytes = new Uint8Array(data)
-    const blob = new Blob([bytes], { type: 'image/jpeg' })
-    return URL.createObjectURL(blob)
-  }
-  if (obj.farm_image) {
-    return obj.farm_image.startsWith('http') ? obj.farm_image : `${BASE_URL}${obj.farm_image}`
-  }
-  return obj.farm_id ? `${BASE_URL}/api/images/farm/${obj.farm_id}` : null
-}
+import { getImageSrc, getFarmImageSrc } from '../../utils/imageUtils'
 
 const FarmerFarm = () => {
   const navigate = useNavigate();

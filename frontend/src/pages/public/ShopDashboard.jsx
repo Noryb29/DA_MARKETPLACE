@@ -8,8 +8,7 @@ import {
   Wheat, TreePine, Apple, Carrot, ChevronLeft
 } from 'lucide-react'
 import CropCard from '../../components/CropCard'
-
-const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+import { getFarmImageSrc } from '../../utils/imageUtils'
 
 /* ─── Marquee ticker ─────────────────────────────────────────── */
 const TICKER_ITEMS = [
@@ -52,24 +51,6 @@ const StatCard = ({ icon, label, value, bg, color, subLabel }) => (
     </div>
   </div>
 )
-
-/* ─── Farm card ───────────────────────────────────────────────── */
-const getFarmImageSrc = (farm) => {
-  const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
-  if (farm.farm_image_data) {
-    const bytes = new Uint8Array(farm.farm_image_data.data || farm.farm_image_data)
-    const blob = new Blob([bytes], { type: 'image/jpeg' })
-    return URL.createObjectURL(blob)
-  }
-  if (farm.farm_image) {
-    if (farm.farm_image.startsWith('http')) return farm.farm_image
-    return `${BASE_URL}${farm.farm_image}`
-  }
-  if (farm.farm_id) {
-    return `${BASE_URL}/api/images/farm/${farm.farm_id}`
-  }
-  return null
-}
 
 const FarmCard = ({ farm, onClick }) => {
   const hasLocation = farm.province || farm.municipality || farm.barangay || farm.farm_location

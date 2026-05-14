@@ -5,25 +5,9 @@ import useFarmerAuthStore from '../../store/FarmerAuthStore'
 import Sidebar from '../public/components/SideBar'
 import { CircleUser, Upload, X, User, Mail, Phone, MapPin, Calendar, Building, Shield, LogOut, Edit, Save, Loader2 } from 'lucide-react'
 import { FaMars, FaVenus } from 'react-icons/fa'
+import { getUserImageSrc } from '../../utils/imageUtils'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
-
-const getProfileImageSrc = (details, userId) => {
-  if (!details) return null
-  if (details.profile_picture_data) {
-    const bytes = new Uint8Array(details.profile_picture_data.data || details.profile_picture_data)
-    const blob = new Blob([bytes], { type: 'image/jpeg' })
-    return URL.createObjectURL(blob)
-  }
-  if (details.profile_picture) {
-    if (details.profile_picture.startsWith('http')) return details.profile_picture
-    return `${BASE_URL}${details.profile_picture}`
-  }
-  if (userId) {
-    return `${BASE_URL}/api/images/farmer/${userId}`
-  }
-  return null
-}
 
 const FarmerProfile = () => {
   const user = useFarmerAuthStore((state) => state.farmer)
@@ -74,7 +58,7 @@ const FarmerProfile = () => {
         municipality: farmerDetails.municipality || '',
         barangay: farmerDetails.barangay || '',
       })
-      setPhotoPreview(farmerDetails.profile_picture_data ? getProfileImageSrc(farmerDetails, user?.user_id) : (farmerDetails.profile_picture ? (farmerDetails.profile_picture.startsWith('http') ? farmerDetails.profile_picture : `${BASE_URL}${farmerDetails.profile_picture}`) : null))
+      setPhotoPreview(getUserImageSrc(farmerDetails, user?.user_id))
     }
   }, [farmerDetails])
 
@@ -171,7 +155,7 @@ const FarmerProfile = () => {
     return '?'
   }
 
-  const getProfilePicture = () => getProfileImageSrc(farmerDetails, user?.user_id)
+  const getProfilePicture = () => getUserImageSrc(farmerDetails, user?.user_id)
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'
 

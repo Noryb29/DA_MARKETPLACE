@@ -2,40 +2,9 @@ import { useState } from 'react'
 import {ShoppingBag, Calendar, Package, User, MapPin, X, CheckCircle, Clock, Truck, DollarSign, MessageSquare, Store, Check, Ban} from 'lucide-react'
 import useOrderStore from '../../../store/OrderStore'
 import Swal from 'sweetalert2'
+import { getImageSrc, getUserImageSrc } from '../../../utils/imageUtils'
 
-const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
-
-const getImageSrc = (obj) => {
-  if (obj.harvest_photo_data) {
-    const raw = obj.harvest_photo_data
-    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
-    const bytes = new Uint8Array(data)
-    const blob = new Blob([bytes], { type: 'image/jpeg' })
-    return URL.createObjectURL(blob)
-  }
-  if (obj.harvest_photo) {
-    return obj.harvest_photo.startsWith('http') ? obj.harvest_photo : `${BASE_URL}${obj.harvest_photo}`
-  }
-  const cropId = obj.crop_id || obj.crop?.crop_id
-  return cropId ? `${BASE_URL}/api/images/crop/${cropId}` : null
-}
-
-const getBuyerPicSrc = (order) => {
-  if (!order) return null
-  if (order.buyer_profile_picture_data) {
-    const bytes = new Uint8Array(order.buyer_profile_picture_data.data || order.buyer_profile_picture_data)
-    const blob = new Blob([bytes], { type: 'image/jpeg' })
-    return URL.createObjectURL(blob)
-  }
-  if (order.buyer_profile_picture) {
-    if (order.buyer_profile_picture.startsWith('http')) return order.buyer_profile_picture
-    return `${BASE_URL}${order.buyer_profile_picture}`
-  }
-  if (order.buyer_user_id) {
-    return `${BASE_URL}/api/images/user/${order.buyer_user_id}`
-  }
-  return null
-}
+const getBuyerPicSrc = (order) => getUserImageSrc(order, order?.buyer_user_id)
 
 const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'

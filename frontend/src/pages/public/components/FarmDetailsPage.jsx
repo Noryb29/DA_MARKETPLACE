@@ -9,40 +9,9 @@ import useCartStore from '../../../store/CartStore'
 import useUserStore from '../../../store/UserStore'
 import { getDaysUntilHarvest } from '../shopComponents/HarvestBadge'
 import CropLocation from '../../../components/CropLocation'
+import { getImageSrc, getFarmImageSrc } from '../../../utils/imageUtils'
 
-const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
-
-const getFarmImageSrc = (farm) => {
-  if (farm.farm_image_data) {
-    const bytes = new Uint8Array(farm.farm_image_data.data || farm.farm_image_data)
-    const blob = new Blob([bytes], { type: 'image/jpeg' })
-    return URL.createObjectURL(blob)
-  }
-  if (farm.farm_image) {
-    if (farm.farm_image.startsWith('http')) return farm.farm_image
-    return `${BASE_URL}${farm.farm_image}`
-  }
-  if (farm.farm_id) {
-    return `${BASE_URL}/api/images/farm/${farm.farm_id}`
-  }
-  return null
-}
-
-const getCropImageSrc = (crop) => {
-  if (crop.harvest_photo_data) {
-    const bytes = new Uint8Array(crop.harvest_photo_data.data || crop.harvest_photo_data)
-    const blob = new Blob([bytes], { type: 'image/jpeg' })
-    return URL.createObjectURL(blob)
-  }
-  if (crop.harvest_photo) {
-    if (crop.harvest_photo.startsWith('http')) return crop.harvest_photo
-    return `${BASE_URL}${crop.harvest_photo}`
-  }
-  if (crop.crop_id) {
-    return `${BASE_URL}/api/images/crop/${crop.crop_id}`
-  }
-  return null
-}
+const getCropImageSrc = (crop) => getImageSrc(crop)
 
 const FarmDetailsPage = () => {
   const { id } = useParams()

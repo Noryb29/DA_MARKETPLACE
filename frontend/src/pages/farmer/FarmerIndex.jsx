@@ -12,23 +12,7 @@ import {
   Users, Calendar, ArrowRight, Plus, Eye, Clock,
   MapPin, ChevronRight
 } from 'lucide-react'
-
-const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
-
-const getImageSrc = (obj) => {
-  if (obj.harvest_photo_data) {
-    const raw = obj.harvest_photo_data
-    const data = raw.data ? Array.from(raw.data) : Array.isArray(raw) ? raw : []
-    const bytes = new Uint8Array(data)
-    const blob = new Blob([bytes], { type: 'image/jpeg' })
-    return URL.createObjectURL(blob)
-  }
-  if (obj.harvest_photo) {
-    return obj.harvest_photo.startsWith('http') ? obj.harvest_photo : `${BASE_URL}${obj.harvest_photo}`
-  }
-  const cropId = obj.crop_id || obj.crop?.crop_id
-  return cropId ? `${BASE_URL}/api/images/crop/${cropId}` : null
-}
+import { getImageSrc, getUserImageSrc } from '../../utils/imageUtils'
 
 const FarmerIndex = () => {
   const { farmer, logout, farmerDetails } = useFarmerAuthStore()
@@ -76,17 +60,7 @@ const FarmerIndex = () => {
   const formatDate = (d) =>
     d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '—'
 
-  const getProfilePicture = () => {
-    const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
-    if (farmerDetails?.profile_picture_data) {
-      const bytes = new Uint8Array(farmerDetails.profile_picture_data.data || farmerDetails.profile_picture_data)
-      const blob = new Blob([bytes], { type: 'image/jpeg' })
-      return URL.createObjectURL(blob)
-    }
-    if (!farmerDetails?.profile_picture) return null
-    const pic = farmerDetails.profile_picture
-    return pic.startsWith('http') ? pic : `${BASE_URL}${pic}`
-  }
+  const getProfilePicture = () => getUserImageSrc(farmerDetails, farmer?.user_id)
 
   if (loading) {
     return (
