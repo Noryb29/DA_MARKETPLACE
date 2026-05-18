@@ -247,7 +247,7 @@ const CTABanner = ({ onShop, onFarm }) => (
 /* ─── Main component ──────────────────────────────────────────── */
 const ShopDashboard = () => {
   const navigate = useNavigate()
-  const { crops, farms, loading, getAllCrops, getAllFarms } = useMarketStore()
+  const { crops, farms, loading, farmsLoading, getAllCrops, getAllFarms } = useMarketStore()
   const [featuredCrops, setFeaturedCrops] = useState([])
   const [featuredFarms, setFeaturedFarms] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -414,9 +414,15 @@ const ShopDashboard = () => {
             </button>
           </div>
 
-          {loading ? (
+          {farmsLoading ? (
             <div className="flex justify-center py-10">
               <div className="w-8 h-8 border-4 border-gray-200 border-t-green-600 rounded-full animate-spin" />
+            </div>
+          ) : featuredFarms.length === 0 ? (
+            <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-gray-200">
+              <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 font-medium">No farms available</p>
+              <p className="text-xs text-gray-400 mt-1">Check back later for featured farms</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">

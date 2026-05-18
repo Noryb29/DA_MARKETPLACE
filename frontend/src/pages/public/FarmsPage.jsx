@@ -9,7 +9,7 @@ import FarmCard from '../../components/FarmCard'
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 const FarmsPage = () => {
-  const { farms, initialized, getAllFarms } = useMarketStore()
+  const { farms, farmsInitialized: initialized, farmsLoading, getAllFarms } = useMarketStore()
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('name')
   const [showFilters, setShowFilters] = useState(false)
