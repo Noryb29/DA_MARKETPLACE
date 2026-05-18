@@ -2,10 +2,18 @@ import {db} from '../db.js'
 import fs from 'fs'
 import path from 'path'
 
+const readFileAsBuffer = (file) => {
+    if (!file) return null
+    try {
+        return fs.readFileSync(file.path)
+    } catch {
+        return null
+    }
+}
+
 const handleFarmDocUpload = (req) => {
     if (req.files && req.files['farm_docs']) {
         const docs = req.files['farm_docs']
-        
         const docData = docs.slice(0, 3).map((file) => {
             if (!file || !file.originalname) return null
             const ext = path.extname(file.originalname).toLowerCase() || '.pdf'
@@ -17,6 +25,284 @@ const handleFarmDocUpload = (req) => {
     }
     return []
 }
+
+export const deleteFarmDocument = async (req, res) => {
+    const { doc_id } = req.params
+    const user_id = req.user.user_id
+
+    try {
+        const docCheck = await db.query(
+            'SELECT fd.* FROM farm_documents fd JOIN farm f ON fd.farm_id = f.farm_id WHERE fd.doc_id = $1 AND f.user_id = $2',
+            [parseInt(doc_id), user_id]
+        )
+        if (docCheck.rows.length === 0) {
+            return res.status(404).json({ message: 'Document not found' })
+        }
+
+        await db.query('DELETE FROM farm_documents WHERE doc_id = $1', [parseInt(doc_id)])
+        res.status(200).json({ message: 'Document deleted successfully' })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: 'Database error', error: error.message })
+    }
+}
+
+export const serveFarmDocument = async (req, res) => {
+    const { doc_id } = req.params
+    const user_id = req.user.user_id
+
+    try {
+        const docCheck = await db.query(
+            'SELECT fd.* FROM farm_documents fd JOIN farm f ON fd.farm_id = f.farm_id WHERE fd.doc_id = $1 AND f.user_id = $2',
+            [parseInt(doc_id), user_id]
+        )
+        if (docCheck.rows.length === 0) {
+            return res.status(404).json({ message: 'Document not found' })
+        }
+
+        const doc = docCheck.rows[0]
+        const mimeTypes = {
+            'pdf': 'application/pdf',
+            'doc': 'application/msword',
+            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        }
+
+        res.setHeader('Content-Type', mimeTypes[doc.file_type] || 'application/pdf')
+        res.setHeader('Content-Disposition', `inline; filename="${doc.file_name}"`)
+        res.send(doc.file_data)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: 'Database error', error: error.message })
+    }
+}
+
+const handleFarmImageUpload = (req) => {
+    if (req.files && req.files['farm_image'] && req.files['farm_image'][0]) {
+        return fs.readFileSync(req.files['farm_image'][0].path)
+    }
+    return null
+}
+
+const handleFarmDocsUpload = (req) => {
+    if (req.files && req.files['farm_docs']) {
+        const docs = req.files['farm_docs']
+        const docPaths = docs.slice(0, 3).map((file) => {
+            if (!file || !file.name) return null
+            const ext = path.extname(file.name) || '.pdf'
+            const filename = `doc-${Date.now()}-${Math.random().toString(36).substring(2, 11)}${ext}`
+            const filepath = path.join(process.cwd(), 'uploads', 'farm_docs', filename)
+            const dir = path.dirname(filepath)
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+            fs.renameSync(file.path, filepath)
+            return `/uploads/farm_docs/${filename}`
+        }).filter(Boolean)
+        console.log('Uploaded docs:', docPaths)
+        return docPaths
+    }
+    return []
+}
+
+export const addFarm = async (req, res) => {
+    const { farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries } = req.body;
+    const user_id = req.user.user_id;
+
+if (!farm_name || !farm_area) {
+        return res.status(400).json({ message: "Please fill in all required fields." });
+    }
+
+    try {
+        const farmImageBuffer = handleFarmImageUpload(req)
+        console.log('farmImageBuffer:', farmImageBuffer ? `Buffer of ${farmImageBuffer.length} bytes` : 'null')
+        const farmDocUrls = handleFarmDocsUpload(req)
+
+        const result = await db.query(
+            `INSERT INTO farm (user_id, farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries, farm_image, farm_image_data, farm_docs, is_verified)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+             RETURNING *`,
+            [
+                user_id,
+                farm_name,
+                gps_coordinates || null,
+                farm_location || null,
+                farm_area,
+                farm_elevation || null,
+                province || null,
+                municipality || null,
+                barangay || null,
+                farm_hectares || null,
+                plot_boundaries || null,
+                null,
+                farmImageBuffer,
+                farmDocUrls.length > 0 ? farmDocUrls : null,
+                false
+            ]
+        );
+        res.status(201).json({ message: "Farm registered successfully", farm: result.rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Database error", error: error.message });
+    }
+};
+
+export const getFarm = async (req, res) => {
+    const user_id = req.user.user_id;
+
+    try {
+        const rows = await db.query(`SELECT * FROM farm WHERE user_id = $1 LIMIT 1`, [user_id]);
+
+        if (rows.rows.length === 0) {
+            return res.status(200).json({ hasFarm: false, farm: null });
+        }
+
+        res.status(200).json({ hasFarm: true, farm: rows.rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Database error", error: error.message });
+    }
+};
+
+export const getCrops = async (req, res) => {
+    const user_id = req.user.user_id;
+
+    try {
+        const rows = await db.query(
+            `SELECT c.*,
+                    f.farm_name, f.farm_location, f.gps_coordinates,
+                    f.province, f.municipality, f.barangay,
+                    com.id AS commodity_id,
+                    com.name AS commodity_name,
+                    com.specification AS commodity_spec,
+                    cat.id AS category_id,
+                    cat.name AS category_name,
+                    latest_price.prevailing_price AS market_price,
+                    latest_price.price_date AS market_price_date
+             FROM crop_in_farm c
+             INNER JOIN farm f ON c.farm_id = f.farm_id
+             LEFT JOIN commodities com ON LOWER(com.name) = LOWER(c.crop_name)
+             LEFT JOIN categories cat ON com.category_id = cat.id
+             LEFT JOIN LATERAL (
+                  SELECT pr.prevailing_price, pr.price_date
+                  FROM price_records pr
+                  WHERE pr.commodity_id = com.id
+                  ORDER BY pr.price_date DESC
+                  LIMIT 1
+             ) latest_price ON true
+             WHERE f.user_id = $1
+             ORDER BY c.crop_id DESC`,
+            [user_id]
+        );
+
+        res.status(200).json({ crops: rows.rows });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Database error", error: error.message });
+    }
+};
+
+export const updateFarm = async (req, res) => {
+    const { farm_id } = req.params;
+    const { farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries, is_verified, rejection_reason } = req.body;
+    const user_id = req.user.user_id;
+
+    if (!farm_name || !farm_area) {
+        return res.status(400).json({ message: "Please fill in all required fields." });
+    }
+
+    try {
+        const farmCheck = await db.query(`SELECT farm_id FROM farm WHERE farm_id = $1 AND user_id = $2`, [farm_id, user_id]);
+        if (farmCheck.rows.length === 0) {
+            return res.status(404).json({ message: "Farm not found." });
+        }
+
+        const farmImageBuffer = readFileAsBuffer(req.file)
+
+        const boolIsVerified = (is_verified === true || is_verified === 'true') ? true : (is_verified === false ? false : undefined)
+
+        const rejReason = (rejection_reason === undefined || rejection_reason === null || rejection_reason === '') ? null : rejection_reason
+
+        let query = `
+            UPDATE farm SET
+                farm_name = $1,
+                gps_coordinates = $2,
+                farm_location = $3,
+                farm_area = $4,
+                farm_elevation = $5,
+                province = $6,
+                municipality = $7,
+                barangay = $8,
+                farm_hectares = $9,
+                plot_boundaries = $10
+        `
+        const params = [
+            farm_name,
+            gps_coordinates || null,
+            farm_location || null,
+            farm_area,
+            farm_elevation || null,
+            province || null,
+            municipality || null,
+            barangay || null,
+            farm_hectares || null,
+            plot_boundaries || null
+        ]
+
+        if (farmImageBuffer) {
+            query += `, farm_image = null, farm_image_data = $${params.length + 1}`
+            params.push(farmImageBuffer)
+        }
+
+        if (boolIsVerified !== undefined) {
+            query += `, is_verified = $${params.length + 1}`
+            params.push(boolIsVerified)
+        }
+
+        query += `, rejection_reason = $${params.length + 1}`
+        params.push(rejReason)
+
+        query += ` WHERE farm_id = $${params.length + 1} AND user_id = $${params.length + 2}`
+        params.push(farm_id, user_id)
+
+        await db.query(query, params)
+
+        const updatedFarm = await db.query(`SELECT * FROM farm WHERE farm_id = $1`, [farm_id]);
+        res.status(200).json({ message: "Farm updated successfully", farm: updatedFarm.rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Database error", error: error.message });
+    }
+};
+
+export const getFarms = async (req, res) => {
+    const user_id = req.user.user_id;
+
+    try {
+        const rows = await db.query(`SELECT * FROM farm WHERE user_id = $1 ORDER BY created_at DESC`, [user_id]);
+        res.status(200).json({ farms: rows.rows });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Database error", error: error.message });
+    }
+};
+
+export const deleteFarm = async (req, res) => {
+    const { farm_id } = req.params;
+    const user_id = req.user.user_id;
+
+    try {
+        const farmCheck = await db.query(`SELECT farm_id FROM farm WHERE farm_id = $1 AND user_id = $2`, [farm_id, user_id]);
+        if (farmCheck.rows.length === 0) {
+            return res.status(404).json({ message: "Farm not found." });
+        }
+
+        await db.query(`DELETE FROM crop_in_farm WHERE farm_id = $1`, [farm_id]);
+        await db.query(`DELETE FROM farm WHERE farm_id = $1 AND user_id = $2`, [farm_id, user_id]);
+
+        res.status(200).json({ message: "Farm deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Database error", error: error.message });
+    }
+};
 
 export const addFarmDocument = async (req, res) => {
     const { farm_id } = req.params
@@ -77,270 +363,3 @@ export const getFarmDocuments = async (req, res) => {
         res.status(500).json({ message: 'Database error', error: error.message })
     }
 }
-
-export const deleteFarmDocument = async (req, res) => {
-    const { doc_id } = req.params
-    const user_id = req.user.user_id
-    
-    try {
-        const docCheck = await db.query(
-            'SELECT fd.* FROM farm_documents fd JOIN farm f ON fd.farm_id = f.farm_id WHERE fd.doc_id = $1 AND f.user_id = $2',
-            [parseInt(doc_id), user_id]
-        )
-        if (docCheck.rows.length === 0) {
-            return res.status(404).json({ message: 'Document not found' })
-        }
-        
-        await db.query('DELETE FROM farm_documents WHERE doc_id = $1', [parseInt(doc_id)])
-        res.status(200).json({ message: 'Document deleted successfully' })
-    } catch (error) {
-        console.error(error)
-        res.status(500).json({ message: 'Database error', error: error.message })
-    }
-}
-
-export const serveFarmDocument = async (req, res) => {
-    const { doc_id } = req.params
-    const user_id = req.user.user_id
-    
-    try {
-        const docCheck = await db.query(
-            'SELECT fd.* FROM farm_documents fd JOIN farm f ON fd.farm_id = f.farm_id WHERE fd.doc_id = $1 AND f.user_id = $2',
-            [parseInt(doc_id), user_id]
-        )
-        if (docCheck.rows.length === 0) {
-            return res.status(404).json({ message: 'Document not found' })
-        }
-        
-        const doc = docCheck.rows[0]
-        const mimeTypes = {
-            'pdf': 'application/pdf',
-            'doc': 'application/msword',
-            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        }
-        
-        res.setHeader('Content-Type', mimeTypes[doc.file_type] || 'application/pdf')
-        res.setHeader('Content-Disposition', `inline; filename="${doc.file_name}"`)
-        res.send(doc.file_data)
-    } catch (error) {
-        console.error(error)
-        res.status(500).json({ message: 'Database error', error: error.message })
-    }
-}
-
-const handleFarmImageUpload = (req) => {
-    if (req.files && req.files['farm_image'] && req.files['farm_image'][0]) {
-        const file = req.files['farm_image'][0]
-        const uploadsDir = path.join(process.cwd(), 'uploads', 'farm_images')
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true })
-        }
-        const ext = path.extname(file.originalname) || '.jpg'
-        const filename = `farm-${Date.now()}-${Math.random().toString(36).substring(2, 11)}${ext}`
-        const filepath = path.join(uploadsDir, filename)
-        fs.renameSync(file.path, filepath)
-        return `/uploads/farm_images/${filename}`
-    }
-    return null
-}
-
-const handleFarmDocsUpload = (req) => {
-    if (req.files && req.files['farm_docs']) {
-        const docs = req.files['farm_docs']
-        const uploadsDir = path.join(process.cwd(), 'uploads', 'farm_docs')
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true })
-        }
-        
-        const docPaths = docs.slice(0, 3).map((file) => {
-            if (!file || !file.name) return null
-            const ext = path.extname(file.name) || '.pdf'
-            const filename = `doc-${Date.now()}-${Math.random().toString(36).substring(2, 11)}${ext}`
-            const filepath = path.join(uploadsDir, filename)
-            fs.renameSync(file.path, filepath)
-            return `/uploads/farm_docs/${filename}`
-        }).filter(Boolean)
-        console.log('Uploaded docs:', docPaths)
-        return docPaths
-    }
-    return []
-}
-
-export const addFarm = async (req, res) => {
-    const { farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries } = req.body;
-    const user_id = req.user.user_id;
-
-if (!farm_name || !farm_area) {
-        return res.status(400).json({ message: "Please fill in all required fields." });
-    }
-
-    try {
-        const farmImageUrl = handleFarmImageUpload(req)
-        const farmDocUrls = handleFarmDocsUpload(req)
-
-        const result = await db.query(
-            `INSERT INTO farm (user_id, farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries, farm_image, farm_docs)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-             RETURNING *`,
-            [
-                user_id,
-                farm_name,
-                gps_coordinates || null,
-                farm_location || null,
-                farm_area,
-                farm_elevation || null,
-                province || null,
-                municipality || null,
-                barangay || null,
-                farm_hectares || null,
-                plot_boundaries || null,
-                farmImageUrl,
-                farmDocUrls.length > 0 ? farmDocUrls : null
-            ]
-        );
-        res.status(201).json({ message: "Farm registered successfully", farm: result.rows[0] });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Database error", error: error.message });
-    }
-};
-
-export const getFarm = async (req, res) => {
-    const user_id = req.user.user_id;
-
-    try {
-        const rows = await db.query(`SELECT * FROM farm WHERE user_id = $1 LIMIT 1`, [user_id]);
-
-        if (rows.rows.length === 0) {
-            return res.status(200).json({ hasFarm: false, farm: null });
-        }
-
-        res.status(200).json({ hasFarm: true, farm: rows.rows[0] });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Database error", error: error.message });
-    }
-};
-
-export const getCrops = async (req, res) => {
-    const user_id = req.user.user_id;
-
-    try {
-        const rows = await db.query(
-            `SELECT c.*, 
-                    f.farm_name, f.farm_location, f.gps_coordinates, 
-                    f.province, f.municipality, f.barangay
-             FROM crop_in_farm c
-             INNER JOIN farm f ON c.farm_id = f.farm_id
-             WHERE f.user_id = $1
-             ORDER BY c.crop_id DESC`,
-            [user_id]
-        );
-    
-        res.status(200).json({ crops: rows.rows });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Database error", error: error.message });
-    }
-};
-
-export const updateFarm = async (req, res) => {
-    const { farm_id } = req.params;
-    const { farm_name, gps_coordinates, farm_location, farm_area, farm_elevation, province, municipality, barangay, farm_hectares, plot_boundaries } = req.body;
-    const user_id = req.user.user_id;
-
-    if (!farm_name || !farm_area) {
-        return res.status(400).json({ message: "Please fill in all required fields." });
-    }
-
-    try {
-        const farmCheck = await db.query(`SELECT farm_id FROM farm WHERE farm_id = $1 AND user_id = $2`, [farm_id, user_id]);
-        if (farmCheck.rows.length === 0) {
-            return res.status(404).json({ message: "Farm not found." });
-        }
-
-        let farmImageUrl = null;
-        if (req.file) {
-            const uploadsDir = path.join(process.cwd(), 'uploads', 'farm_images')
-            if (!fs.existsSync(uploadsDir)) {
-                fs.mkdirSync(uploadsDir, { recursive: true })
-            }
-            const ext = path.extname(req.file.originalname) || '.jpg'
-            const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${ext}`
-            const filepath = path.join(uploadsDir, filename)
-            fs.renameSync(req.file.path, filepath)
-            farmImageUrl = `/uploads/farm_images/${filename}`
-        }
-
-        const updateFields = [
-            'farm_name = $1', 'gps_coordinates = $2', 'farm_location = $3', 'farm_area = $4', 
-            'farm_elevation = $5', 'province = $6', 'municipality = $7', 'barangay = $8', 
-            'farm_hectares = $9', 'plot_boundaries = $10'
-        ]
-        const updateValues = [
-            farm_name, gps_coordinates || null, farm_location || null, farm_area,
-            farm_elevation || null, province || null, municipality || null, barangay || null,
-            farm_hectares || null, plot_boundaries || null
-        ]
-
-        if (farmImageUrl) {
-            updateFields.push('farm_image = $11')
-            updateValues.push(farmImageUrl)
-        }
-
-        updateFields.push('farm_id = $' + (updateFields.length - 1))
-        updateValues.push(farm_id)
-
-        const setClause = updateFields.slice(0, farmImageUrl ? 11 : 10).join(', ')
-        
-        if (farmImageUrl) {
-            await db.query(
-                `UPDATE farm SET ${setClause} WHERE farm_id = $${updateValues.length} AND user_id = $${updateValues.length + 1}`,
-                [...updateValues.slice(0, -1), user_id]
-            )
-        } else {
-            await db.query(
-                `UPDATE farm SET ${setClause} WHERE farm_id = $${updateValues.length} AND user_id = $${updateValues.length + 1}`,
-                [...updateValues, user_id]
-            )
-        }
-
-        const updatedFarm = await db.query(`SELECT * FROM farm WHERE farm_id = $1`, [farm_id]);
-        res.status(200).json({ message: "Farm updated successfully", farm: updatedFarm.rows[0] });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Database error", error: error.message });
-    }
-};
-
-export const getFarms = async (req, res) => {
-    const user_id = req.user.user_id;
-
-    try {
-        const rows = await db.query(`SELECT * FROM farm WHERE user_id = $1 ORDER BY created_at DESC`, [user_id]);
-        res.status(200).json({ farms: rows.rows });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Database error", error: error.message });
-    }
-};
-
-export const deleteFarm = async (req, res) => {
-    const { farm_id } = req.params;
-    const user_id = req.user.user_id;
-
-    try {
-        const farmCheck = await db.query(`SELECT farm_id FROM farm WHERE farm_id = $1 AND user_id = $2`, [farm_id, user_id]);
-        if (farmCheck.rows.length === 0) {
-            return res.status(404).json({ message: "Farm not found." });
-        }
-
-        await db.query(`DELETE FROM crop_in_farm WHERE farm_id = $1`, [farm_id]);
-        await db.query(`DELETE FROM farm WHERE farm_id = $1 AND user_id = $2`, [farm_id, user_id]);
-        
-        res.status(200).json({ message: "Farm deleted successfully" });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Database error", error: error.message });
-    }
-};

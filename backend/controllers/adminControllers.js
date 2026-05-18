@@ -17,6 +17,7 @@ export const getAllProducts = async (req, res) => {
         cif.specification_5,
         cif.planting_date,
         cif.expected_harvest,
+        cif.is_verified,
         f.farm_name,
         f.user_id as farmer_id,
         fm.firstname,
@@ -41,7 +42,40 @@ export const getAllProducts = async (req, res) => {
     });
   }
 };
+  
 
+export const verifyProduct = async (req, res) => {
+  const { productId } = req.params;
+  const { is_verified, rejection_reason } = req.body;
+  
+  try {
+    const result = await db.query(
+      `UPDATE crop_in_farm SET is_verified = $1, rejection_reason = $2 WHERE crop_id = $3 RETURNING crop_id`,
+      [is_verified, is_verified ? null : rejection_reason, productId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: is_verified ? "Product approved successfully" : "Product rejected",
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error("Error verifying product:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error verifying product",
+      error: error.message
+    });
+  }
+};
+  
 export const getAllFarms = async (req, res) => {
   try {
     const result = await db.query(`
@@ -53,6 +87,7 @@ export const getAllFarms = async (req, res) => {
         f.farm_area,
         f.farm_elevation,
         f.created_at,
+        f.is_verified,
         fm.firstname,
         fm.lastname,
         fm.email,
@@ -76,6 +111,38 @@ export const getAllFarms = async (req, res) => {
       success: false,
       message: "Error fetching farms",
       error: error.message,
+    });
+  }
+};
+
+export const verifyFarm = async (req, res) => {
+  const { farmId } = req.params;
+  const { is_verified, rejection_reason } = req.body;
+  
+  try {
+    const result = await db.query(
+      `UPDATE farm SET is_verified = $1, rejection_reason = $2 WHERE farm_id = $3 RETURNING farm_id`,
+      [is_verified, is_verified ? null : rejection_reason, farmId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Farm not found"
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: is_verified ? "Farm approved successfully" : "Farm rejected",
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error("Error verifying farm:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error verifying farm",
+      error: error.message
     });
   }
 };

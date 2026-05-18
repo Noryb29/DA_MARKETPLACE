@@ -100,8 +100,8 @@ const useFarmerAuthStore = create((set, get) => ({
         })
         result = data.details
       }
-      set({ farmerDetails: result, loading: false })
-      return result
+      set({ farmerDetails: result || null, loading: false })
+      return result || null
     } catch (error) {
       set({ loading: false })
       const message = error.response?.data?.message || error.message || 'Save failed'

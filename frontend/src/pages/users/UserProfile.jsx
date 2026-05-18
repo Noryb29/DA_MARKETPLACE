@@ -5,8 +5,11 @@ import Swal from 'sweetalert2'
 import Sidebar from '../public/components/SideBar'
 import { FaEdit, FaCalendar, FaMars, FaVenus } from 'react-icons/fa'
 import { Upload, X } from 'lucide-react'
+import { getUserImageSrc } from '../../utils/imageUtils'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+
+const getProfileImageSrc = (details, userId) => getUserImageSrc(details, userId)
 
 const UserProfile = () => {
   const user = useUserStore((state) => state.user)
@@ -63,12 +66,12 @@ const UserProfile = () => {
   useEffect(() => {
     if (userDetails) {
       setDetailsForm({
-        profile_picture: userDetails.profile_picture || '',
+        profile_picture: '',
         bio: userDetails.bio || '',
         gender: userDetails.gender || '',
         date_of_birth: userDetails.date_of_birth || '',
       })
-      setPhotoPreview(userDetails.profile_picture || null)
+      setPhotoPreview(getProfileImageSrc(userDetails, user?.user_id))
     }
   }, [userDetails])
 
@@ -151,11 +154,7 @@ const UserProfile = () => {
     return '?'
   }
 
-  const getProfilePicture = () => {
-    if (!userDetails?.profile_picture) return null
-    const pic = userDetails.profile_picture
-    return pic.startsWith('http') ? pic : `${BASE_URL}${pic}`
-  }
+  const getProfilePicture = () => getUserImageSrc(userDetails, user?.user_id)
 
   return (
     <div className="min-h-screen bg-gray-50">

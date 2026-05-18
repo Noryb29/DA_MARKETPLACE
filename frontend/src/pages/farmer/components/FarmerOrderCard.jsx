@@ -2,6 +2,9 @@ import { useState } from 'react'
 import {ShoppingBag, Calendar, Package, User, MapPin, X, CheckCircle, Clock, Truck, DollarSign, MessageSquare, Store, Check, Ban} from 'lucide-react'
 import useOrderStore from '../../../store/OrderStore'
 import Swal from 'sweetalert2'
+import { getImageSrc, getUserImageSrc } from '../../../utils/imageUtils'
+
+const getBuyerPicSrc = (order) => getUserImageSrc(order, order?.buyer_user_id)
 
 const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
@@ -61,8 +64,8 @@ const FarmerOrderCard = ({ order }) => {
       <div className="h-2 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400" />
       <div className="p-4">
         <div className="flex items-start gap-3">
-          {order.harvest_photo ? (
-            <img src={order.harvest_photo} alt="Harvest" className="w-16 h-16 rounded-lg object-cover shrink-0" />
+          {getImageSrc(order) ? (
+            <img src={getImageSrc(order)} alt="Harvest" className="w-16 h-16 rounded-lg object-cover shrink-0" />
           ) : (
             <div className="w-16 h-16 rounded-lg bg-green-50 border border-green-100 flex items-center justify-center shrink-0">
               <ShoppingBag className="w-7 h-7 text-green-500" />
@@ -100,8 +103,8 @@ const FarmerOrderCard = ({ order }) => {
             )}
             
             <div className="flex items-center gap-2 mt-2">
-              {order.buyer_profile_picture ? (
-                <img src={order.buyer_profile_picture} alt="Buyer" className="w-4 h-4 rounded-full object-cover" />
+              {getBuyerPicSrc(order) ? (
+                <img src={getBuyerPicSrc(order)} alt="Buyer" className="w-4 h-4 rounded-full object-cover" />
               ) : (
                 <User className="w-3.5 h-3.5 text-gray-400 shrink-0" />
               )}
@@ -186,9 +189,9 @@ const FarmerOrderCard = ({ order }) => {
                 </button>
               </div>
 
-              {order.harvest_photo && (
+              {getImageSrc(order) && (
                 <div className="rounded-xl overflow-hidden mb-4">
-                  <img src={order.harvest_photo} alt="Harvest" className="w-full h-48 object-cover" />
+                  <img src={getImageSrc(order)} alt="Harvest" className="w-full h-48 object-cover" />
                 </div>
               )}
 
@@ -239,8 +242,8 @@ const FarmerOrderCard = ({ order }) => {
               <div className="bg-blue-50 rounded-xl p-4 mt-4 space-y-3">
                 <p className="text-[10px] text-blue-600 font-semibold uppercase tracking-widest">Buyer</p>
                 <div className="flex items-center gap-3">
-                  {order.buyer_profile_picture ? (
-                    <img src={order.buyer_profile_picture} alt="Buyer" className="w-14 h-14 rounded-full object-cover" />
+                  {getBuyerPicSrc(order) ? (
+                    <img src={getBuyerPicSrc(order)} alt="Buyer" className="w-14 h-14 rounded-full object-cover" />
                   ) : (
                     <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
                       <User className="w-7 h-7 text-blue-400" />

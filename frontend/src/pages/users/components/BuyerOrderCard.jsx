@@ -1,5 +1,6 @@
 import React from 'react'
 import { Wheat, Package, Archive, Store, ChevronRight, MapPin, Calendar, Sprout } from 'lucide-react'
+import { getImageSrc } from '../../../utils/imageUtils'
 
 const formatDateTime = (d) =>
   d ? new Date(d).toLocaleString('en-PH', {
@@ -14,8 +15,8 @@ const BuyerOrderCard = ({ order, onViewDetails }) => {
       className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-green-300 hover:shadow-md transition-all duration-200 cursor-pointer"
     >
       <div className="h-28 bg-gray-100 relative">
-        {order.harvest_photo ? (
-          <img src={order.harvest_photo} alt={order.crop_name} className="w-full h-full object-cover" />
+        {getImageSrc(order) ? (
+          <img src={getImageSrc(order)} alt={order.crop_name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Sprout className="w-10 h-10 text-gray-300" />

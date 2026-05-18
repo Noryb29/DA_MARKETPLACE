@@ -5,6 +5,7 @@ import useFarmerAuthStore from '../../store/FarmerAuthStore'
 import Sidebar from '../public/components/SideBar'
 import { CircleUser, Upload, X, User, Mail, Phone, MapPin, Calendar, Building, Shield, LogOut, Edit, Save, Loader2 } from 'lucide-react'
 import { FaMars, FaVenus } from 'react-icons/fa'
+import { getUserImageSrc } from '../../utils/imageUtils'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
@@ -47,11 +48,8 @@ const FarmerProfile = () => {
 
   useEffect(() => {
     if (farmerDetails) {
-      const profilePic = farmerDetails.profile_picture 
-        ? (farmerDetails.profile_picture.startsWith('http') ? farmerDetails.profile_picture : `${BASE_URL}${farmerDetails.profile_picture}`)
-        : ''
       setDetailsForm({
-        profile_picture: profilePic,
+        profile_picture: '',
         gender: farmerDetails.gender || '',
         age: farmerDetails.age || '',
         farmer_organization: farmerDetails.farmer_organization || '',
@@ -60,7 +58,7 @@ const FarmerProfile = () => {
         municipality: farmerDetails.municipality || '',
         barangay: farmerDetails.barangay || '',
       })
-      setPhotoPreview(profilePic || null)
+      setPhotoPreview(getUserImageSrc(farmerDetails, user?.user_id))
     }
   }, [farmerDetails])
 
@@ -157,11 +155,7 @@ const FarmerProfile = () => {
     return '?'
   }
 
-  const getProfilePicture = () => {
-    if (!farmerDetails?.profile_picture) return null
-    const pic = farmerDetails.profile_picture
-    return pic.startsWith('http') ? pic : `${BASE_URL}${pic}`
-  }
+  const getProfilePicture = () => getUserImageSrc(farmerDetails, user?.user_id)
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'
 

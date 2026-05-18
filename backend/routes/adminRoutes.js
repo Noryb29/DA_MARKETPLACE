@@ -8,6 +8,8 @@ import {
   updateFarmer,
   getAllOrders,
   getOrderById,
+  verifyProduct,
+  verifyFarm,
 } from "../controllers/adminControllers.js";
 import { adminAuthMiddleware } from "../middleware/authMiddleware.js";
 
@@ -19,9 +21,11 @@ adminRoutes.use(adminAuthMiddleware)
 
 // ==================== PRODUCT ROUTES ====================
 adminRoutes.get("/products", getAllProducts);
+adminRoutes.put("/products/:productId/verify", verifyProduct);
 
 // ==================== FARM ROUTES ====================
 adminRoutes.get("/farms", getAllFarms);
+adminRoutes.put("/farms/:farmId/verify", verifyFarm);
 
 // ==================== USER ROUTES ====================
 adminRoutes.get("/users", getAllUsers);

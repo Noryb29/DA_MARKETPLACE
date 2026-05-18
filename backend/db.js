@@ -43,6 +43,7 @@ export const createDB = async() => {
                 detail_id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL UNIQUE,
                 profile_picture VARCHAR(255),
+                profile_picture_data BYTEA,
                 gender VARCHAR(10),
                 age VARCHAR(6),
                 farmer_organization VARCHAR(100),
@@ -69,8 +70,11 @@ export const createDB = async() => {
                 municipality VARCHAR(100),
                 barangay VARCHAR(100),
                 farm_image VARCHAR(500),
+                farm_image_data BYTEA,
                 farm_docs VARCHAR(1000)[],
                 farm_elevation INTEGER,
+                is_verified BOOLEAN DEFAULT false,
+                rejection_reason VARCHAR(500),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `)
@@ -109,7 +113,11 @@ export const createDB = async() => {
                 actual_harvest DATE NOT NULL,
                 total_harvest DECIMAL(10,2),
                 harvest_photo VARCHAR(500),
-                location VARCHAR(255)
+                harvest_photo_data BYTEA,
+                price DECIMAL(10,2),
+                location VARCHAR(255),
+                is_verified BOOLEAN DEFAULT false,
+                rejection_reason VARCHAR(500)
             )
         `)
         console.log('✓ Table "crop_in_farm" created')
@@ -135,19 +143,20 @@ export const createDB = async() => {
         console.log('✓ Table "users" created')
 
          await pool.query(`
-            CREATE TABLE IF NOT EXISTS user_details (
-                detail_id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL UNIQUE,
-                profile_picture VARCHAR(255),
-                bio TEXT,
-                gender VARCHAR(10),
-                date_of_birth DATE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                CONSTRAINT fk_user_details FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-            )
-        `)
-        console.log('✓ Table "user_details" created')
+             CREATE TABLE IF NOT EXISTS user_details (
+                 detail_id SERIAL PRIMARY KEY,
+                 user_id INTEGER NOT NULL UNIQUE,
+                 profile_picture VARCHAR(255),
+                 profile_picture_data BYTEA,
+                 bio TEXT,
+                 gender VARCHAR(10),
+                 date_of_birth DATE,
+                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                 CONSTRAINT fk_user_details FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+             )
+         `)
+         console.log('✓ Table "user_details" created')
 
 
         await pool.query(`
@@ -249,7 +258,34 @@ export const createDB = async() => {
         `)
         console.log('✓ Table "price_records" created')
 
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS conversations (
+                conversation_id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                farmer_id INTEGER NOT NULL,
+                crop_order_id INTEGER,
+                last_message_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_conversation_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                CONSTRAINT fk_conversation_farmer FOREIGN KEY (farmer_id) REFERENCES farmer(user_id) ON DELETE CASCADE,
+                CONSTRAINT fk_conversation_order FOREIGN KEY (crop_order_id) REFERENCES crop_orders(crop_order_id) ON DELETE SET NULL
+            )
+        `)
+        console.log('✓ Table "conversations" created')
 
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS messages (
+                message_id SERIAL PRIMARY KEY,
+                conversation_id INTEGER NOT NULL,
+                sender_id INTEGER NOT NULL,
+                sender_type VARCHAR(10) NOT NULL,
+                content TEXT NOT NULL,
+                is_read BOOLEAN DEFAULT false,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_message_conversation FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id) ON DELETE CASCADE
+            )
+        `)
+        console.log('✓ Table "messages" created')
 
         console.log('\n✅ Database setup completed successfully!')
 

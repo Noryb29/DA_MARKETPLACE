@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react'
 import Header from '../public/components/Header'
 import Sidebar from '../public/components/SideBar'
 import { useAdminStore } from '../../store/AdminStore'
-import { Search, MapPin, Crop, User, Calendar, ChevronDown, X, AlertCircle } from 'lucide-react'
+import { Search, MapPin, Crop, User, Calendar, ChevronDown, X, AlertCircle, CheckCircle, Loader2, XCircle } from 'lucide-react'
 
 const AdminFarms = () => {
-  const { farms, loading, error, getAllFarms, clearError } = useAdminStore()
+  const { farms, loading, error, getAllFarms, verifyFarm, clearError } = useAdminStore()
   const [filteredFarms, setFilteredFarms] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedFarm, setSelectedFarm] = useState(null)
@@ -14,6 +14,31 @@ const AdminFarms = () => {
   const [sortOrder, setSortOrder] = useState('asc')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
+  const [filter, setFilter] = useState('pending')
+  const [verifyingId, setVerifyingId] = useState(null)
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectFarmId, setRejectFarmId] = useState(null)
+  const [rejectionReason, setRejectionReason] = useState('')
+
+  const handleVerify = async (farmId, is_verified, reason = null) => {
+    setVerifyingId(farmId)
+    try {
+      await verifyFarm(farmId, is_verified, reason)
+      setShowRejectModal(false)
+      setRejectFarmId(null)
+      setRejectionReason('')
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setVerifyingId(null)
+    }
+  }
+
+  const openRejectModal = (farmId) => {
+    setRejectFarmId(farmId)
+    setRejectionReason('')
+    setShowRejectModal(true)
+  }
 
   useEffect(() => {
     getAllFarms()
@@ -23,12 +48,18 @@ const AdminFarms = () => {
   useEffect(() => {
     let filtered = farms.filter(farm => {
       const searchLower = searchTerm.toLowerCase()
-      return (
+      const matchesSearch = (
         farm.farm_name?.toLowerCase().includes(searchLower) ||
         farm.firstname?.toLowerCase().includes(searchLower) ||
         farm.lastname?.toLowerCase().includes(searchLower) ||
         farm.email?.toLowerCase().includes(searchLower)
       )
+      
+      if (filter === 'all') return matchesSearch
+      if (filter === 'pending') return matchesSearch && !farm.is_verified && !farm.rejection_reason
+      if (filter === 'approved') return matchesSearch && farm.is_verified
+      if (filter === 'rejected') return matchesSearch && !farm.is_verified && farm.rejection_reason
+      return matchesSearch
     })
 
     // Sort
@@ -50,7 +81,7 @@ const AdminFarms = () => {
 
     setFilteredFarms(filtered)
     setCurrentPage(1)
-  }, [searchTerm, farms, sortField, sortOrder])
+  }, [searchTerm, farms, sortField, sortOrder, filter])
 
   // Pagination
   const paginatedFarms = filteredFarms.slice(
@@ -103,6 +134,16 @@ const AdminFarms = () => {
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+                <select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Farms</option>
+                  <option value="pending">Pending Approval</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
                 <div className="flex gap-2">
                   <select
                     value={sortField}
@@ -125,10 +166,14 @@ const AdminFarms = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-5 gap-4 mb-6">
               <div className="bg-white rounded-lg shadow-sm p-4">
                 <p className="text-gray-600 text-sm">Total Farms</p>
                 <p className="text-2xl font-bold text-gray-900">{farms.length}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-amber-500">
+                <p className="text-gray-600 text-sm">Pending</p>
+                <p className="text-2xl font-bold text-amber-600">{farms.filter(f => !f.is_verified).length}</p>
               </div>
               <div className="bg-white rounded-lg shadow-sm p-4">
                 <p className="text-gray-600 text-sm">Total Crops</p>
@@ -171,6 +216,7 @@ const AdminFarms = () => {
                         <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Elevation (m)</th>
                         <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Crops</th>
                         <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Created</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
                         <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
                       </tr>
                     </thead>
@@ -199,16 +245,67 @@ const AdminFarms = () => {
                           <td className="px-6 py-4 text-sm text-gray-600">
                             {new Date(farm.created_at).toLocaleDateString()}
                           </td>
+                          <td className="px-6 py-4">
+                            {farm.is_verified ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                <CheckCircle size={12} /> Approved
+                              </span>
+                            ) : farm.rejection_reason ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                <XCircle size={12} /> Rejected
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                                <AlertCircle size={12} /> Pending
+                              </span>
+                            )}
+                          </td>
                           <td className="px-6 py-4 text-sm">
-                            <button
-                              onClick={() => {
-                                setSelectedFarm(farm)
-                                setShowDetailModal(true)
-                              }}
-                              className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition"
-                            >
-                              View Details
-                            </button>
+                            <div className="flex items-center gap-2">
+                              {(!farm.is_verified && !farm.rejection_reason) && (
+                                <>
+                                  <button
+                                    onClick={() => handleVerify(farm.farm_id, true)}
+                                    disabled={verifyingId === farm.farm_id}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors text-xs font-medium"
+                                  >
+                                    {verifyingId === farm.farm_id ? (
+                                      <Loader2 size={12} className="animate-spin" />
+                                    ) : (
+                                      <CheckCircle size={12} />
+                                    )}
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => openRejectModal(farm.farm_id)}
+                                    disabled={verifyingId === farm.farm_id}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors text-xs font-medium"
+                                  >
+                                    <XCircle size={12} />
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                              {farm.rejection_reason && (
+                                <button
+                                  onClick={() => handleVerify(farm.farm_id, true)}
+                                  disabled={verifyingId === farm.farm_id}
+                                  className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors text-xs font-medium"
+                                >
+                                  <CheckCircle size={12} />
+                                  Approve
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setSelectedFarm(farm)
+                                  setShowDetailModal(true)
+                                }}
+                                className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition"
+                              >
+                                View Details
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -320,6 +417,45 @@ const AdminFarms = () => {
                   Close
                 </button>
               </div>
+            </div>{/* ← closes <div className="p-6 space-y-6"> */}
+          </div>{/* ← closes <div className="bg-white rounded-lg shadow-xl ..."> */}
+        </div>
+      )}{/* ← closes Detail Modal conditional */}
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-full">
+                <XCircle className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Reject Farm</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Please provide a reason for rejecting this farm. This will be shown to the farmer.
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+              rows={4}
+            />
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowRejectModal(false)}
+                className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleVerify(rejectFarmId, false, rejectionReason)}
+                disabled={!rejectionReason.trim() || verifyingId === rejectFarmId}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {verifyingId === rejectFarmId ? 'Rejecting...' : 'Reject Farm'}
+              </button>
             </div>
           </div>
         </div>

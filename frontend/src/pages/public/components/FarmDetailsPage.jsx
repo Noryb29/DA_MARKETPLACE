@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState,useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Header from './Header'
 import Sidebar from './SideBar'
@@ -9,8 +9,11 @@ import useCartStore from '../../../store/CartStore'
 import useUserStore from '../../../store/UserStore'
 import { getDaysUntilHarvest } from '../shopComponents/HarvestBadge'
 import CropLocation from '../../../components/CropLocation'
+import { getImageSrc, getFarmImageSrc } from '../../../utils/imageUtils'
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+
+const getCropImageSrc = (crop) => getImageSrc(crop)
 
 const FarmDetailsPage = () => {
   const { id } = useParams()
@@ -128,8 +131,8 @@ const FarmDetailsPage = () => {
               <div className="lg:col-span-1 space-y-4">
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   <div className="h-40 bg-linear-to-br from-green-400 to-emerald-600 relative">
-                    {farm.farm_image ? (
-                      <img src={farm.farm_image.startsWith('http') ? farm.farm_image : `${BASE_URL}${farm.farm_image}`} alt={farm.farm_name} className="w-full h-full object-cover" />
+                    {getFarmImageSrc(farm) ? (
+                      <img src={getFarmImageSrc(farm)} alt={farm.farm_name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Sprout className="w-12 h-12 text-white/40" />
@@ -245,8 +248,8 @@ const FarmDetailsPage = () => {
                     {crops.map(crop => (
                       <div key={crop.crop_id} onClick={() => setSelectedCrop(crop)} className="bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-md transition-all cursor-pointer overflow-hidden">
                         <div className="h-32 relative">
-                          {crop.harvest_photo ? (
-                            <img src={crop.harvest_photo} alt={crop.crop_name} className="w-full h-full object-cover" />
+                          {getCropImageSrc(crop) ? (
+                            <img src={getCropImageSrc(crop)} alt={crop.crop_name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                               <Sprout className="w-10 h-10 text-green-300" />
@@ -338,8 +341,8 @@ const FarmDetailsPage = () => {
               </div>
 
               <div className="rounded-xl overflow-hidden mb-4">
-                {selectedCrop.harvest_photo ? (
-                  <img src={selectedCrop.harvest_photo} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
+                {getCropImageSrc(selectedCrop) ? (
+                  <img src={getCropImageSrc(selectedCrop)} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
                 ) : (
                   <div className="w-full h-44 bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                     <Sprout className="w-12 h-12 text-green-300" />

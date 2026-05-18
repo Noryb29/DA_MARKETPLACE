@@ -104,7 +104,7 @@ export const login = async (req, res) => {
     const emailTrimmed = email.trim()
 
     const [userRows, farmerRows] = await Promise.all([
-      db.query(`SELECT user_id, email, password, firstname,middlename, lastname, address, contact_number, role, created_at FROM users WHERE email = $1`, [emailTrimmed]),
+      db.query(`SELECT user_id, email, password, firstname,middlename, lastname, address, contact_number, role, created_at,rsbsa_number FROM users WHERE email = $1`, [emailTrimmed]),
       db.query(`SELECT user_id, rsbsa_number, email, password, firstname, middlename, lastname, address, contact_number, role, created_at FROM farmer WHERE email = $1`, [emailTrimmed])
     ])
 
@@ -149,7 +149,7 @@ export const loginUser = async (req, res) => {
 
     const emailTrimmed = email.trim()
     const [userRows, farmerRows] = await Promise.all([
-      db.query(`SELECT user_id, email, password, firstname, middlename, lastname, address, contact_number, role, created_at FROM users WHERE email = $1 AND role = 'user'`, [emailTrimmed]),
+      db.query(`SELECT user_id, email, password, firstname, middlename, lastname, address, contact_number, role, created_at, rsbsa_number FROM users WHERE email = $1 AND role = 'user'`, [emailTrimmed]),
       db.query(`SELECT user_id, rsbsa_number, email, password, firstname, middlename, lastname, address, contact_number, role, created_at FROM farmer WHERE email = $1 AND role = 'farmer'`, [emailTrimmed])
     ])
 
@@ -200,7 +200,7 @@ export const loginFarmer = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid email or password' })
 
     const token = signToken({ user_id: user.user_id, email: user.email, role: user.role }, process.env.JWT_SECRET_FARMER)
-
+    console.log(user)
     res.status(200).json({ success: true, user: removePassword(user), token })
   } catch (error) {
     console.error('Farmer login error:', error)

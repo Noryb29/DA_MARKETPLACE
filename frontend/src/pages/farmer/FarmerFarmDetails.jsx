@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState,useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Sidebar from '../public/components/SideBar'
 import useFarmerStore from '../../store/FarmsStore'
@@ -7,8 +7,7 @@ import EditFarmModal from './components/EditFarmModal.jsx'
 import CropModal from './components/CropModal.jsx'
 import { ArrowLeft, Loader2, MapPin, Ruler, AlertCircle, Leaf, Droplets, Sprout, Calendar, Package, FileText, MapPinned, Navigation } from 'lucide-react'
 import { getDaysUntilHarvest } from '../public/shopComponents/HarvestBadge'
-
-const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+import { getImageSrc, getFarmImageSrc } from '../../utils/imageUtils'
 
 const FarmerFarmDetails = () => {
   const { id } = useParams()
@@ -23,6 +22,8 @@ const FarmerFarmDetails = () => {
 
   const currentFarm = farms.find(f => f.farm_id === parseInt(id))
   const farmCrops = crops.filter(c => c.farm_id === parseInt(id))
+  const farmImg = useMemo(() => currentFarm ? getFarmImageSrc(currentFarm) : null, [currentFarm])
+  const selectedCropImg = useMemo(() => selectedCrop ? getImageSrc(selectedCrop) : null, [selectedCrop])
 
   useEffect(() => {
     getFarms()
@@ -68,8 +69,8 @@ const FarmerFarmDetails = () => {
               <div className="lg:col-span-1 space-y-4">
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   <div className="h-40 bg-linear-to-br from-green-400 to-emerald-600 relative">
-                    {currentFarm.farm_image ? (
-                      <img src={currentFarm.farm_image.startsWith('http') ? currentFarm.farm_image : `${BASE_URL}${currentFarm.farm_image}`} alt={currentFarm.farm_name} className="w-full h-full object-cover" />
+                    {farmImg ? (
+                      <img src={farmImg} alt={currentFarm.farm_name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Sprout className="w-12 h-12 text-white/40" />
@@ -168,32 +169,47 @@ const FarmerFarmDetails = () => {
                     <h2 className="text-lg font-bold text-gray-900">Your Crops</h2>
                     <span className="text-xs text-gray-400 font-medium">({farmCrops.length})</span>
                   </div>
-                  <button
-                    onClick={() => setCropModalOpen(true)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                  >
-                    + Add Crop
-                  </button>
+                  {currentFarm?.is_verified ? (
+                    <button
+                      onClick={() => setCropModalOpen(true)}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                    >
+                      + Add Crop
+                    </button>
+                  ) : (
+                    <div className="px-4 py-2 bg-gray-300 text-gray-500 text-sm font-semibold rounded-lg cursor-not-allowed flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      Farm Pending
+                    </div>
+                  )}
                 </div>
 
                 {farmCrops.length === 0 ? (
                   <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
                     <Sprout className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                    <p className="text-gray-500 text-sm">No crops listed yet</p>
-                    <button
-                      onClick={() => setCropModalOpen(true)}
-                      className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                    >
-                      + Add Your First Crop
-                    </button>
+                    {currentFarm?.is_verified ? (
+                      <>
+                        <p className="text-gray-500 text-sm">No crops listed yet</p>
+                        <button
+                          onClick={() => setCropModalOpen(true)}
+                          className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                        >
+                          + Add Your First Crop
+                        </button>
+                      </>
+                    ) : (
+                      <p className="text-amber-600 text-sm font-medium">Farm must be verified before adding crops</p>
+                    )}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {farmCrops.map(crop => (
+                    {farmCrops.map(crop => {
+                      const cropImg = getImageSrc(crop)
+                      return (
                       <div key={crop.crop_id} onClick={() => setSelectedCrop(crop)} className="bg-white rounded-xl border border-gray-200 hover:border-green-300 hover:shadow-md transition-all cursor-pointer overflow-hidden">
                         <div className="h-32 relative">
-                          {crop.harvest_photo ? (
-                            <img src={crop.harvest_photo} alt={crop.crop_name} className="w-full h-full object-cover" />
+                          {cropImg ? (
+                            <img src={cropImg} alt={crop.crop_name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                               <Sprout className="w-10 h-10 text-green-300" />
@@ -259,7 +275,8 @@ const FarmerFarmDetails = () => {
                           )}
                         </div>
                       </div>
-                    ))}
+                    )
+                    })}
                   </div>
                 )}
               </div>
@@ -282,8 +299,8 @@ const FarmerFarmDetails = () => {
               </div>
 
               <div className="rounded-xl overflow-hidden mb-4">
-                {selectedCrop.harvest_photo ? (
-                  <img src={selectedCrop.harvest_photo} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
+                {selectedCropImg ? (
+                  <img src={selectedCropImg} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
                 ) : (
                   <div className="w-full h-44 bg-linear-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                     <Sprout className="w-12 h-12 text-green-300" />
@@ -409,6 +426,10 @@ const FarmerFarmDetails = () => {
         isOpen={cropModalOpen}
         onClose={() => setCropModalOpen(false)}
         onSubmit={async (form) => {
+          if (!currentFarm?.is_verified) {
+            alert('This farm is still pending approval. You cannot add crops until the farm is verified.')
+            return
+          }
           await addCrop({ ...form, farm_id: parseInt(id) })
           setCropModalOpen(false)
           getCrops()

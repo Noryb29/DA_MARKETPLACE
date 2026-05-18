@@ -12,6 +12,7 @@ import {
   Users, Calendar, ArrowRight, Plus, Eye, Clock,
   MapPin, ChevronRight
 } from 'lucide-react'
+import { getImageSrc, getUserImageSrc } from '../../utils/imageUtils'
 
 const FarmerIndex = () => {
   const { farmer, logout, farmerDetails } = useFarmerAuthStore()
@@ -59,12 +60,7 @@ const FarmerIndex = () => {
   const formatDate = (d) =>
     d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : '—'
 
-  const getProfilePicture = () => {
-    if (!farmerDetails?.profile_picture) return null
-    const pic = farmerDetails.profile_picture
-    const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
-    return pic.startsWith('http') ? pic : `${BASE_URL}${pic}`
-  }
+  const getProfilePicture = () => getUserImageSrc(farmerDetails, farmer?.user_id)
 
   if (loading) {
     return (
@@ -177,12 +173,14 @@ const FarmerIndex = () => {
               </div>
               <div className="divide-y divide-gray-50">
                 {recentOrders.length > 0 ? (
-                  recentOrders.map((order) => (
+                  recentOrders.map((order) => {
+                    const orderImg = getImageSrc(order)
+                    return (
                     <div key={order.crop_order_id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
-                          {order.harvest_photo ? (
-                            <img src={order.harvest_photo} alt={order.crop_name} className="w-full h-full object-cover" />
+                          {orderImg ? (
+                            <img src={orderImg} alt={order.crop_name} className="w-full h-full object-cover" />
                           ) : (
                             <Package className="w-5 h-5 text-gray-400" />
                           )}
@@ -204,7 +202,8 @@ const FarmerIndex = () => {
                         <p className="text-[10px] text-gray-400">{formatDate(order.order_date)}</p>
                       </div>
                     </div>
-                  ))
+                    )
+                  })
                 ) : (
                   <div className="p-8 text-center">
                     <ShoppingCart className="w-10 h-10 text-gray-200 mx-auto mb-3" />

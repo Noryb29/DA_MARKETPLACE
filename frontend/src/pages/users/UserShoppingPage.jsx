@@ -10,6 +10,8 @@ import { Wheat, Search, SlidersHorizontal, X, Loader2, Sprout, ShoppingCart, Map
 import Sidebar from '../public/components/SideBar'
 import Swal from 'sweetalert2'
 import CropLocation from '../../components/CropLocation'
+import CropCard from '../../components/CropCard'
+import { getImageSrc } from '../../utils/imageUtils'
 
 const UserShoppingPage = () => {
   const { items, openCart, addToCart } = useCartStore()
@@ -25,6 +27,7 @@ const UserShoppingPage = () => {
   const [filterMinVolume, setFilterMinVolume] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [selectedCrop, setSelectedCrop] = useState(null)
+  const selectedCropImg = useMemo(() => selectedCrop ? getImageSrc(selectedCrop) : null, [selectedCrop])
 
   useEffect(() => { getAllCrops() }, [])
 
@@ -114,11 +117,10 @@ const UserShoppingPage = () => {
         <Sidebar />
 
         <main className="flex-1 px-6 py-8 overflow-y-auto">
-          
           <div className="max-w-6xl mx-auto">
 
-            {/* Page Header */}
-              <div className="mb-7 flex items-start justify-between">
+            <div className="mb-7 flex flex-col gap-4">
+              <div className="flex items-start justify-between">
                 <div>
                   <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
                     <Sprout className="w-3.5 h-3.5" />
@@ -128,97 +130,88 @@ const UserShoppingPage = () => {
                   <p className="text-gray-500 mt-1 text-sm">Fresh crops listed directly by registered farmers.</p>
                 </div>
 
-                {/* Cart button */}
-                <button
-                  onClick={openCart}
-                  className="relative flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200
-                    hover:border-green-400 rounded-xl text-sm font-semibold text-gray-700
-                    hover:text-green-700 transition-all mt-1"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  Cart
-                  {totalItems > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-green-600 text-white text-[10px] font-bold
-                      w-5 h-5 rounded-full flex items-center justify-center shadow-md">
-                      {totalItems}
-                    </span>
-                  )}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center gap-2 px-4 py-2.5 border-2 rounded-xl text-sm font-semibold transition-all mt-1 ${showFilters ? 'bg-green-50 border-green-400 text-green-700' : 'bg-white border-gray-200 text-gray-700 hover:border-green-400'}`}
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <span className="bg-green-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={openCart}
+                    className="relative flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 hover:border-green-400 rounded-xl text-sm font-semibold text-gray-700 hover:text-green-700 transition-all mt-1"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Cart
+                    {totalItems > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-green-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                        {totalItems}
+                      </span>
+                    )}
+                  </button>
+                </div>
               </div>
-            {/* Search + Filter Bar */}
-            <div className="flex gap-2 mb-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
-                  placeholder="Search by crop, variety, farm…"
+                  placeholder="Search crops, varieties, farms..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-white
-                    focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.1)]
-                    outline-none text-sm text-gray-800 font-medium transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-green-500 focus:outline-none focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)] text-sm text-gray-800 font-medium transition-all"
                 />
                 {search && (
-                  <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                    <X className="w-3.5 h-3.5" />
+                  <button
+                    onClick={() => setSearch('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={18} />
                   </button>
                 )}
               </div>
-
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all
-                  ${showFilters || activeFilterCount > 0
-                    ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                Filters
-                {activeFilterCount > 0 && (
-                  <span className="bg-green-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
             </div>
 
-            {/* Filter Panel */}
+            <CartDrawer />
+
             {showFilters && (
-              <MarketFilterPanel
-                varieties={varieties}
-                filterVariety={filterVariety}
-                setFilterVariety={setFilterVariety}
-                filterHarvest={filterHarvest}
-                setFilterHarvest={setFilterHarvest}
-                locations={locations}
-                filterLocation={filterLocation}
-                setFilterLocation={setFilterLocation}
-                filterStock={filterStock}
-                setFilterStock={setFilterStock}
-                filterMinVolume={filterMinVolume}
-                setFilterMinVolume={setFilterMinVolume}
-                activeFilterCount={activeFilterCount}
-                clearFilters={clearFilters}
+              <MarketFilterPanel 
+                varieties={varieties} 
+                filterVariety={filterVariety} 
+                setFilterVariety={setFilterVariety} 
+                filterHarvest={filterHarvest} 
+                setFilterHarvest={setFilterHarvest} 
+                locations={locations} 
+                filterLocation={filterLocation} 
+                setFilterLocation={setFilterLocation} 
+                filterStock={filterStock} 
+                setFilterStock={setFilterStock} 
+                filterMinVolume={filterMinVolume} 
+                setFilterMinVolume={setFilterMinVolume} 
+                activeFilterCount={activeFilterCount} 
+                clearFilters={clearFilters} 
               />
             )}
 
-            {/* Results count */}
             {initialized && (
-              <p className="text-xs text-gray-400 font-medium mb-3">
-                {filtered.length === crops.length
-                  ? `${crops.length} listings`
-                  : `${filtered.length} of ${crops.length} listings`}
+              <p className="text-xs text-gray-400 font-medium mb-4">
+                {filtered.length === crops.length ? `${crops.length} listings` : `${filtered.length} of ${crops.length} listings`}
               </p>
             )}
 
-            {/* Loading */}
             {!initialized && (
               <div className="flex items-center justify-center h-64">
                 <Loader2 className="w-7 h-7 animate-spin text-green-600" />
               </div>
             )}
 
-            {/* Empty state */}
             {initialized && filtered.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
                 <div className="bg-gray-100 p-5 rounded-full">
@@ -227,87 +220,22 @@ const UserShoppingPage = () => {
                 <p className="font-semibold text-gray-500">No crops found</p>
                 <p className="text-xs text-gray-400">Try adjusting your search or filters.</p>
                 {(search || activeFilterCount > 0) && (
-                  <button onClick={clearFilters} className="mt-1 text-xs text-green-600 font-semibold hover:underline">
-                    Clear all filters
-                  </button>
+                  <button onClick={clearFilters} className="mt-1 text-xs text-green-600 font-semibold hover:underline">Clear all filters</button>
                 )}
               </div>
             )}
-            
-            <CartDrawer/>
 
-            {/* Crop Grid */}
             {initialized && filtered.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
                 {filtered.map((crop) => (
-                  <div
-                    key={crop.crop_id}
-                    onClick={() => setSelectedCrop(crop)}
-                    className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-green-300 hover:shadow-md transition-all duration-200 cursor-pointer"
-                  >
-                    <div className="h-36 bg-gray-100 relative">
-                      {crop.harvest_photo ? (
-                        <img src={crop.harvest_photo} alt={crop.crop_name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Wheat className="w-12 h-12 text-gray-300" />
-                        </div>
-                      )}
-                      {(crop.province || crop.municipality || crop.barangay || crop.farm_location) && (
-                        <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full flex items-center gap-1">
-                          <MapPin className="w-2.5 h-2.5" />
-                          {crop.barangay || crop.municipality || crop.province || crop.farm_location}
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3 space-y-2">
-                      <div>
-                        <p className="font-bold text-gray-900 text-sm truncate">{crop.crop_name}</p>
-                        {crop.variety && <p className="text-xs text-gray-400 truncate">{crop.variety}</p>}
-                      </div>
-                      
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
-                        <span className="text-[10px] text-gray-500 truncate">{crop.farm_name}</span>
-                      </div>
-                      <CropLocation crop={crop} showGps={true} />
-
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {crop.volume && (
-                          <span className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded flex items-center gap-1">
-                            <Package className="w-2.5 h-2.5" />{crop.volume}kg
-                          </span>
-                        )}
-                        {crop.stock && (
-                          <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded flex items-center gap-1">
-                            <Archive className="w-2.5 h-2.5" />{crop.stock} pcs
-                          </span>
-                        )}
-                      </div>
-
-                      {crop.expected_harvest && (
-                        <div className="flex items-center gap-1 text-[10px] text-amber-600">
-                          <Calendar className="w-2.5 h-2.5" />
-                          <span>Harvest: {new Date(crop.expected_harvest).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</span>
-                        </div>
-                      )}
-
-                      {[1, 2, 3, 4, 5, 6, 7, 8].some(n => crop[`specification_${n}_name`] || crop[`specification_${n}_value`]) && (
-                        <div className="flex flex-wrap gap-1 pt-1">
-                          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
-                            const name = crop[`specification_${n}_name`]
-                            const metric = crop[`specification_${n}_metric`]
-                            const value = crop[`specification_${n}_value`]
-                            return (name || value) ? (
-                              <span key={n} className="text-[9px] bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded border border-green-200">
-                                {name}: {value}{metric && <span className="text-green-600"> {metric}</span>}
-                              </span>
-                            ) : null
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <CropCard 
+                    key={crop.crop_id} 
+                    crop={crop} 
+                    onClick={() => setSelectedCrop(crop)} 
+                    variant="shop" 
+                    showAddToCart={true} 
+                    onAddToCart={handleAddToCart} 
+                  />
                 ))}
               </div>
             )}
@@ -316,18 +244,17 @@ const UserShoppingPage = () => {
         </main>
       </div>
 
-      {/* Crop Detail Modal */}
       {selectedCrop && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedCrop(null)} />
-          
+
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col">
             <div className="h-1.5 w-full bg-linear-to-r from-green-400 via-emerald-500 to-teal-400" />
-            
+
             <div className="p-5 overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-gray-900">{selectedCrop.crop_name}</h2>
-                <button 
+                <button
                   onClick={() => setSelectedCrop(null)}
                   className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                 >
@@ -335,10 +262,9 @@ const UserShoppingPage = () => {
                 </button>
               </div>
 
-              {/* Photo */}
               <div className="rounded-xl overflow-hidden mb-4">
-                {selectedCrop.harvest_photo ? (
-                  <img src={selectedCrop.harvest_photo} alt={selectedCrop.crop_name} className="w-full h-48 object-cover" />
+                {selectedCropImg ? (
+                  <img src={selectedCropImg} alt={selectedCrop.crop_name} className="w-full h-48 object-cover" />
                 ) : (
                   <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
                     <Wheat className="w-12 h-12 text-gray-300" />
@@ -346,7 +272,6 @@ const UserShoppingPage = () => {
                 )}
               </div>
 
-              {/* Details */}
               <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                 {selectedCrop.variety && (
                   <div className="flex items-center justify-between">
@@ -354,91 +279,44 @@ const UserShoppingPage = () => {
                     <span className="text-sm text-gray-800">{selectedCrop.variety}</span>
                   </div>
                 )}
+
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500 font-medium">Farm</span>
                   <span className="text-sm text-gray-800">{selectedCrop.farm_name}</span>
                 </div>
-                {(selectedCrop.province || selectedCrop.municipality || selectedCrop.barangay) && (
+
+                {selectedCrop.planting_date && (
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 font-medium">Barangay</span>
-                    <span className="text-sm text-gray-800">{selectedCrop.barangay}</span>
+                    <span className="text-xs text-gray-500 font-medium">Planting Date</span>
+                    <span className="text-sm text-gray-800">{formatDate(selectedCrop.planting_date)}</span>
                   </div>
                 )}
-                {(selectedCrop.province || selectedCrop.municipality) && (
+
+                {selectedCrop.expected_harvest && (
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 font-medium">Municipality</span>
-                    <span className="text-sm text-gray-800">{selectedCrop.municipality}</span>
+                    <span className="text-xs text-gray-500 font-medium">Expected Harvest</span>
+                    <span className="text-sm text-gray-800">{formatDate(selectedCrop.expected_harvest)}</span>
                   </div>
                 )}
-                {selectedCrop.province && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 font-medium">Province</span>
-                    <span className="text-sm text-gray-800">{selectedCrop.province}</span>
-                  </div>
-                )}
-                {selectedCrop.farm_location && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 font-medium">Farm Location</span>
-                    <span className="text-sm text-gray-800">{selectedCrop.farm_location}</span>
-                  </div>
-                )}
-                {selectedCrop.gps_coordinates && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 font-medium">GPS</span>
-                    <span className="text-sm text-gray-600">{selectedCrop.gps_coordinates}</span>
-                  </div>
-                )}
+
                 {selectedCrop.volume !== null && selectedCrop.volume !== undefined && (
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500 font-medium">Volume</span>
                     <span className="text-sm font-semibold text-green-700">{Number(selectedCrop.volume).toLocaleString()} kg</span>
                   </div>
                 )}
+
                 {selectedCrop.stock && (
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500 font-medium">Stock</span>
                     <span className="text-sm font-semibold text-blue-700">{Number(selectedCrop.stock).toLocaleString()} pcs</span>
                   </div>
                 )}
-                {selectedCrop.planting_date && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 font-medium">Planted</span>
-                    <span className="text-sm text-gray-700">{formatDate(selectedCrop.planting_date)}</span>
-                  </div>
-                )}
-                {selectedCrop.expected_harvest && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 font-medium">Expected Harvest</span>
-                    <span className="text-sm font-semibold text-amber-700">{formatDate(selectedCrop.expected_harvest)}</span>
-                  </div>
-                )}
               </div>
 
-              {/* Specs */}
-              {[1, 2, 3, 4, 5, 6, 7, 8].some(n => selectedCrop[`specification_${n}_name`] || selectedCrop[`specification_${n}_value`]) && (
-                <div className="mt-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
-                  <p className="text-xs font-bold text-green-700 uppercase tracking-widest mb-2">Specifications</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
-                      const name = selectedCrop[`specification_${n}_name`]
-                      const metric = selectedCrop[`specification_${n}_metric`]
-                      const value = selectedCrop[`specification_${n}_value`]
-                      return (name || value) ? (
-                        <span key={n} className="text-xs bg-white text-green-700 font-semibold px-3 py-1.5 rounded-lg border border-green-200">
-                          {name}: <span className="font-normal">{value}</span>{metric && <span className="text-green-600"> {metric}</span>}
-                        </span>
-                      ) : null
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Add to Cart Button */}
               <button
                 onClick={() => handleAddToCart(selectedCrop)}
-                className="w-full mt-5 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600
-                  hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold
-                  active:scale-[0.98] transition-all shadow-md shadow-green-200"
+                className="w-full mt-5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <ShoppingCart className="w-4 h-4" />
                 Add to Cart

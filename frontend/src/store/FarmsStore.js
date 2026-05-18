@@ -96,7 +96,7 @@ const useFarmerStore = create((set, get) => ({
     try {
       const response = await axios.get(
         `${BASE_URL}/api/farmers/getFarms`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` }, responseType: 'json' }
       )
       set({ farms: response.data.farms })
     } catch (error) {

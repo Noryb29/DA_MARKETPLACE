@@ -11,8 +11,7 @@ import { Wheat, Search, SlidersHorizontal, X, Loader2, Sprout, ShoppingCart, Pac
 import Swal from 'sweetalert2'
 import CropLocation from '../../components/CropLocation'
 import CropCard from '../../components/CropCard'
-
-const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+import { getImageSrc } from '../../utils/imageUtils'
 
 const ITEMS_PER_PAGE = 12
 
@@ -32,6 +31,7 @@ const ShoppingPage = () => {
   const [sortBy, setSortBy] = useState('newest')
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCrop, setSelectedCrop] = useState(null)
+  const selectedCropImg = useMemo(() => selectedCrop ? getImageSrc(selectedCrop) : null, [selectedCrop])
 
   useEffect(() => { getAllCrops() }, [])
 
@@ -251,8 +251,8 @@ const ShoppingPage = () => {
               </div>
 
               <div className="rounded-xl overflow-hidden mb-4">
-                {selectedCrop.harvest_photo ? (
-                  <img src={selectedCrop.harvest_photo.startsWith('http') ? selectedCrop.harvest_photo : `${BASE_URL}${selectedCrop.harvest_photo}`} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
+                {selectedCropImg ? (
+                  <img src={selectedCropImg} alt={selectedCrop.crop_name} className="w-full h-44 object-cover" />
                 ) : (
                   <div className="w-full h-44 bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                     <Sprout className="w-12 h-12 text-green-300" />
@@ -260,10 +260,32 @@ const ShoppingPage = () => {
                 )}
               </div>
 
+              {selectedCrop.category_name && (
+                <div className="mb-2">
+                  <span className="text-xs text-purple-600 font-semibold">{selectedCrop.category_name}</span>
+                  {selectedCrop.commodity_spec && <span className="text-xs text-orange-600 ml-2">• {selectedCrop.commodity_spec}</span>}
+                </div>
+              )}
               {selectedCrop.variety && (
                 <div className="mb-3">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Variety</p>
                   <p className="text-sm text-gray-800">{selectedCrop.variety}</p>
+                </div>
+              )}
+              {(selectedCrop.price || selectedCrop.market_price) && (
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {selectedCrop.price && (
+                    <div className="bg-emerald-50 rounded-lg p-3">
+                      <span className="text-[10px] text-emerald-700 font-semibold uppercase">Your Price</span>
+                      <p className="text-lg font-bold text-emerald-700">₱{Number(selectedCrop.price).toLocaleString()}/kg</p>
+                    </div>
+                  )}
+                  {selectedCrop.market_price && (
+                    <div className="bg-gray-100 rounded-lg p-3">
+                      <span className="text-[10px] text-gray-600 font-semibold uppercase">Market Price</span>
+                      <p className="text-lg font-bold text-gray-700">₱{Number(selectedCrop.market_price).toLocaleString()}/kg</p>
+                    </div>
+                  )}
                 </div>
               )}
 

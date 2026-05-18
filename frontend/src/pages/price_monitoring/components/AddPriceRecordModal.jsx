@@ -99,8 +99,9 @@ const AddPriceRecordModal = ({ isOpen, OnClose, defaultCommodity = null }) => {
         low_price:        computed.low,
       })
       if (result?.duplicate) return setError("A record for this commodity, market, and date already exists.")
+      if (result?.success === false) return setError(result?.message || "Failed to add price record.")
       OnClose()
-    } catch {
+    } catch (err) {
       setError("Failed to add price record. Please try again.")
     } finally {
       setIsSubmitting(false)

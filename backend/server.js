@@ -2,6 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import multer from 'multer'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 
 import { farmerRoutes } from './routes/farmerRoutes.js'
 import { produceRoutes } from './routes/produceRoutes.js'
@@ -12,6 +14,8 @@ import {analyticsRoutes} from './routes/analyticsRoutes.js'
 import authRouter from './routes/authRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import userDetailsRouter from './routes/userDetailsRoutes.js'
+import chatRouter from './routes/chatRoutes.js'
+import {imageRouter} from './routes/imageRoutes.js'
 
 dotenv.config()
 
@@ -19,11 +23,11 @@ const app = express()
 const PORT = process.env.PORT
 const FRONTEND_LINK = process.env.CORS_ORIGIN
 app.use(cors({
-  origin: ['https://da-marketplace.vercel.app', `https://${FRONTEND_LINK}`],
+  // origin: ['http://localhost:5173', `https://${FRONTEND_LINK}`],
   origin:'*',
   credentials: true
 }))
-app.use(express.json())
+app.use(express.json({ limit: '10mb' }))
 app.use('/uploads', express.static('uploads'))
 
 const upload = multer({ dest: 'uploads/' })
@@ -38,8 +42,30 @@ app.use('/api/crops',vegetableRouter)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/auth', userDetailsRouter)
+app.use('/api/chat', chatRouter)
+app.use('/api/images', imageRouter)
 
-app.listen(PORT, () => {
+const httpServer = createServer(app)
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+})
+
+io.on('connection', (socket) => {
+  socket.on('join', ({ userId, role }) => {
+    if (role === 'farmer') {
+      socket.join(`farmer_${userId}`)
+    } else {
+      socket.join(`user_${userId}`)
+    }
+  })
+})
+
+app.set('io', io)
+
+httpServer.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
 
   // CHECK IF NEON IS CONNECTED

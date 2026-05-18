@@ -61,14 +61,8 @@ const useUserStore = create((set, get) => ({
   fetchUserDetails: async () => {
     try {
       const { data } = await api.get('/api/auth/me/details')
-      const detailsWithFullUrl = data.details ? {
-        ...data.details,
-        profile_picture: data.details.profile_picture 
-          ? (data.details.profile_picture.startsWith('http') ? data.details.profile_picture : `${BASE_URL}${data.details.profile_picture}`)
-          : null
-      } : null
-      set({ userDetails: detailsWithFullUrl })
-      return detailsWithFullUrl
+      set({ userDetails: data.details || null })
+      return data.details || null
     } catch (error) {
       if (error.response?.status === 404) {
         set({ userDetails: null })
@@ -105,12 +99,7 @@ const useUserStore = create((set, get) => ({
         })
         result = data.details
       }
-      const resultWithFullUrl = result ? {
-        ...result,
-        profile_picture: result.profile_picture 
-          ? (result.profile_picture.startsWith('http') ? result.profile_picture : `${BASE_URL}${result.profile_picture}`)
-          : null
-      } : null
+      const resultWithFullUrl = result || null
       set({ userDetails: resultWithFullUrl, loading: false })
       return resultWithFullUrl
     } catch (error) {

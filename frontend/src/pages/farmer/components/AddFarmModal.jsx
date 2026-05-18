@@ -197,7 +197,7 @@ const EMPTY_FARM_FORM = {
   province: '',
   municipality: '',
   barangay: '',
-  hectares: '',
+  farm_hectares: '',
   plot_boundaries: '' || 'None',
   farm_image: null,
   farm_docs: []
@@ -282,9 +282,9 @@ const AddFarmModal = ({ isOpen, onClose, onSubmit, loading }) => {
                 <div className="relative">
                   <input
                     type="number" placeholder="0" step="0.01"
-                    className={inputClass('total_hectares') + ' pr-14'} value={form.total_hectares}
-                    onFocus={() => setFocused('total_hectares')} onBlur={() => setFocused('')}
-                    onChange={(e) => setForm({ ...form, total_hectares: e.target.value })}
+className={inputClass('farm_hectares') + ' pr-14'} value={form.farm_hectares} 
+                    onFocus={() => setFocused('farm_hectares')} onBlur={() => setFocused('')}
+                    onChange={(e) => setForm({ ...form, farm_hectares: e.target.value })}
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">ha</span>
                 </div>

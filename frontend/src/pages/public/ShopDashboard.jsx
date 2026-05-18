@@ -7,10 +7,8 @@ import {
   Package, Calendar, ShieldCheck, Truck, BadgeCheck, Star,
   Wheat, TreePine, Apple, Carrot, ChevronLeft
 } from 'lucide-react'
-import CropLocation from '../../components/CropLocation'
 import CropCard from '../../components/CropCard'
-
-const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
+import { getFarmImageSrc } from '../../utils/imageUtils'
 
 /* ─── Marquee ticker ─────────────────────────────────────────── */
 const TICKER_ITEMS = [
@@ -41,56 +39,81 @@ const Marquee = () => (
 )
 
 /* ─── Stat card ───────────────────────────────────────────────── */
-const StatCard = ({ icon, label, value, bg, color }) => (
-  <div className="flex items-center gap-4 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+const StatCard = ({ icon, label, value, bg, color, subLabel }) => (
+  <div className="flex items-center gap-4 bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
     <div className={`p-3 rounded-xl ${bg}`}>
       <span className={color}>{icon}</span>
     </div>
     <div>
       <p className="text-xs text-gray-500 font-medium">{label}</p>
       <p className="text-3xl font-bold text-gray-900 leading-none mt-0.5">{value}</p>
+      {subLabel && <p className="text-[10px] text-gray-400 mt-0.5">{subLabel}</p>}
     </div>
   </div>
 )
 
-/* ─── Farm card ───────────────────────────────────────────────── */
-const FarmCard = ({ farm, onClick }) => (
-  <div
-    onClick={onClick}
-    className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-green-300 hover:shadow-lg transition-all duration-200 cursor-pointer"
-  >
-    <div className="h-32 bg-gradient-to-br from-green-400 to-emerald-500 relative overflow-hidden">
-      {farm.farm_image ? (
-        <img
-          src={farm.farm_image}
-          alt={farm.farm_name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center">
-          <Sprout className="w-10 h-10 text-white/40" />
-        </div>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-    </div>
+const FarmCard = ({ farm, onClick }) => {
+  const hasLocation = farm.province || farm.municipality || farm.barangay || farm.farm_location
+  const locationStr = [farm.barangay, farm.municipality, farm.province].filter(Boolean).join(', ')
+  const farmImageSrc = getFarmImageSrc(farm)
 
-    <div className="p-4 space-y-2">
-      <p className="font-bold text-gray-900 truncate">{farm.farm_name}</p>
-      <CropLocation farm={farm} showGps={true} />
-      {farm.farm_area && (
-        <div className="flex items-center gap-1.5 pt-1">
-          <div className="h-1 flex-1 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-green-400 rounded-full"
-              style={{ width: `${Math.min((farm.farm_area / 20) * 100, 100)}%` }}
-            />
+  return (
+    <div
+      onClick={onClick}
+      className="group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-green-300 hover:shadow-xl transition-all duration-300 cursor-pointer"
+    >
+      <div className="h-40 bg-gray-100 relative overflow-hidden">
+        {farmImageSrc ? (
+          <img
+            src={farmImageSrc}
+            alt={farm.farm_name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
+          />
+        ) : null}
+        <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-green-400 to-emerald-500 ${farmImageSrc ? 'hidden' : ''}`}>
+          <Sprout className="w-12 h-12 text-white/40" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        {hasLocation && (
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/40 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-full">
+            <MapPin className="w-2.5 h-2.5" />
+            <span className="truncate max-w-[120px]">{locationStr}</span>
           </div>
-          <span className="text-[10px] font-semibold text-green-700 flex-shrink-0">{farm.farm_area} ha</span>
+        )}
+      </div>
+
+      <div className="p-4 space-y-3">
+        <div>
+          <p className="font-bold text-gray-900 text-sm truncate">{farm.farm_name}</p>
+          {farm.farm_location && (
+            <p className="text-xs text-gray-400 mt-0.5 truncate">{farm.farm_location}</p>
+          )}
         </div>
-      )}
+
+        {farm.farm_area && (
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 flex-1 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-green-400 rounded-full"
+                style={{ width: `${Math.min((farm.farm_area / 20) * 100, 100)}%` }}
+              />
+            </div>
+            <span className="text-[10px] font-semibold text-green-700 shrink-0">{farm.farm_area} ha</span>
+          </div>
+        )}
+
+        {farm.farm_description && (
+          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{farm.farm_description}</p>
+        )}
+
+        <button className="w-full py-2 mt-1 rounded-xl bg-green-50 border border-green-100 text-green-700 text-xs font-semibold hover:bg-green-100 transition-colors">
+          View Farm
+        </button>
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 /* ─── How it works ────────────────────────────────────────────── */
 const HOW_IT_WORKS = [
@@ -248,9 +271,9 @@ const ShopDashboard = () => {
   }, [crops, farms, searchTerm])
 
   const stats = [
-    { label: 'Total Crops', value: crops.length, icon: <Sprout size={22} />, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Active Farms', value: farms.length, icon: <MapPin size={22} />, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Fresh Harvest', value: crops.filter(c => c.stock > 50).length, icon: <Leaf size={22} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Total Crops', value: crops.length, icon: <Sprout size={22} />, color: 'text-green-600', bg: 'bg-green-50', subLabel: 'Listed produce' },
+    { label: 'Active Farms', value: farms.length, icon: <MapPin size={22} />, color: 'text-blue-600', bg: 'bg-blue-50', subLabel: 'Verified farmers' },
+    { label: 'Fresh Harvest', value: crops.filter(c => c.stock > 50).length, icon: <Leaf size={22} />, color: 'text-emerald-600', bg: 'bg-emerald-50', subLabel: 'High stock items' },
   ]
 
   return (

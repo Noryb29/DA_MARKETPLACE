@@ -1,6 +1,9 @@
 import { Loader2 ,X, MapPin, Upload, Image as ImageIcon, AlertTriangle, Info, Plus, Trash2 } from 'lucide-react'
 import { useEffect,useState } from 'react'
 import cropData from '../../../assets/CROP_NAMES.json'
+import axios from 'axios'
+
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000"
 
 const EMPTY_FORM = {
   crop_name: '', variety: '', volume: '', stock: '', farm_id: '',
@@ -8,7 +11,8 @@ const EMPTY_FORM = {
   maturity_days: '', expected_volume: '',
   planting_date: '', expected_harvest: '',
   actual_harvest: '', total_harvest: '',
-  harvest_photo: '', location: '',
+  harvest_photo: '', price: '', location: '',
+  is_harvested: false,
 }
 
 const METRIC_OPTIONS = [
@@ -21,6 +25,33 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
   const [form, setForm] = useState(initialData && initialData.farm_id ? { ...EMPTY_FORM, farm_id: initialData.farm_id } : EMPTY_FORM)
   const [photoPreview, setPhotoPreview] = useState(null)
   const [warnings, setWarnings] = useState({})
+  const [latestPrice, setLatestPrice] = useState(null)
+  const [priceLoading, setPriceLoading] = useState(false)
+  const [harvestStatus, setHarvestStatus] = useState(null)
+  const [showHarvestDetails, setShowHarvestDetails] = useState(false)
+  const [harvestError, setHarvestError] = useState(null)
+
+  useEffect(() => {
+    const fetchLatestPrice = async () => {
+      if (!form.crop_name) {
+        setLatestPrice(null)
+        return
+      }
+      setPriceLoading(true)
+      try {
+        const response = await axios.get(`${BASE_URL}/api/produce/getLatestPrice?crop_name=${encodeURIComponent(form.crop_name)}`)
+        setLatestPrice(response.data)
+        if (!isEdit && !form.price && response.data?.prevailing_price) {
+          setForm(prev => ({ ...prev, price: response.data.prevailing_price.toString() }))
+        }
+      } catch (err) {
+        setLatestPrice(null)
+      } finally {
+        setPriceLoading(false)
+      }
+    }
+    fetchLatestPrice()
+  }, [form.crop_name, isEdit])
 
   const addSpecification = () => {
     if (form.specifications.length < 8) {
@@ -73,7 +104,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
     })
     delete submitForm.specifications
     
-    const numericFields = ['volume', 'stock', 'maturity_days', 'expected_volume', 'total_harvest']
+    const numericFields = ['volume', 'stock', 'maturity_days', 'expected_volume', 'total_harvest', 'price']
     numericFields.forEach(field => {
       if (submitForm[field] === '' || submitForm[field] === undefined) {
         submitForm[field] = null
@@ -82,6 +113,8 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
         submitForm[field] = isNaN(parsed) ? null : parsed
       }
     })
+    
+    submitForm.is_harvested = harvestStatus === 'harvested' || showHarvestDetails
     
     return submitForm
   }
@@ -128,6 +161,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
   }
 
   const handleChange = (key, value) => {
+    if (value && value < 0) return
     setForm({ ...form, [key]: value })
     const warning = validateField(key, value)
     setWarnings(prev => ({ ...prev, [key]: warning }))
@@ -168,7 +202,10 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
         planting_date: initialData.planting_date?.slice(0, 10) || '',
         expected_harvest: initialData.expected_harvest?.slice(0, 10) || '',
         actual_harvest: initialData.actual_harvest?.slice(0, 10) || '',
+        is_harvested: initialData.is_harvested ?? (!!initialData.actual_harvest || !!initialData.total_harvest),
       })
+      setHarvestStatus(initialData.is_harvested || !!initialData.actual_harvest || !!initialData.total_harvest ? 'harvested' : 'not-harvested')
+      setShowHarvestDetails(!!initialData.actual_harvest || !!initialData.total_harvest || initialData.is_harvested)
       if (initialData?.harvest_photo) {
         setPhotoPreview(initialData.harvest_photo)
       } else {
@@ -183,15 +220,18 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
         stock: '',
         maturity_days: '',
         expected_volume: '',
-        total_harvest: ''
+        total_harvest: '',
+        is_harvested: false,
       })
       setPhotoPreview(null)
+      setHarvestStatus(null)
+      setShowHarvestDetails(false)
     }
   }, [initialData, isOpen, farms])
 
   if (!isOpen) return null
 
-  const field = (key, label, placeholder, type = 'text', required = false) => (
+  const field = (key, label, placeholder, type = 'text', required = false, clearError = false) => (
     <div className="space-y-1.5">
       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">
         {label} {required && <span className="text-red-400">*</span>}
@@ -200,7 +240,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
         type={type}
         placeholder={placeholder}
         value={form[key]}
-        onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+        onChange={(e) => { setForm({ ...form, [key]: e.target.value }); if (clearError) setHarvestError(null); }}
         className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 hover:border-gray-300
           focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
           outline-none text-sm text-gray-800 font-medium transition-all duration-200"
@@ -227,6 +267,35 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
             </button>
           </div>
 
+          {/* Harvest Status Question - Only for new crops */}
+          {!isEdit && harvestStatus === null && (
+            <div className="py-6 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Is this crop already harvested?</h3>
+              <p className="text-sm text-gray-500 mb-6">This helps us show the right fields for your crop.</p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setHarvestStatus('not-harvested')}
+                  className="px-6 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Not Yet Harvested
+                </button>
+                <button
+                  onClick={() => setHarvestStatus('harvested')}
+                  className="px-6 py-2.5 rounded-xl bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors"
+                >
+                  Yes, It's Harvested
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Form Content */}
+          {(isEdit || harvestStatus !== null) && (
           <div className="space-y-4 max-h-[62vh] overflow-y-auto pr-1">
 
             {/* Crop Name + Variety */}
@@ -247,10 +316,28 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                     <option key={c.name} value={c.name}>{c.name}</option>
                   ))}
                 </select>
+                {latestPrice && latestPrice.category_name && (
+                  <div className="text-[10px] text-purple-600 bg-purple-50 rounded-lg p-2 mt-1 flex items-center gap-1">
+                    Category: {latestPrice.category_name}
+                  </div>
+                )}
                 {form.crop_name && getCropRanges(form.crop_name) && (
                   <div className="text-[10px] text-blue-600 bg-blue-50 rounded-lg p-2 mt-1 flex items-center gap-1">
                     <Info className="w-3 h-3" />
                     Avg: {getCropRanges(form.crop_name).avgYieldTons} tons/ha • {getCropRanges(form.crop_name).maturityDays} days
+                  </div>
+                )}
+                {latestPrice && latestPrice.commodity_spec && (
+                  <div className="text-[10px] text-orange-600 bg-orange-50 rounded-lg p-2 mt-1 flex items-center gap-1">
+                    Spec: {latestPrice.commodity_spec}
+                  </div>
+                )}
+                {priceLoading && (
+                  <div className="text-[10px] text-gray-500 mt-1">Loading latest price...</div>
+                )}
+                {latestPrice && !priceLoading && (
+                  <div className="text-[10px] text-green-600 bg-green-50 rounded-lg p-2 mt-1 flex items-center gap-1">
+                    Market Price: ₱{latestPrice.prevailing_price}/kg ({latestPrice.market_name} - {new Date(latestPrice.price_date).toLocaleDateString()})
                   </div>
                 )}
               </div>
@@ -279,12 +366,12 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
             </div>
 
             {/* Volume + Stock */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Volume</label>
                 <div className="relative">
                   <input
-                    type="number" placeholder="0" value={form.volume}
+                    type="number" min="0" placeholder="0" value={form.volume}
                     onChange={(e) => handleChange('volume', e.target.value)}
                     className={`w-full px-3 py-2.5 pr-10 rounded-xl border-2 hover:border-gray-300
                       focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
@@ -304,7 +391,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Stock</label>
                 <div className="relative">
                   <input
-                    type="number" placeholder="0" value={form.stock}
+                    type="number" min="0" placeholder="0" value={form.stock}
                     onChange={(e) => setForm({ ...form, stock: e.target.value })}
                     className="w-full px-3 py-2.5 pr-12 rounded-xl border-2 border-gray-200 hover:border-gray-300
                       focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
@@ -313,11 +400,25 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">pcs</span>
                 </div>
               </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Price/kg</label>
+                <div className="relative">
+                  <input
+                    type="number" min="0" placeholder={latestPrice ? latestPrice.prevailing_price : "0"} value={form.price}
+                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    className="w-full px-3 py-2.5 pr-10 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                      focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                      outline-none text-sm text-gray-800 font-medium transition-all duration-200"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">₱</span>
+                </div>
+              </div>
             </div>
 
             {/* Planting Date + Expected Harvest */}
             <div className="grid grid-cols-2 gap-3">
-              {field('planting_date', 'Planting Date', '', 'date')}
+              {field('planting_date', 'Planting Date', '', 'date', false, true)}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">
                   Expected Harvest
@@ -326,7 +427,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                   type="date"
                   min={form.planting_date || undefined}
                   value={form.expected_harvest}
-                  onChange={(e) => setForm({ ...form, expected_harvest: e.target.value })}
+                  onChange={(e) => { setForm({ ...form, expected_harvest: e.target.value }); setHarvestError(null); }}
                   className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 hover:border-gray-300
                     focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
                     outline-none text-sm text-gray-800 font-medium transition-all duration-200"
@@ -335,101 +436,134 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
             </div>
 
             {/* Actual Harvest + Total Harvest */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">
-                  Actual Harvest
-                </label>
-                <input
-                  type="date"
-                  value={form.actual_harvest || ''}
-                  onChange={(e) => setForm({ ...form, actual_harvest: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 hover:border-gray-300
-                    focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
-                    outline-none text-sm text-gray-800 font-medium transition-all duration-200"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Total Harvest</label>
-                <div className="relative">
+            {(harvestStatus === 'harvested' || showHarvestDetails) ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                    Actual Harvest
+                  </label>
                   <input
-                    type="number" placeholder="0" step="0.01"
-                    value={form.total_harvest}
-                    onChange={(e) => handleChange('total_harvest', e.target.value)}
-                    className={`w-full px-3 py-2.5 pr-10 rounded-xl border-2 hover:border-gray-300
+                    type="date"
+                    value={form.actual_harvest || ''}
+                    onChange={(e) => { setForm({ ...form, actual_harvest: e.target.value }); setHarvestError(null); }}
+                    className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 hover:border-gray-300
                       focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
-                      outline-none text-sm text-gray-800 font-medium transition-all duration-200
-                      ${warnings.total_harvest ? 'border-orange-400' : 'border-gray-200'}`}
+                      outline-none text-sm text-gray-800 font-medium transition-all duration-200"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">kg</span>
                 </div>
-                {warnings.total_harvest && (
-                  <p className="text-[10px] text-orange-600 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" /> {warnings.total_harvest}
-                  </p>
-                )}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Total Harvest</label>
+                  <div className="relative">
+                    <input
+                      type="number" min="0" placeholder="0" step="0.01"
+                      value={form.total_harvest}
+                      onChange={(e) => handleChange('total_harvest', e.target.value)}
+                      className={`w-full px-3 py-2.5 pr-10 rounded-xl border-2 hover:border-gray-300
+                        focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
+                        outline-none text-sm text-gray-800 font-medium transition-all duration-200
+                        ${warnings.total_harvest ? 'border-orange-400' : 'border-gray-200'}`}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">kg</span>
+                  </div>
+                  {warnings.total_harvest && (
+                    <p className="text-[10px] text-orange-600 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" /> {warnings.total_harvest}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : null}
 
             {/* Specifications */}
-            <div className="space-y-1.5">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Specifications</label>
-                {form.specifications.length < 8 && (
-                  <button
-                    type="button"
-                    onClick={addSpecification}
-                    className="text-xs font-medium text-green-600 hover:text-green-700 flex items-center gap-1"
-                  >
-                    <Plus className="w-3 h-3" /> Add Specification
-                  </button>
-                )}
+                <span className="text-[10px] text-gray-400">{form.specifications.length}/8</span>
               </div>
-              {form.specifications.length === 0 ? (
-                <p className="text-xs text-gray-400 italic py-2">No specifications added. Click "Add Specification" to add.</p>
-              ) : (
-                <div className="space-y-2">
+              
+              {form.specifications.length === 0 && (
+                <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
+                  <p className="text-xs text-gray-400 mb-3">No specifications added yet</p>
+                  {form.specifications.length < 8 && (
+                    <button
+                      type="button"
+                      onClick={addSpecification}
+                      className="px-4 py-2 rounded-lg border-2 border-green-300 bg-green-50 text-sm font-semibold text-green-600 hover:bg-green-100 hover:border-green-400 transition-all flex items-center justify-center gap-2 mx-auto"
+                    >
+                      <Plus className="w-4 h-4" /> Add Specification
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {form.specifications.length > 0 && (
+                <div className="space-y-3">
+                  {/* Header Row */}
+                  <div className="grid gap-2 px-1">
+                    <div className="grid grid-cols-12 gap-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                      <span className="col-span-4">Name</span>
+                      <span className="col-span-2">Unit</span>
+                      <span className="col-span-5">Value</span>
+                      <span className="col-span-1"></span>
+                    </div>
+                  </div>
+
                   {form.specifications.map((spec, index) => (
-                    <div key={index} className="flex gap-2 items-center">
+                    <div key={index} className="bg-green-50 border border-green-200 rounded-xl p-3 flex gap-2 items-center">
+                      <span className="w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                        {index + 1}
+                      </span>
                       <input
                         type="text"
-                        placeholder="Name (e.g. Color)"
+                        placeholder="e.g. Color"
                         value={spec.name}
                         onChange={(e) => updateSpecification(index, 'name', e.target.value)}
-                        className="w-1/3 px-3 py-2 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                        className="w-1/4 px-3 py-2 rounded-lg border-2 border-gray-200 hover:border-green-300
                           focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
                           outline-none text-sm text-gray-800 font-medium transition-all duration-200"
                       />
                       <select
                         value={spec.metric || ''}
                         onChange={(e) => updateSpecification(index, 'metric', e.target.value)}
-                        className="w-24 px-2 py-2 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                        className="w-20 px-2 py-2 rounded-lg border-2 border-gray-200 hover:border-green-300
                           focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
                           outline-none text-sm text-gray-800 font-medium transition-all duration-200 bg-white"
                       >
-                        <option value=""> </option>
+                        <option value="">—</option>
                         {METRIC_OPTIONS.map((m) => (
                           <option key={m} value={m}>{m}</option>
                         ))}
                       </select>
                       <input
                         type="text"
-                        placeholder="Value (e.g. Green)"
+                        placeholder="e.g. Green"
                         value={spec.value}
                         onChange={(e) => updateSpecification(index, 'value', e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-xl border-2 border-gray-200 hover:border-gray-300
+                        className="flex-1 px-3 py-2 rounded-lg border-2 border-gray-200 hover:border-green-300
                           focus:border-green-500 focus:shadow-[0_0_0_4px_rgba(34,197,94,0.12)]
                           outline-none text-sm text-gray-800 font-medium transition-all duration-200"
                       />
                       <button
                         type="button"
                         onClick={() => removeSpecification(index)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors shrink-0"
+                        title="Remove"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
+
+                  {/* Add Another Button */}
+                  {form.specifications.length < 8 && (
+                    <button
+                      type="button"
+                      onClick={addSpecification}
+                      className="w-full py-2.5 rounded-xl border-2 border-dashed border-green-300 bg-green-50 text-sm font-semibold text-green-600 hover:bg-green-100 hover:border-green-400 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" /> Add Another Specification
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -440,7 +574,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Maturity Days</label>
                 <div className="relative">
                   <input
-                    type="number" placeholder="0"
+                    type="number" min="0" placeholder="0"
                     value={form.maturity_days}
                     onChange={(e) => handleChange('maturity_days', e.target.value)}
                     className={`w-full px-3 py-2.5 pr-12 rounded-xl border-2 hover:border-gray-300
@@ -460,7 +594,7 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Expected Volume</label>
                 <div className="relative">
                   <input
-                    type="number" placeholder="0" step="0.01"
+                    type="number" min="0" placeholder="0" step="0.01"
                     value={form.expected_volume}
                     onChange={(e) => handleChange('expected_volume', e.target.value)}
                     className={`w-full px-3 py-2.5 pr-10 rounded-xl border-2 hover:border-gray-300
@@ -479,36 +613,38 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
             </div>
 
             {/* Harvest Photo */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Harvest Photo</label>
-              <div className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all ${photoPreview ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                {photoPreview ? (
-                  <div className="relative">
-                    <img src={photoPreview} alt="Harvest preview" className="w-full h-40 object-cover rounded-lg mx-auto" />
-                    <button
-                      type="button"
-                      onClick={handleRemovePhoto}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                    <p className="text-xs text-green-600 mt-2 font-medium">Click to change photo</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center py-2">
-                    <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                    <p className="text-xs text-gray-500 font-medium">Click to upload harvest photo</p>
-                    <p className="text-[10px] text-gray-400 mt-1">PNG, JPG up to 5MB</p>
-                  </div>
-                )}
+            {(harvestStatus === 'harvested' || showHarvestDetails) && (
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest">Harvest Photo</label>
+                <div className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all ${photoPreview ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  {photoPreview ? (
+                    <div className="relative">
+                      <img src={photoPreview} alt="Harvest preview" className="w-full h-40 object-cover rounded-lg mx-auto" />
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                      <p className="text-xs text-green-600 mt-2 font-medium">Click to change photo</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center py-2">
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <p className="text-xs text-gray-500 font-medium">Click to upload harvest photo</p>
+                      <p className="text-[10px] text-gray-400 mt-1">PNG, JPG up to 5MB</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Location */}
             <div className="space-y-1.5">
@@ -527,14 +663,35 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
               </div>
             </div>
           </div>
+          )}
 
           {/* Footer */}
-          <div className="flex gap-3 mt-6 pt-5 border-t border-gray-100">
+          {(isEdit || harvestStatus !== null) && (
+            <>
+              {harvestError && (
+                <div className="text-xs text-red-500 text-center mt-2 font-medium">{harvestError}</div>
+              )}
+              <div className="flex gap-3 mt-3 pt-5 border-t border-gray-100">
             <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
               Cancel
             </button>
             <button
-              onClick={() => onSubmit(getSubmitForm())}
+              onClick={() => {
+                if (showHarvestDetails && !form.actual_harvest) {
+                  setHarvestError('Please set the actual harvest date')
+                  return
+                }
+                if (form.planting_date && form.expected_harvest && form.expected_harvest < form.planting_date) {
+                  setHarvestError('Expected harvest must be after planting date')
+                  return
+                }
+                if (form.planting_date && form.actual_harvest && form.actual_harvest < form.planting_date) {
+                  setHarvestError('Actual harvest must be after planting date')
+                  return
+                }
+                setHarvestError(null)
+                onSubmit(getSubmitForm())
+              }}
               disabled={loading || !form.crop_name || !form.farm_id}
               className="flex-1 py-2.5 rounded-xl bg-linear-to-r from-green-500 to-emerald-600
                 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold
@@ -547,7 +704,9 @@ const CropModal = ({ isOpen, onClose, onSubmit, loading, initialData, farms = []
                 </span>
               ) : isEdit ? 'Update Crop' : 'Add Crop'}
             </button>
-          </div>
+            </div>
+            </>
+          )}
         </div>
       </div>
     </div>
